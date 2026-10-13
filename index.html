@@ -132,6 +132,13 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
 .who-list b i{font-style:normal;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#45e8a8;margin-left:6px}
 .who-list b i.bs{color:var(--danger)}
 .who-list b i.hn{color:var(--hunter)}
+.tabs{display:flex;gap:4px;padding:4px;border-radius:12px;background:rgba(10,7,26,.6);border:1px solid var(--line)}
+.tabs button{flex:1 1 0;min-width:0;font:400 14px var(--display);color:var(--muted);background:none;border:0;border-radius:9px;padding:9px 10px;cursor:pointer}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);box-shadow:0 0 0 1px var(--spark) inset}
+.tabs button:focus-visible{outline:2px solid var(--spark);outline-offset:2px}
+.panel{display:flex;flex-direction:column;gap:12px}
+.pause-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .saves{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .saves li{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:rgba(26,20,56,.6)}
 .save-text{flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:2px}
@@ -172,8 +179,7 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
     <div class="stat"><small id="infoLabel">Огоньков</small><span id="info">—</span></div>
     <div class="stat"><small>Жизни</small><span id="lives">✦✦✦</span></div>
     <div class="btns">
-      <button class="iconbtn" id="saveBtn" hidden title="Сохранить игру и продолжить её позже">Сохранить</button>
-      <button class="iconbtn" id="pauseBtn" aria-label="Пауза">❚❚</button>
+      <button class="iconbtn" id="pauseBtn" aria-label="Пауза и меню">❚❚</button>
       <button class="iconbtn" id="targetsBtn" aria-pressed="false" title="Показать, куда метит каждая звезда">Цели</button>
       <button class="iconbtn" id="muteBtn" aria-pressed="true">Звук</button>
     </div>
@@ -201,11 +207,6 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
         </div>
         <p class="note warn" id="menuMsg" hidden></p>
         <p class="keys" id="bestLine" hidden></p>
-
-        <section class="skin-block" id="savesBlock" hidden>
-          <h3>Сохранённые игры</h3>
-          <ul class="saves" id="saves"></ul>
-        </section>
 
         <section class="skin-block">
           <h3>Скин смайлика</h3>
@@ -251,12 +252,41 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
       </div>
     </div>
 
+    <div class="overlay" id="soloOv" hidden>
+      <div class="card">
+        <h2>Одиночная игра</h2>
+        <div class="tabs" role="tablist" aria-label="Одиночная игра">
+          <button type="button" role="tab" data-tab="new" aria-selected="true">Новая игра</button>
+          <button type="button" role="tab" data-tab="saves" aria-selected="false">Сохранения</button>
+        </div>
+        <div class="panel" data-panel="new">
+          <p>Девять уровней с первого: огоньки, охота и боссы на 3, 6 и 9 уровне. На каждом уровне 3 жизни.</p>
+          <div class="row"><button class="btn" id="soloStartBtn">Начать с 1 уровня</button></div>
+        </div>
+        <div class="panel" data-panel="saves" hidden>
+          <ul class="saves" data-kinds="solo"></ul>
+          <p class="note empty">Сохранений пока нет. Во время игры нажми паузу и выбери «Сохранить и выйти в меню».</p>
+        </div>
+        <div class="row"><button class="linkbtn" data-back>← Назад в меню</button></div>
+      </div>
+    </div>
+
     <div class="overlay" id="coopOv" hidden>
       <div class="card">
         <h2>Кооп вдвоём</h2>
-        <p>Два смайлика против шести звёзд на карте вдвое больше. Пойманного друга спасают сердцем. Как будете играть?</p>
-        <button class="choice" id="coopLocalBtn"><b>На одном устройстве</b><span id="coopLocalHint">Игрок 1 управляет на WASD, игрок 2 на стрелках.</span></button>
-        <button class="choice" id="coopNetBtn"><b>По сети, каждый со своего устройства</b><span>Ты создаёшь комнату и отправляешь другу ссылку. Лучший вариант для телефонов.</span></button>
+        <div class="tabs" role="tablist" aria-label="Кооп вдвоём">
+          <button type="button" role="tab" data-tab="new" aria-selected="true">Новая игра</button>
+          <button type="button" role="tab" data-tab="saves" aria-selected="false">Сохранения</button>
+        </div>
+        <div class="panel" data-panel="new">
+          <p>Два смайлика против шести звёзд на карте вдвое больше. Пойманного друга спасают сердцем. Как будете играть?</p>
+          <button class="choice" id="coopLocalBtn"><b>На одном устройстве</b><span id="coopLocalHint">Игрок 1 управляет на WASD, игрок 2 на стрелках.</span></button>
+          <button class="choice" id="coopNetBtn"><b>По сети, каждый со своего устройства</b><span>Ты создаёшь комнату и отправляешь другу ссылку. Лучший вариант для телефонов.</span></button>
+        </div>
+        <div class="panel" data-panel="saves" hidden>
+          <ul class="saves" data-kinds="local-coop net-coop"></ul>
+          <p class="note empty">Сохранений пока нет. Во время игры нажми паузу и выбери «Сохранить и выйти в меню».</p>
+        </div>
         <div class="row"><button class="linkbtn" id="coopBack">← Назад в меню</button></div>
       </div>
     </div>
@@ -267,6 +297,11 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
         <p class="invite" id="mpInvite" hidden></p>
         <p class="note warn" id="mpState" hidden></p>
         <label class="field" for="nick"><span>Твоё имя</span><input type="text" id="nick" maxlength="16" autocomplete="off" placeholder="Например, Макс"></label>
+        <div class="tabs" role="tablist" aria-label="Игра по сети">
+          <button type="button" role="tab" data-tab="new" aria-selected="true">Новая игра</button>
+          <button type="button" role="tab" data-tab="saves" aria-selected="false">Сохранения</button>
+        </div>
+        <div class="panel" data-panel="new">
         <section class="mp-block">
           <h3>Создать комнату</h3>
           <div class="seg wide" id="roomModeSeg" role="group" aria-label="Режим комнаты">
@@ -287,6 +322,12 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
           <div class="row"><input type="text" id="codeIn" maxlength="8" autocomplete="off" placeholder="Код" aria-label="Код комнаты"><button class="btn2" id="joinBtn">Войти</button></div>
         </section>
         <p class="note">Создай комнату и отправь другу ссылку или код. Держи игру открытой на экране, пока вы играете: она считается у хозяина комнаты. Если сервер долго никто не использовал, первое подключение займёт до минуты, пока он просыпается.</p>
+        </div>
+        <div class="panel" data-panel="saves" hidden>
+          <ul class="saves" data-kinds="net-coop net-stars"></ul>
+          <p class="note empty">Сохранений пока нет. Хозяин комнаты может нажать паузу во время игры и выбрать «Сохранить и выйти в меню».</p>
+          <p class="note">«Продолжить» открывает комнату с тем же кодом: старая ссылка у друга снова работает.</p>
+        </div>
         <div class="row"><button class="linkbtn" id="mpBack">← Назад в меню</button></div>
       </div>
     </div>
@@ -327,9 +368,15 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
 
     <div class="overlay" id="pauseOv" hidden>
       <div class="card wide">
-        <h2>Пауза</h2>
-        <p>Нажми <kbd>P</kbd> или кнопку, чтобы продолжить.</p>
-        <div class="row"><button class="btn" id="resumeBtn">Продолжить</button></div>
+        <h2 id="pauseTitle">Пауза</h2>
+        <p id="pauseText">Нажми P или «Продолжить», чтобы вернуться в игру.</p>
+        <div class="pause-actions">
+          <button class="btn" id="resumeBtn">Продолжить</button>
+          <button class="btn2" id="saveBtn">Сохранить</button>
+          <button class="btn2" id="saveExitBtn">Сохранить и выйти в меню</button>
+          <button class="linkbtn" id="quitBtn">Выйти без сохранения</button>
+        </div>
+        <p class="note warn" id="pauseSaved" hidden></p>
         <div id="pauseLegend"></div>
       </div>
     </div>
@@ -466,7 +513,7 @@ const MIN_TILE1 = 17;                                         // below this tile
 const DIRS = [[0, -1], [-1, 0], [0, 1], [1, 0]];              // up, left, down, right — the classic tie-break order
 const DIR_CODES = [[0, 0], [0, -1], [-1, 0], [0, 1], [1, 0]];
 const dirCode = (dx, dy) => dy < 0 ? 1 : dx < 0 ? 2 : dy > 0 ? 3 : dx > 0 ? 4 : 0;
-const OVERLAYS = ['menu', 'coopOv', 'mpOv', 'lobbyOv', 'pauseOv', 'endOv'];
+const OVERLAYS = ['menu', 'soloOv', 'coopOv', 'mpOv', 'lobbyOv', 'pauseOv', 'endOv'];
 const touchDevice = matchMedia('(pointer: coarse)').matches;
 
 const $ = id => document.getElementById(id);
@@ -1222,6 +1269,7 @@ function stateMessage(st) {
     if (phase === 2) return 'Снова в бой!';
     return star ? 'Готов? Лови смайлик!' : watcher ? 'Игра начинается' : (team ? 'Готовы? Собирайте огоньки!' : 'Готов? Собирай огоньки!');
   }
+  if (st === 'paused') return guest ? 'Хозяин поставил игру на паузу' : null;
   if (st === 'cleared') return 'Все огоньки собраны!';
   if (st === 'grow') {
     if (isBossLevel()) return 'Появляется босс: ' + bossTitle() + '!';
@@ -1469,13 +1517,19 @@ function saveGame(silent) {
   }
   renderSaves();
 }
+// Each mode screen has a "Сохранения" tab with a list that shows only that mode's saves
 function renderSaves() {
-  const box = $('saves');
-  if (!box) return;
   const all = loadSaves();
-  $('savesBlock').hidden = !all.length;
+  document.querySelectorAll('ul.saves[data-kinds]').forEach(box => {
+  const kinds = box.dataset.kinds.split(' ');
+  const list = all.filter(s => kinds.includes(s.kind));
+  const card = box.closest('.card');
+  const tab = card.querySelector('.tabs [data-tab="saves"]');
+  if (tab) tab.textContent = list.length ? 'Сохранения · ' + list.length : 'Сохранения';
+  const empty = card.querySelector('[data-panel="saves"] .empty');
+  if (empty) empty.hidden = !!list.length;
   box.textContent = '';
-  for (const s of all) {
+  for (const s of list) {
     const li = document.createElement('li');
     const text = document.createElement('div'); text.className = 'save-text';
     const b = document.createElement('b');
@@ -1499,6 +1553,16 @@ function renderSaves() {
     li.append(text, side);
     box.append(li);
   }
+  });
+}
+function selectTab(card, name) {
+  card.querySelectorAll('.tabs [data-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+  card.querySelectorAll('[data-panel]').forEach(p => { p.hidden = p.dataset.panel !== name; });
+}
+function openModeScreen(id) {
+  renderSaves();
+  showOverlay(id);
+  selectTab($(id).querySelector('.card'), 'new');
 }
 function saveProgress(n) {
   if (n <= progress) return;
@@ -2588,8 +2652,6 @@ const textCache = {};
 function setText(id, v) { if (textCache[id] !== v) { textCache[id] = v; $(id).textContent = v; } }
 const fmtTime = t => `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
 function updateHud() {
-  const canSave = net.mode !== 'guest' && state !== 'menu' && state !== 'over';
-  if ($('saveBtn').hidden === canSave) $('saveBtn').hidden = !canSave;
   setText('score', String(score));
   setText('lives', lives > 0 ? '✦'.repeat(Math.min(lives, 9)) : '—');
   setText('level', level + '/' + MAX_LEVEL);
@@ -3061,7 +3123,6 @@ function updateNames() {
 function netTick() {
   if (net.mode === 'off') return;
   const tnow = performance.now();
-  if (net.confirmLeave && tnow > net.confirmLeave) { net.confirmLeave = 0; setText('pauseBtn', 'Выйти'); }
   if (!net.room) return;
   if (!net.myPeer) { const me = net.room.peers().find(p => p.isMe && p.sameTab); if (me) net.myPeer = me.peer; }
   const slow = tnow - net.lastSlow > 250;
@@ -3153,8 +3214,8 @@ function showOverlay(id) {
 }
 function syncModeButtons() {
   const mp = net.mode !== 'off';
-  setText('pauseBtn', mp ? 'Выйти' : '❚❚');
-  $('pauseBtn').setAttribute('aria-label', mp ? 'Выйти из комнаты' : 'Пауза');
+  setText('pauseBtn', '❚❚');
+  $('pauseBtn').setAttribute('aria-label', mp ? 'Меню комнаты' : 'Пауза и меню');
   $('targetsBtn').hidden = net.mode === 'guest';
 }
 function refreshMpAvailability() {
@@ -3166,11 +3227,12 @@ function refreshMpAvailability() {
 }
 let lastSolo = { mode: 'solo', local: false };
 const UI = {
-  single() { $('menuMsg').hidden = true; humans = emptySlots(); lastSolo = { mode: 'solo', local: false }; startGame('solo', false); },
-  coop() { $('menuMsg').hidden = true; showOverlay('coopOv'); },
+  single() { $('menuMsg').hidden = true; openModeScreen('soloOv'); },
+  startSolo() { $('menuMsg').hidden = true; humans = emptySlots(); lastSolo = { mode: 'solo', local: false }; startGame('solo', false); },
+  coop() { $('menuMsg').hidden = true; openModeScreen('coopOv'); },
   coopLocal() { humans = emptySlots(); lastSolo = { mode: 'coop', local: true }; startGame('coop', true); },
   coopNet() { createMode = 'coop'; syncCreateMode(); UI.openMp(); },
-  openMp() { $('menuMsg').hidden = true; showOverlay('mpOv'); refreshMpAvailability(); },
+  openMp() { $('menuMsg').hidden = true; openModeScreen('mpOv'); refreshMpAvailability(); },
   back() { showOverlay('menu'); },
   create(n, rm) { mpEnter(genCode(), true, n, rm); },
   join(code) {
@@ -3211,7 +3273,7 @@ const UI = {
   removeSave(id) { storeSaves(loadSaves().filter(z => z.id !== id)); renderSaves(); },
   again() {
     if (net.mode === 'host') mpBackToLobby();
-    else if (net.mode === 'off') { if (lastSolo.mode === 'coop') UI.coopLocal(); else UI.single(); }
+    else if (net.mode === 'off') { if (lastSolo.mode === 'coop') UI.coopLocal(); else UI.startSolo(); }
   },
   endMenu() {
     if (net.mode !== 'off') { mpLeave(); return; }
@@ -3272,9 +3334,9 @@ addEventListener('keydown', e => {
     want(k[0], k[1], localCoop && ar ? 1 : 0);
     return;
   }
-  if (e.code === 'KeyP' || e.code === 'Escape') { if (net.mode === 'off') { e.preventDefault(); togglePause(); } }
+  if (e.code === 'KeyP' || e.code === 'Escape') { if (inGame()) { e.preventDefault(); togglePause(); } }
   if (e.code === 'KeyT' && net.mode !== 'guest') toggleTargets();
-  if ((e.code === 'Enter' || e.code === 'Space') && net.mode === 'off' && (state === 'menu' || state === 'over') && !$('menu').hidden && !(e.target && e.target.closest && e.target.closest('button'))) { e.preventDefault(); UI.single(); }
+  if ((e.code === 'Enter' || e.code === 'Space') && net.mode === 'off' && (state === 'menu' || state === 'over') && !$('menu').hidden && !(e.target && e.target.closest && e.target.closest('button'))) { e.preventDefault(); UI.startSolo(); }
 });
 // Swipes: each finger is tracked on its own. In local co-op the left half of the screen steers
 // player 1 and the right half steers player 2, so both can swipe at once.
@@ -3308,11 +3370,37 @@ document.querySelectorAll('.pad button').forEach(b => {
   b.addEventListener('pointerdown', e => { e.preventDefault(); const [dx, dy] = b.dataset.d.split(',').map(Number); want(dx, dy, localCoop ? who : 0); });
 });
 
-function togglePause() {
-  if (net.mode !== 'off') return;
-  if (state === 'paused') { state = pausedFrom; $('pauseOv').hidden = true; }
-  else if (state !== 'menu' && state !== 'over') { pausedFrom = state; state = 'paused'; $('pauseOv').hidden = false; }
+/* ---------- pause menu ----------
+   Solo and the room host really pause the game (the host pauses it for everyone in the room).
+   A guest gets the same menu over a game that keeps running, with only "back" and "leave". */
+let quitArmed = 0;
+const inGame = () => net.mode === 'guest' ? net.stage === 'play' && state !== 'over' : state !== 'menu' && state !== 'over';
+function openPause() {
+  if (!inGame() || !$('pauseOv').hidden) return;
+  const guest = net.mode === 'guest';
+  if (!guest && state !== 'paused') { pausedFrom = state; state = 'paused'; }
+  setText('pauseTitle', guest ? 'Меню' : 'Пауза');
+  setText('pauseText', guest ? 'Игра продолжается у хозяина комнаты.' : net.mode === 'host' ? 'Игра на паузе у всех игроков. Нажми P или «Продолжить», чтобы вернуться.' : 'Нажми P или «Продолжить», чтобы вернуться в игру.');
+  setText('resumeBtn', guest ? 'Вернуться в игру' : 'Продолжить');
+  $('saveBtn').hidden = guest; $('saveExitBtn').hidden = guest;
+  setText('quitBtn', guest ? 'Выйти из комнаты' : 'Выйти без сохранения');
+  $('pauseSaved').hidden = true; quitArmed = 0;
+  $('pauseOv').hidden = false;
 }
+function closePause() {
+  if ($('pauseOv').hidden) return;
+  $('pauseOv').hidden = true;
+  if (net.mode !== 'guest' && state === 'paused') state = pausedFrom || (phase === 2 ? 'play2' : 'play1');
+}
+function togglePause() { if ($('pauseOv').hidden) openPause(); else closePause(); }
+function exitToMenu(msg) {
+  $('pauseOv').hidden = true;
+  if (net.mode !== 'off') { mpLeave(msg); return; }
+  backToMenuMaze(); showOverlay('menu');
+  const m = $('menuMsg');
+  if (msg) { m.textContent = msg; m.hidden = false; } else m.hidden = true;
+}
+function savedText() { return 'Игра сохранена: уровень ' + level + '. Продолжить можно в режиме игры, вкладка «Сохранения».'; }
 function toggleTargets() {
   showTargets = !showTargets;
   $('targetsBtn').setAttribute('aria-pressed', String(showTargets));
@@ -3327,7 +3415,9 @@ function syncCreateMode() {
 }
 $('startBtn').onclick = () => UI.single();
 $('coopBtn').onclick = () => UI.coop();
-$('saveBtn').onclick = () => { saveGame(false); $('saveBtn').blur(); };
+$('soloStartBtn').onclick = () => UI.startSolo();
+document.querySelectorAll('[data-back]').forEach(b => { b.onclick = () => UI.back(); });
+document.querySelectorAll('.tabs [data-tab]').forEach(b => { b.onclick = () => selectTab(b.closest('.card'), b.dataset.tab); });
 $('coopLocalBtn').onclick = () => UI.coopLocal();
 $('coopNetBtn').onclick = () => UI.coopNet();
 $('coopBack').onclick = () => UI.back();
@@ -3344,7 +3434,18 @@ $('readyBtn').onclick = () => UI.toggleReady();
 $('leaveBtn').onclick = () => UI.leave();
 $('againBtn').onclick = () => UI.again();
 $('endMenuBtn').onclick = () => UI.endMenu();
-$('resumeBtn').onclick = togglePause;
+$('resumeBtn').onclick = () => closePause();
+$('saveBtn').onclick = () => {
+  saveGame(true); netEvent(13);
+  $('pauseSaved').textContent = savedText(); $('pauseSaved').hidden = false;
+};
+$('saveExitBtn').onclick = () => { saveGame(true); exitToMenu(savedText()); };
+$('quitBtn').onclick = () => {
+  if (net.mode === 'guest' || performance.now() < quitArmed) { exitToMenu(); return; }
+  quitArmed = performance.now() + 3000;
+  setText('quitBtn', 'Точно выйти? Уровень не сохранится');
+  setTimeout(() => { if (performance.now() >= quitArmed && !$('pauseOv').hidden) setText('quitBtn', 'Выйти без сохранения'); }, 3100);
+};
 $('copyBtn').onclick = () => {
   const text = ART_URL + '#' + net.code;
   const fail = () => { selectText($('lobbyLink')); $('copyMsg').textContent = 'Не получилось скопировать: ссылка выделена, скопируй её вручную.'; };
@@ -3355,12 +3456,7 @@ $('copyBtn').onclick = () => {
 function selectText(el) {
   try { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
 }
-$('pauseBtn').onclick = () => {
-  if (net.mode === 'off') togglePause();
-  else if (performance.now() < net.confirmLeave) mpLeave();
-  else { net.confirmLeave = performance.now() + 3000; setText('pauseBtn', 'Точно выйти?'); }
-  $('pauseBtn').blur();
-};
+$('pauseBtn').onclick = () => { togglePause(); $('pauseBtn').blur(); };
 $('targetsBtn').onclick = () => { toggleTargets(); $('targetsBtn').blur(); };
 $('muteBtn').onclick = () => {
   muted = !muted;
@@ -3368,7 +3464,7 @@ $('muteBtn').onclick = () => {
   $('muteBtn').classList.toggle('off', muted);
   $('muteBtn').blur();
 };
-addEventListener('blur', () => { if (net.mode === 'off' && state !== 'paused' && state !== 'menu' && state !== 'over') togglePause(); });
+addEventListener('blur', () => { if (net.mode === 'off') openPause(); });
 if (best) { $('bestLine').textContent = `Твой рекорд: ${best} · лучший уровень: ${Math.min(progress, MAX_LEVEL)}`; $('bestLine').hidden = false; }
 
 /* ---------- legend icons ---------- */
@@ -3470,7 +3566,7 @@ function applyInvite() {
   m.textContent = 'Тебя позвали в комнату ' + inviteCode.toUpperCase() + '. Впиши имя и нажми «Войти».';
   m.hidden = false;
   if (state !== 'menu' && state !== 'over') { backToMenuMaze(); }
-  showOverlay('mpOv');
+  openModeScreen('mpOv');
 }
 applyInvite();
 addEventListener('hashchange', applyInvite);
