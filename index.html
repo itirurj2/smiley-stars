@@ -3218,14 +3218,20 @@ if ('WebSocket' in window) { net.api = makeServerApi(SERVER_URL); net.apiState =
 else net.apiState = 'none';
 // wake the free server up while the player is still in the menu
 try { fetch(SERVER_URL.replace(/^ws/, 'http'), { mode: 'no-cors' }).catch(() => {}); } catch (e) {}
-const inviteCode = parseCode((location.hash || '').slice(1));
-if (inviteCode) {
+// An invite link carries the room code after #. It is read on load and again whenever the
+// hash changes, since opening a new invite in an already open tab does not reload the page.
+function applyInvite() {
+  const inviteCode = parseCode((location.hash || '').slice(1));
+  if (!inviteCode || net.mode !== 'off') return;
   $('codeIn').value = inviteCode.toUpperCase();
   const m = $('mpInvite');
   m.textContent = 'Тебя позвали в комнату ' + inviteCode.toUpperCase() + '. Впиши имя и нажми «Войти».';
   m.hidden = false;
+  if (state !== 'menu' && state !== 'over') { backToMenuMaze(); }
   showOverlay('mpOv');
 }
+applyInvite();
+addEventListener('hashchange', applyInvite);
 refreshMpAvailability();
 
 /* ---------- sizing & loop ---------- */
