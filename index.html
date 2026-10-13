@@ -131,6 +131,7 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
 .who-list b{display:block;font-weight:500;color:var(--ink);margin-bottom:2px}
 .who-list b i{font-style:normal;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#45e8a8;margin-left:6px}
 .who-list b i.bs{color:var(--danger)}
+.who-list b i.hn{color:var(--hunter)}
 .who-list span{display:block;color:var(--muted);font-size:13.5px;line-height:1.45}
 .ico{width:36px;height:36px;display:block}
 .card p.note{font-size:13px;line-height:1.45}
@@ -182,7 +183,7 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
         <ul class="rules">
           <li><span class="tag">Фаза 1</span><span>Ты смайлик. Собери все огоньки в лабиринте и не попадись звёздам. У каждой звезды свой характер.</span></li>
           <li><span class="tag t2">Фаза 2</span><span>Лабиринт вырастает, улыбка переворачивается, и смайлик выходит на охоту. Теперь звёзды убегают: поймай всех, пока не кончилось время.</span></li>
-          <li><span class="tag t3">Уровни</span><span>9 уровней. Каждый раз новый лабиринт, больше огоньков и быстрее звёзды. На 3 и 6 уровне вместо охоты ждут боссы, на 9 уровне мега-босс.</span></li>
+          <li><span class="tag t3">Уровни</span><span>9 уровней, на каждом 3 жизни. Каждый раз новый лабиринт, больше огоньков и быстрее звёзды. На 3 и 6 уровне вместо охоты ждут боссы, на 9 уровне мега-босс.</span></li>
           <li><span class="tag t4">Кооп</span><span>Два смайлика против шести звёзд на карте вдвое больше. Пойманный смайлик падает, и друг спасает его сердцем.</span></li>
         </ul>
         <p class="keys"><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> или <kbd>WASD</kbd> · свайп на телефоне · <kbd>P</kbd> пауза · <kbd>T</kbd> цели звёзд. В коопе за одним компьютером: игрок 1 на <kbd>WASD</kbd>, игрок 2 на стрелках.</p>
@@ -217,7 +218,10 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
             <ul class="who-list">
               <li><canvas class="ico" data-item="boot" width="72" height="72"></canvas><div><b>Сапог</b><span>Скорость +15% на 10 секунд.</span></div></li>
               <li><canvas class="ico" data-item="shield" width="72" height="72"></canvas><div><b>Щит</b><span>Один раз спасает от звезды или осколка босса: щит разлетается, загорается нимб, и 2,5 секунды тебя нельзя поймать.</span></div></li>
-              <li><canvas class="ico" data-item="cloak" width="72" height="72"></canvas><div><b>Плащ-невидимка</b><span>3 секунды тебя не видят: звёзды бродят наугад, осколки пролетают насквозь. В охоте звёзды перестают убегать.</span></div></li>
+              <li><canvas class="ico" data-item="cloak" width="72" height="72"></canvas><div><b>Плащ-невидимка</b><span>3 секунды звёзды тебя не видят и бродят наугад. Встречается в первой фазе.</span></div></li>
+              <li><canvas class="ico" data-item="freeze" width="72" height="72"></canvas><div><b>Заморозка<i class="hn">охота</i></b><span>Все звёзды, боссы и осколки замирают во льду на 3 секунды. Лови, пока не оттаяли.</span></div></li>
+              <li><canvas class="ico" data-item="ghost" width="72" height="72"></canvas><div><b>Призрак<i class="hn">охота</i></b><span>4 секунды проходишь сквозь стены. Когда действие кончится, тебя вынесет в ближайший коридор.</span></div></li>
+              <li><canvas class="ico" data-item="magnet" width="72" height="72"></canvas><div><b>Магнит<i class="hn">охота</i></b><span>Ближайшая звезда 4 секунды не убегает, а сама тянется к тебе.</span></div></li>
               <li><canvas class="ico" data-item="heart" width="72" height="72"></canvas><div><b>Сердце<i>кооп</i></b><span>Появляется, когда друга поймали. Подбери его, и друг вернётся в игру. Если поймают обоих, команда теряет жизнь.</span></div></li>
             </ul>
             <p class="note">Новый предмет появляется через 15 секунд после того, как ты что-то подобрал.</p>
@@ -229,7 +233,7 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
               <li><canvas class="ico" data-star="7" width="72" height="72"></canvas><div><b>Звёзды-Близнецы<i class="bs">уровень 6</i></b><span>Сириус и Вега. Каждую нужно поймать по 2 раза, и обе стреляют.</span></div></li>
               <li><canvas class="ico" data-star="9" width="72" height="72"></canvas><div><b>Чёрная Звезда<i class="bs">уровень 9</i></b><span>Мега-босс. Нужно поймать 6 раз. Раненая, она стреляет чаще и сама прыгает по лабиринту.</span></div></li>
             </ul>
-            <p class="note">Осколок отнимает жизнь. После удара босс телепортируется и ускоряется. За каждого побеждённого босса +1 жизнь. В коопе боссы крепче.</p>
+            <p class="note">Осколок отнимает жизнь, щит его поглощает. После удара босс телепортируется и ускоряется. В коопе боссы крепче.</p>
           </section>
         </div>
       </div>
@@ -398,9 +402,13 @@ const ITEMS = {
   boot:   { color: '#5be38a', msg: 'Сапог: скорость +15% на 10 секунд', seen: 'Смайлик надел сапог' },
   shield: { color: '#9fd0ff', msg: 'Щит: спасёт от одного удара', seen: 'У смайлика щит' },
   cloak:  { color: '#b48cff', msg: 'Плащ: 3 секунды тебя не видят', seen: 'Смайлик в плаще-невидимке' },
-  heart:  { color: '#ff5c8a', msg: 'Сердце: друг снова в игре!', seen: 'Друга спасли сердцем' }
+  heart:  { color: '#ff5c8a', msg: 'Сердце: друг снова в игре!', seen: 'Друга спасли сердцем' },
+  freeze: { color: '#7fe6ff', msg: 'Заморозка: все звёзды замерли на 3 секунды!', seen: 'Смайлик заморозил звёзд' },
+  ghost:  { color: '#c9c4ff', msg: 'Призрак: 4 секунды проходишь сквозь стены', seen: 'Смайлик проходит сквозь стены' },
+  magnet: { color: '#ff6b7a', msg: 'Магнит: ближайшая звезда тянется к тебе', seen: 'Смайлик включил магнит' }
 };
-const ITEM_CODES = ['boot', 'shield', 'cloak', 'heart'];
+const ITEM_CODES = ['boot', 'shield', 'cloak', 'heart', 'freeze', 'ghost', 'magnet'];
+const FREEZE_TIME = 3, GHOST_TIME = 4, MAGNET_TIME = 4;
 const SKINS = [
   { id: 'classic', name: 'Классика', need: 1,  hint: '' },
   { id: 'cool',    name: 'Крутой',   need: 2,  hint: 'Дойди до 2 уровня' },
@@ -469,6 +477,7 @@ let cw = 0, ch = 0, dpr = 1;
 let distMap = null, distKey = '';
 let toastT = 0, toastText = '', stateMsg = null;
 let dotToggle = false, shake = 0;
+let freezeT = 0, magnetT = 0;                 // hunt buffs that act on the stars, not on one smiley
 const glowCache = {};
 let best = 0, progress = 1, skin = 0;
 try { best = +localStorage.getItem('smiley-stars-best') || 0; } catch (e) {}
@@ -497,6 +506,7 @@ function canEnter(e, x, y) {
   const v = grid[idx(x, y)];
   if (v === 0) return true;
   if (v === 2) return !!(e.isShade && e.exiting);
+  if (e.ghost > 0) return x > 0 && y > 0 && x < W - 1 && y < H - 1;   // ghost smiley: through walls, never out of the maze
   return false;
 }
 const pos = e => [e.x + e.dx * e.t, e.y + e.dy * e.t];
@@ -647,7 +657,7 @@ function makePlayers(speed, spawn) {
     const sp = spawn[k] || spawn[0];
     const p = mk(sp[0], sp[1], speed);
     Object.assign(p, {
-      id: k, isPlayer: true, down: false, boot: 0, cloak: 0, shield: !!(old[k] && old[k].shield), invuln: 0, halo: 0,
+      id: k, isPlayer: true, down: false, boot: 0, cloak: 0, ghost: 0, shield: !!(old[k] && old[k].shield), invuln: 0, halo: 0,
       hist: [], histT: 0, trail: [], m: 1, skin: k === 0 || localCoop ? skin : p2Skin
     });
     players.push(p);
@@ -663,7 +673,7 @@ function resetActors() {
     return s;
   });
   modeIdx = 0; modeT = 0; noEatT = 0; houseT = 0;
-  shards = []; distKey = '';
+  shards = []; distKey = ''; freezeT = 0; magnetT = 0;
 }
 
 function genMaze(cwc, chc, seed) {
@@ -731,7 +741,8 @@ function loadPhase2() {
   shades = [];
   const coop = gameMode === 'coop';
   if (isBossLevel()) spawnBosses(); else spawnHuntStars(coop ? 6 : 4);
-  const kit = isBossLevel() ? ['boot', 'boot', 'boot', 'shield', 'shield', 'cloak', 'cloak'] : ['boot', 'boot', 'boot', 'boot', 'cloak', 'cloak', 'cloak'];
+  freezeT = 0; magnetT = 0;
+  const kit = isBossLevel() ? ['boot', 'boot', 'shield', 'shield', 'freeze', 'ghost', 'magnet'] : ['boot', 'boot', 'boot', 'freeze', 'ghost', 'ghost', 'magnet', 'magnet'];
   for (const type of coop ? kit.concat(kit.slice(0, 4)) : kit) {
     const p = findSpot(9);
     if (p) items.push({ x: p[0], y: p[1], type, born: now });
@@ -854,6 +865,12 @@ function chooseDir(s) {
       const v = (s.x + d[0] - tgt[0]) ** 2 + (s.y + d[1] - tgt[1]) ** 2;
       if (v < bd) { bd = v; bestD = d; }
     }
+    return bestD;
+  }
+  if (s.pulled && magnetT > 0 && alivePlayers().length) {          // magnet: dragged towards the smileys
+    ensureDist();
+    let bestD = null, bv = Infinity;
+    for (const d of opts) { const v = distMap[idx(s.x + d[0], s.y + d[1])]; if (v < bv) { bv = v; bestD = d; } }
     return bestD;
   }
   // phase 2: run away from the smileys, unless every one of them is cloaked
@@ -1044,7 +1061,9 @@ function findSpot(minGap) {
 }
 function pickType() {
   const r = Math.random();
-  if (phase === 2) return isBossLevel() ? (r < 0.4 ? 'boot' : r < 0.72 ? 'shield' : 'cloak') : (r < 0.6 ? 'boot' : 'cloak');
+  if (phase === 2) return isBossLevel()
+    ? (r < 0.25 ? 'boot' : r < 0.55 ? 'shield' : r < 0.75 ? 'freeze' : r < 0.9 ? 'ghost' : 'magnet')
+    : (r < 0.4 ? 'boot' : r < 0.6 ? 'freeze' : r < 0.8 ? 'ghost' : 'magnet');
   if (r < 0.45) return 'boot';
   if (r < 0.8) return 'cloak';
   return players.every(p => p.shield) ? 'boot' : 'shield';
@@ -1086,6 +1105,12 @@ function pickup(it, p) {
   if (it.type === 'boot') p.boot = BOOT_TIME;
   else if (it.type === 'shield') p.shield = true;
   else if (it.type === 'cloak') p.cloak = CLOAK_TIME;
+  else if (it.type === 'freeze') {
+    freezeT = FREEZE_TIME;
+    for (const s of shades) if (!s.caught) { const [x, y] = center(s); burst(x, y, '#bff4ff', 12, 2.5, 0.7); }
+  }
+  else if (it.type === 'ghost') p.ghost = GHOST_TIME;
+  else if (it.type === 'magnet') pullNearest(p);
   else for (const q of players) if (q.down) revive(q);
   sfx.pick(it.type);
   if (it.type !== 'heart') {
@@ -1108,6 +1133,37 @@ function tickBuffs(dt) {
     if (p.cloak > 0) p.cloak = Math.max(0, p.cloak - dt);
     if (p.invuln > 0) p.invuln = Math.max(0, p.invuln - dt);
     if (p.halo > 0) p.halo = Math.max(0, p.halo - dt);
+    if (p.ghost > 0) { p.ghost = Math.max(0, p.ghost - dt); if (p.ghost === 0) unstick(p); }
+  }
+  if (freezeT > 0) freezeT = Math.max(0, freezeT - dt);
+  if (magnetT > 0) { magnetT = Math.max(0, magnetT - dt); if (magnetT === 0) for (const s of shades) s.pulled = false; }
+}
+// The nearest star the bots drive gets pulled towards the smileys for a few seconds
+function pullNearest(p) {
+  let bestS = null, bd = Infinity;
+  for (const s of shades) {
+    if (s.caught || s.human) continue;
+    const d = (s.x - p.x) ** 2 + (s.y - p.y) ** 2;
+    if (d < bd) { bd = d; bestS = s; }
+  }
+  for (const s of shades) s.pulled = false;
+  if (bestS) { bestS.pulled = true; magnetT = MAGNET_TIME; }
+}
+// When the ghost wears off inside a wall, step out into the nearest corridor
+function unstick(p) {
+  const nextOk = !(p.dx || p.dy) || canEnter(p, p.x + p.dx, p.y + p.dy);
+  if (grid[idx(p.x, p.y)] === 0 && (nextOk || p.t < 0.5)) { if (!nextOk) { p.dx = p.dy = 0; p.t = 0; } return; }
+  const [fx, fy] = pos(p);
+  const sx = Math.min(W - 1, Math.max(0, Math.round(fx))), sy = Math.min(H - 1, Math.max(0, Math.round(fy)));
+  const seen = new Uint8Array(W * H), q = [[sx, sy]];
+  seen[idx(sx, sy)] = 1;
+  while (q.length) {
+    const [x, y] = q.shift();
+    if (grid[idx(x, y)] === 0) { p.x = x; p.y = y; p.dx = p.dy = 0; p.t = 0; return; }
+    for (const d of DIRS) {
+      const nx = x + d[0], ny = y + d[1];
+      if (inb(nx, ny) && !seen[idx(nx, ny)]) { seen[idx(nx, ny)] = 1; q.push([nx, ny]); }
+    }
   }
 }
 function recordHist(dt) {
@@ -1134,6 +1190,7 @@ function startGame(mode, local) {
 }
 function nextLevel() {
   level++;
+  lives = 3;                                                      // every level starts with three lives
   seed1 = 1 + rnd(2147483646);
   loadPhase1();
   updateCamera(0);
@@ -1310,7 +1367,6 @@ function bossHit(s) {
     if (shades.every(z => !z.boss || z.caught)) {
       for (const z of shards) { const [zx, zy] = center(z); burst(zx, zy, SHARD, 6, 2, 0.5); }
       shards = [];
-      if (lives < MAX_LIVES) lives++;
       finishHunt(true);
     } else toast(STAR_TYPES[s.type].name + ' повержена! Осталась вторая', 2);
     return;
@@ -1325,7 +1381,7 @@ function finishHunt(won) {
   if (won) {
     const bonus = Math.ceil(timeLeft) * 20;
     score += bonus;
-    levelNote = (isBossLevel() ? 'Босс повержен! +1 жизнь. ' : 'Все звёзды пойманы! ') + 'Бонус за время: ' + bonus;
+    levelNote = (isBossLevel() ? 'Босс повержен! ' : 'Все звёзды пойманы! ') + 'Бонус за время: ' + bonus;
   } else levelNote = 'Звёзды ускользнули, но вы идёте дальше';
   fireworkT = 0;
   setState('levelup');
@@ -1506,12 +1562,14 @@ function update(dt) {
     stepItems(dt);
     recordHist(dt);
     for (const p of players) stepPlayer(p, dt);
-    for (const s of shades) { if (s.boss && !s.caught) stepBossExtras(s, dt); stepShade(s, dt); }
-    for (let k = shards.length - 1; k >= 0; k--) {
-      const z = shards[k];
-      z.life -= dt;
-      if (z.life <= 0) { const [x, y] = center(z); burst(x, y, SHARD, 6, 2, 0.5); shards.splice(k, 1); continue; }
-      stepShard(z, dt);
+    if (freezeT <= 0) {                                           // frozen: stars, bosses and shards all stand still
+      for (const s of shades) { if (s.boss && !s.caught) stepBossExtras(s, dt); stepShade(s, dt); }
+      for (let k = shards.length - 1; k >= 0; k--) {
+        const z = shards[k];
+        z.life -= dt;
+        if (z.life <= 0) { const [x, y] = center(z); burst(x, y, SHARD, 6, 2, 0.5); shards.splice(k, 1); continue; }
+        stepShard(z, dt);
+      }
     }
     collide2();
     if (state === 'play2') { trails(); checkHuntTime(); }
@@ -1675,6 +1733,33 @@ function drawItemIcon(c, type) {
     c.beginPath(); c.ellipse(-0.17, -0.17, 0.08, 0.05, -0.6, 0, Math.PI * 2); c.fill();
     c.strokeStyle = '#ffffff'; c.lineWidth = 0.06;
     c.beginPath(); c.moveTo(0, -0.06); c.lineTo(0, 0.14); c.moveTo(-0.1, 0.04); c.lineTo(0.1, 0.04); c.stroke();
+  } else if (type === 'freeze') {
+    c.strokeStyle = '#e6fbff'; c.lineWidth = 0.06;
+    for (let k = 0; k < 6; k++) {
+      const a = k * Math.PI / 3, bx = Math.cos(a) * 0.22, by = Math.sin(a) * 0.22;
+      c.beginPath(); c.moveTo(0, 0); c.lineTo(Math.cos(a) * 0.38, Math.sin(a) * 0.38); c.stroke();
+      for (const sd of [-1, 1]) { const b = a + sd * 0.75; c.beginPath(); c.moveTo(bx, by); c.lineTo(bx + Math.cos(b) * 0.12, by + Math.sin(b) * 0.12); c.stroke(); }
+    }
+    c.fillStyle = '#7fe6ff'; c.beginPath(); c.arc(0, 0, 0.08, 0, Math.PI * 2); c.fill();
+  } else if (type === 'ghost') {
+    const g = c.createLinearGradient(0, -0.36, 0, 0.34);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#a9a2ff');
+    c.fillStyle = g;
+    c.beginPath(); c.moveTo(-0.28, 0.32); c.lineTo(-0.28, -0.06); c.arc(0, -0.06, 0.28, Math.PI, 0); c.lineTo(0.28, 0.32);
+    c.lineTo(0.14, 0.22); c.lineTo(0, 0.32); c.lineTo(-0.14, 0.22); c.closePath(); c.fill();
+    c.strokeStyle = 'rgba(60,40,140,.5)'; c.lineWidth = 0.03; c.stroke();
+    c.fillStyle = '#1b1240';
+    c.beginPath(); c.ellipse(-0.1, -0.08, 0.05, 0.08, 0, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(0.1, -0.08, 0.05, 0.08, 0, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(0, 0.1, 0.05, 0.06, 0, 0, Math.PI * 2); c.fill();
+  } else if (type === 'magnet') {
+    c.lineCap = 'butt'; c.lineWidth = 0.16;
+    c.strokeStyle = '#ff4d5e';
+    c.beginPath(); c.moveTo(-0.2, 0.16); c.lineTo(-0.2, -0.04); c.arc(0, -0.04, 0.2, Math.PI, 0); c.lineTo(0.2, 0.16); c.stroke();
+    c.strokeStyle = '#e8eef8';
+    c.beginPath(); c.moveTo(-0.2, 0.16); c.lineTo(-0.2, 0.32); c.moveTo(0.2, 0.16); c.lineTo(0.2, 0.32); c.stroke();
+    c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 0.035;
+    c.beginPath(); c.arc(0, -0.04, 0.2, Math.PI * 1.15, Math.PI * 1.45); c.stroke();
   } else {
     const g = c.createLinearGradient(0, -0.38, 0, 0.36);
     g.addColorStop(0, '#c9a6ff'); g.addColorStop(1, '#6b3fd6');
@@ -1881,10 +1966,11 @@ function drawShade(s) {
   if (s.boss) { drawBoss(s); return; }
   const [cx, cy] = center(s);
   const scared = phase === 2;
+  const frozen = scared && freezeT > 0;
   const blink = scared && timeLeft < 20 && Math.floor(now * 6) % 2;
-  const col = scared ? (blink ? '#e8e4ff' : '#6f7fd6') : s.color;
+  const col = frozen ? '#a8ecff' : scared ? (s.pulled && magnetT > 0 ? '#ff8a96' : blink ? '#e8e4ff' : '#6f7fd6') : s.color;
   const bob = s.inHouse ? Math.sin(now * 4 + s.i * 1.3) * 0.16 : 0;
-  const shiver = scared ? Math.sin(now * 40 + s.i) * 0.025 : 0;
+  const shiver = scared && !frozen ? Math.sin(now * 40 + s.i) * 0.025 : 0;
   const angry = phase === 1 && s.key === 'blinky' && elroyLevel() > 0;
   const free = !s.inHouse && !s.exiting;
   const lost = phase === 1 && free && !s.human && (!visiblePlayers().length || (showTargets && net.mode !== 'guest' && !targetFor(s)));
@@ -1897,7 +1983,8 @@ function drawShade(s) {
     ctx.beginPath(); ctx.arc(0, 0, 0.68, 0, Math.PI * 2); ctx.stroke();
     ctx.setLineDash([]);
   }
-  paintStar(ctx, col, s.i, s.dx, s.dy, now, { scared, angry, lost });
+  paintStar(ctx, col, s.i, frozen ? 0 : s.dx, frozen ? 0 : s.dy, frozen ? 0 : now, { scared, angry, lost });
+  if (frozen) iceShell(0.62);
   if (mine) labelText(ctx, 'ТЫ', -26, 12, '#ffffff');
   else if (s.human && net.names[s.key]) labelText(ctx, net.names[s.key], -26, 11, s.color);
   ctx.restore();
@@ -1938,6 +2025,42 @@ function drawBoss(s) {
   ctx.scale(size, size);
   paintStar(ctx, d.mega ? '#24123a' : d.color, s.i + 3, s.dx, s.dy, now, { glow: false, angry: true, outline: d.mega ? d.color : null, pupil: d.mega ? d.color : null });
   if (d.key === 'king') paintCrown(ctx, -0.58, 0.24);
+  if (freezeT > 0) iceShell(0.72);
+  ctx.restore();
+}
+// A block of ice around a frozen star, drawn around (0,0) in the current units
+function iceShell(r) {
+  ctx.save();
+  ctx.globalAlpha = 0.22 + 0.1 * Math.min(1, freezeT);
+  ctx.fillStyle = '#bff4ff';
+  ctx.beginPath();
+  for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3 + 0.3; const x = Math.cos(a) * r, y = Math.sin(a) * r; k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+  ctx.closePath(); ctx.fill();
+  ctx.globalAlpha = 0.85; ctx.strokeStyle = '#e6fbff'; ctx.lineWidth = 0.04; ctx.stroke();
+  ctx.globalAlpha = 0.7; ctx.lineWidth = 0.025;
+  ctx.beginPath(); ctx.moveTo(-r * 0.5, -r * 0.55); ctx.lineTo(-r * 0.15, -r * 0.2); ctx.moveTo(r * 0.2, -r * 0.6); ctx.lineTo(r * 0.35, -r * 0.35); ctx.stroke();
+  ctx.restore();
+}
+function drawMagnetBeam() {
+  if (magnetT <= 0) return;
+  const s = shades.find(z => z.pulled && !z.caught);
+  if (!s) return;
+  const [sx, sy] = center(s);
+  let bp = null, bd = Infinity;
+  for (const p of alivePlayers()) { const [x, y] = center(p); const d = (x - sx) ** 2 + (y - sy) ** 2; if (d < bd) { bd = d; bp = [x, y]; } }
+  if (!bp) return;
+  const len = Math.hypot(sx - bp[0], sy - bp[1]) || 1, nx = -(sy - bp[1]) / len, ny = (sx - bp[0]) / len;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineWidth = 0.07; ctx.lineCap = 'round';
+  for (const [col, ph] of [['#ff4d5e', 0], ['#4dc3ff', Math.PI]]) {
+    ctx.strokeStyle = col; ctx.globalAlpha = 0.75 * Math.min(1, magnetT);
+    ctx.beginPath();
+    for (let k = 0; k <= 20; k++) {
+      const f = k / 20, w = Math.sin(f * Math.PI * Math.max(2, len / 1.5) - now * 12 + ph) * 0.2 * Math.sin(f * Math.PI);
+      const x = bp[0] + (sx - bp[0]) * f + nx * w, y = bp[1] + (sy - bp[1]) * f + ny * w;
+      k ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    }
+    ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -1954,6 +2077,7 @@ function drawSmiley(p) {
   let alpha = 1;
   if (p.cloak > 0) alpha = iWatchAsStar ? 0.07 : 0.28 + 0.1 * Math.sin(now * 18);
   if (p.invuln > 0 && Math.floor(now * 12) % 2) alpha *= 0.5;
+  if (p.ghost > 0) alpha *= 0.55 + 0.15 * Math.sin(now * 10);
   if (p.down) alpha = 0.6;
   // the flip of the smile: animates whenever the smiley changes mood
   const want = p.down ? -0.5 : (hunt ? -1 : 1);
@@ -1992,6 +2116,15 @@ function drawSmiley(p) {
     fx: p.fx, fy: p.fy, blink: (now + p.id * 1.7) % 3.4 < 0.12, skin: p.skin, t: now, p2: p.id === 1
   });
   ctx.restore();
+  if (p.ghost > 0) {                                               // ghost: a misty ring, flickering as it runs out
+    ctx.save();
+    ctx.globalAlpha = p.ghost < 1 && Math.floor(now * 10) % 2 ? 0.3 : 0.85;
+    ctx.strokeStyle = '#e8e4ff'; ctx.lineWidth = 0.05;
+    ctx.setLineDash([0.05, 0.12]); ctx.lineDashOffset = now * 0.8;
+    ctx.beginPath(); ctx.arc(0, 0, R * 1.35, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
   if (p.cloak > 0) {
     ctx.strokeStyle = 'rgba(180,140,255,.85)'; ctx.lineWidth = 0.045;
     ctx.setLineDash([0.12, 0.1]); ctx.lineDashOffset = -now;
@@ -2111,6 +2244,9 @@ function drawBuffBar(p, row) {
   const slots = [];
   if (p.boot > 0) slots.push(['boot', p.boot / BOOT_TIME, Math.ceil(p.boot)]);
   if (p.cloak > 0) slots.push(['cloak', p.cloak / CLOAK_TIME, Math.ceil(p.cloak)]);
+  if (p.ghost > 0) slots.push(['ghost', p.ghost / GHOST_TIME, Math.ceil(p.ghost)]);
+  if (freezeT > 0 && row === 0) slots.push(['freeze', freezeT / FREEZE_TIME, Math.ceil(freezeT)]);
+  if (magnetT > 0 && row === 0) slots.push(['magnet', magnetT / MAGNET_TIME, Math.ceil(magnetT)]);
   if (p.shield) slots.push(['shield', 1, null]);
   const R = 17;
   slots.forEach(([type, frac, secs], k) => {
@@ -2308,6 +2444,7 @@ function draw() {
 
   if (state !== 'menu') {
     drawShards();
+    drawMagnetBeam();
     for (const sh of shades) drawShade(sh);
     for (const p of players) drawSmiley(p);
   }
@@ -2324,6 +2461,12 @@ function draw() {
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   if (vig) ctx.drawImage(vig, 0, 0, cw, ch);
+  if (freezeT > 0 && phase === 2) {                                 // frost creeping in from the edges
+    const a = Math.min(1, freezeT / 0.4) * 0.5;
+    const fg = ctx.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.3, cw / 2, ch / 2, Math.hypot(cw, ch) * 0.55);
+    fg.addColorStop(0, 'rgba(160,230,255,0)'); fg.addColorStop(1, `rgba(190,240,255,${a})`);
+    ctx.fillStyle = fg; ctx.fillRect(0, 0, cw, ch);
+  }
   if (state === 'dying' && stateT < 0.4 && !reduceMotion) {
     ctx.fillStyle = `rgba(255,60,90,${0.28 * (1 - stateT / 0.4)})`;
     ctx.fillRect(0, 0, cw, ch);
@@ -2606,9 +2749,9 @@ function entSnap(e) { const [x, y] = pos(e); return [r2(x), r2(y), dirCode(e.dx,
 function makeSnapshot() {
   return {
     k: ++net.seq, ht: Math.round(performance.now()), st: state, sT: r2(stateT), ph: phase, lvl: level, gm: gameMode === 'coop' ? 1 : 0, s1: seed1,
-    sc: score, lv: lives, tl: r1(timeLeft), tm: timeMax, md: modeIdx, el: elroyLevel(), dl: dotsLeft, sd: phase === 2 ? mazeSeed : 0, ln: state === 'levelup' ? levelNote : '',
-    p: players.map(p => entSnap(p).concat(dirCode(p.fx, p.fy), (p.down ? 1 : 0) | (p.shield ? 2 : 0) | (p.invuln > 0 ? 4 : 0), p.skin | 0, r1(p.boot), r1(p.cloak), r1(p.halo))),
-    s: shades.map(s => entSnap(s).concat((s.inHouse ? 1 : 0) | (s.exiting ? 2 : 0) | (s.caught ? 4 : 0) | (s.human ? 8 : 0) | (s.inv > 0 ? 16 : 0), s.type, s.hp | 0, s.maxHp | 0)),
+    sc: score, lv: lives, tl: r1(timeLeft), tm: timeMax, fz: r1(freezeT), mt: r1(magnetT), md: modeIdx, el: elroyLevel(), dl: dotsLeft, sd: phase === 2 ? mazeSeed : 0, ln: state === 'levelup' ? levelNote : '',
+    p: players.map(p => entSnap(p).concat(dirCode(p.fx, p.fy), (p.down ? 1 : 0) | (p.shield ? 2 : 0) | (p.invuln > 0 ? 4 : 0), p.skin | 0, r1(p.boot), r1(p.cloak), r1(p.halo), r1(p.ghost))),
+    s: shades.map(s => entSnap(s).concat((s.inHouse ? 1 : 0) | (s.exiting ? 2 : 0) | (s.caught ? 4 : 0) | (s.human ? 8 : 0) | (s.inv > 0 ? 16 : 0) | (s.pulled ? 32 : 0), s.type, s.hp | 0, s.maxHp | 0)),
     z: shards.map(z => { const [x, y] = pos(z); return [r2(x), r2(y)]; }),
     d: phase === 1 ? packDots() : '',
     it: items.map(o => [o.x, o.y, ITEM_CODES.indexOf(o.type)]),
@@ -2707,7 +2850,7 @@ function applyView(A, B, al) {
   levelNote = typeof g.ln === 'string' ? g.ln.slice(0, 80) : '';
   if (typeof g.st === 'string' && g.st !== state) setViewState(g.st);
   stateT = A.st === B.st ? (+A.sT || 0) + ((+B.sT || 0) - (+A.sT || 0)) * al : (+B.sT || 0);
-  score = g.sc | 0; lives = g.lv | 0; timeLeft = +g.tl || 0; timeMax = +g.tm || 0;
+  score = g.sc | 0; lives = g.lv | 0; timeLeft = +g.tl || 0; timeMax = +g.tm || 0; freezeT = +g.fz || 0; magnetT = +g.mt || 0;
   modeIdx = Math.min(MODES.length - 1, Math.max(0, g.md | 0)); v.el = g.el | 0;
   const dl = g.dl | 0;
   if (phase === 1 && v.dl >= 0 && dl < v.dl) { dotToggle = !dotToggle; tone(dotToggle ? 660 : 520, 0.05, 'triangle', 0.02); }
@@ -2731,7 +2874,7 @@ function applyView(A, B, al) {
     if (fc && (fc[0] || fc[1])) { o.fx = fc[0]; o.fy = fc[1]; }
     const fl = b[4] | 0;
     o.down = !!(fl & 1); o.shield = !!(fl & 2); o.invuln = (fl & 4) ? 1 : 0;
-    o.skin = clampSkin(b[5]); o.boot = +b[6] || 0; o.cloak = +b[7] || 0; o.halo = +b[8] || 0;
+    o.skin = clampSkin(b[5]); o.boot = +b[6] || 0; o.cloak = +b[7] || 0; o.halo = +b[8] || 0; o.ghost = +b[9] || 0;
   }
   players = v.players;
   const ns = Math.min(8, B.s.length);
@@ -2745,7 +2888,7 @@ function applyView(A, B, al) {
     const s = viewEnt(v.shades[i], a, b, al);
     if (s.type !== tp) { const d = STAR_TYPES[tp]; s.type = tp; s.key = d.key; s.color = d.color; s.boss = !!d.boss; }
     const fl = b[3] | 0;
-    s.inHouse = !!(fl & 1); s.exiting = !!(fl & 2); s.caught = !!(fl & 4); s.human = (fl & 8) ? 'friend' : null; s.inv = (fl & 16) ? 1 : 0;
+    s.inHouse = !!(fl & 1); s.exiting = !!(fl & 2); s.caught = !!(fl & 4); s.human = (fl & 8) ? 'friend' : null; s.inv = (fl & 16) ? 1 : 0; s.pulled = !!(fl & 32);
     s.hp = b[5] | 0; s.maxHp = b[6] | 0;
   }
   shades = v.shades;
@@ -3261,6 +3404,9 @@ if (location.hostname === 'localhost') window.__ss = {
     if (ph === 2) startGrow();
   },
   clearDots() { for (let i = 0; i < W * H; i++) dots[i] = 0; dotsLeft = 1; },
+  give(type) { const p = players[0]; if (!p) return; const it = { x: p.x, y: p.y, type, born: now }; items.push(it); pickup(it, p); },
+  steer(dx, dy) { want(dx, dy, 0); },
+  buffs: () => ({ freezeT, magnetT, ghost: players[0] && players[0].ghost, pulled: shades.filter(s => s.pulled).map(s => s.key), p: players[0] && [players[0].x, players[0].y, grid[idx(players[0].x, players[0].y)]] }),
   toBoss() { const b = shades.find(s => s.boss && !s.caught); if (b && players[0]) { players[0].x = b.x; players[0].y = b.y; players[0].t = 0; players[0].dx = players[0].dy = 0; updateCamera(0); } },
   info: () => ({ state, phase, level, W, H, dotsLeft, players: players.map(p => [p.x, p.y, p.down]), shades: shades.map(s => [s.key, s.x, s.y, s.hp]), shards: shards.length, lives, score }),
   mazeCheck(n) {
