@@ -229,12 +229,12 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
           <section>
             <h3>Предметы</h3>
             <ul class="who-list">
-              <li><canvas class="ico" data-item="boot" width="72" height="72"></canvas><div><b>Сапог</b><span>Скорость +15% на 10 секунд.</span></div></li>
-              <li><canvas class="ico" data-item="shield" width="72" height="72"></canvas><div><b>Щит</b><span>Один раз спасает от звезды или осколка босса: щит разлетается, загорается нимб, и 2,5 секунды тебя нельзя поймать.</span></div></li>
+              <li><canvas class="ico" data-item="boot" width="72" height="72"></canvas><div><b>Сапог</b><span>Скорость +15% на 10 секунд. Встречается в первой фазе.</span></div></li>
+              <li><canvas class="ico" data-item="shield" width="72" height="72"></canvas><div><b>Щит</b><span>Один раз спасает от звезды: щит разлетается, загорается нимб, и 2,5 секунды тебя нельзя поймать. Встречается в первой фазе.</span></div></li>
               <li><canvas class="ico" data-item="cloak" width="72" height="72"></canvas><div><b>Плащ-невидимка</b><span>3 секунды звёзды тебя не видят и бродят наугад. Встречается в первой фазе.</span></div></li>
-              <li><canvas class="ico" data-item="freeze" width="72" height="72"></canvas><div><b>Заморозка<i class="hn">охота</i></b><span>Все звёзды, боссы и осколки замирают во льду на 3 секунды. Лови, пока не оттаяли.</span></div></li>
-              <li><canvas class="ico" data-item="ghost" width="72" height="72"></canvas><div><b>Призрак<i class="hn">охота</i></b><span>4 секунды проходишь сквозь стены. Когда действие кончится, тебя вынесет в ближайший коридор.</span></div></li>
-              <li><canvas class="ico" data-item="magnet" width="72" height="72"></canvas><div><b>Магнит<i class="hn">охота</i></b><span>Ближайшая звезда 4 секунды не убегает, а сама тянется к тебе.</span></div></li>
+              <li><canvas class="ico" data-item="freeze" width="72" height="72"></canvas><div><b>Заморозка<i class="hn">охота</i></b><span>Все звёзды, боссы и осколки вмерзают в ледяные глыбы на 3 секунды. Лови, пока лёд не треснул.</span></div></li>
+              <li><canvas class="ico" data-item="ghost" width="72" height="72"></canvas><div><b>Призрак<i class="hn">охота</i></b><span>4 секунды проходишь сквозь стены, и осколки босса пролетают насквозь. Но ловить звёзд призраком нельзя. Когда действие кончится, тебя вынесет в ближайший коридор.</span></div></li>
+              <li><canvas class="ico" data-item="magnet" width="72" height="72"></canvas><div><b>Магнит<i class="hn">охота</i></b><span>Ближайшая звезда 4 секунды не убегает, а медленно плывёт к тебе.</span></div></li>
               <li><canvas class="ico" data-item="heart" width="72" height="72"></canvas><div><b>Сердце<i>кооп</i></b><span>Появляется, когда друга поймали. Подбери его, и друг вернётся в игру. Если поймают обоих, команда теряет жизнь.</span></div></li>
             </ul>
             <p class="note">Новый предмет появляется через 15 секунд после того, как ты что-то подобрал.</p>
@@ -246,7 +246,7 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
               <li><canvas class="ico" data-star="7" width="72" height="72"></canvas><div><b>Звёзды-Близнецы<i class="bs">уровень 6</i></b><span>Сириус и Вега. Каждую нужно поймать по 2 раза, и обе стреляют.</span></div></li>
               <li><canvas class="ico" data-star="9" width="72" height="72"></canvas><div><b>Чёрная Звезда<i class="bs">уровень 9</i></b><span>Мега-босс. Нужно поймать 6 раз. Раненая, она стреляет чаще и сама прыгает по лабиринту.</span></div></li>
             </ul>
-            <p class="note">Осколок отнимает жизнь, щит его поглощает. После удара босс телепортируется и ускоряется. В коопе боссы крепче.</p>
+            <p class="note">Осколок отнимает жизнь. Призрака он пролетает насквозь, а заморозка его останавливает. После удара босс телепортируется и ускоряется. В коопе боссы крепче.</p>
           </section>
         </div>
       </div>
@@ -464,7 +464,7 @@ const ITEMS = {
   cloak:  { color: '#b48cff', msg: 'Плащ: 3 секунды тебя не видят', seen: 'Смайлик в плаще-невидимке' },
   heart:  { color: '#ff5c8a', msg: 'Сердце: друг снова в игре!', seen: 'Друга спасли сердцем' },
   freeze: { color: '#7fe6ff', msg: 'Заморозка: все звёзды замерли на 3 секунды!', seen: 'Смайлик заморозил звёзд' },
-  ghost:  { color: '#c9c4ff', msg: 'Призрак: 4 секунды проходишь сквозь стены', seen: 'Смайлик проходит сквозь стены' },
+  ghost:  { color: '#c9c4ff', msg: 'Призрак: 4 секунды сквозь стены, но ловить нельзя', seen: 'Смайлик проходит сквозь стены' },
   magnet: { color: '#ff6b7a', msg: 'Магнит: ближайшая звезда тянется к тебе', seen: 'Смайлик включил магнит' }
 };
 const ITEM_CODES = ['boot', 'shield', 'cloak', 'heart', 'freeze', 'ghost', 'magnet'];
@@ -802,7 +802,7 @@ function loadPhase2() {
   const coop = gameMode === 'coop';
   if (isBossLevel()) spawnBosses(); else spawnHuntStars(coop ? 6 : 4);
   freezeT = 0; magnetT = 0;
-  const kit = isBossLevel() ? ['boot', 'boot', 'shield', 'shield', 'freeze', 'ghost', 'magnet'] : ['boot', 'boot', 'boot', 'freeze', 'ghost', 'ghost', 'magnet', 'magnet'];
+  const kit = isBossLevel() ? ['freeze', 'freeze', 'ghost', 'ghost', 'magnet', 'magnet'] : ['freeze', 'freeze', 'ghost', 'ghost', 'magnet', 'magnet', 'magnet'];
   for (const type of coop ? kit.concat(kit.slice(0, 4)) : kit) {
     const p = findSpot(9);
     if (p) items.push({ x: p[0], y: p[1], type, born: now });
@@ -1008,7 +1008,7 @@ function stepWalker(p, dt, speed, onArrive) {
 function stepPlayer(p, dt) { if (!p.down) stepWalker(p, dt, p.speed * (p.boot > 0 ? BOOT_MULT : 1), arrive); }
 
 function starSpeed(s) {
-  if (phase === 2) return s.human ? 7.0 * lvlK() : s.speed;
+  if (phase === 2) return (s.human ? 7.0 * lvlK() : s.speed) * (s.pulled && magnetT > 0 ? 0.45 : 1);   // a magnet drags its star in slowly
   let sp = s.speed;
   if (s.exiting) sp *= 0.55;
   else if (s.key === 'blinky') { const e = elroyLevel(); if (e === 1) sp *= 1.05; else if (e === 2) sp *= 1.1; }
@@ -1121,9 +1121,7 @@ function findSpot(minGap) {
 }
 function pickType() {
   const r = Math.random();
-  if (phase === 2) return isBossLevel()
-    ? (r < 0.25 ? 'boot' : r < 0.55 ? 'shield' : r < 0.75 ? 'freeze' : r < 0.9 ? 'ghost' : 'magnet')
-    : (r < 0.4 ? 'boot' : r < 0.6 ? 'freeze' : r < 0.8 ? 'ghost' : 'magnet');
+  if (phase === 2) return r < 0.35 ? 'freeze' : r < 0.65 ? 'ghost' : 'magnet';   // the hunt only has the evil smiley's buffs
   if (r < 0.45) return 'boot';
   if (r < 0.8) return 'cloak';
   return players.every(p => p.shield) ? 'boot' : 'shield';
@@ -1167,6 +1165,7 @@ function pickup(it, p) {
   else if (it.type === 'cloak') p.cloak = CLOAK_TIME;
   else if (it.type === 'freeze') {
     freezeT = FREEZE_TIME;
+    tone(1900, 0.3, 'triangle', 0.04, 700); later(90, () => tone(2600, 0.2, 'sine', 0.03, 1400));
     for (const s of shades) if (!s.caught) { const [x, y] = center(s); burst(x, y, '#bff4ff', 12, 2.5, 0.7); }
   }
   else if (it.type === 'ghost') p.ghost = GHOST_TIME;
@@ -1195,7 +1194,7 @@ function tickBuffs(dt) {
     if (p.halo > 0) p.halo = Math.max(0, p.halo - dt);
     if (p.ghost > 0) { p.ghost = Math.max(0, p.ghost - dt); if (p.ghost === 0) unstick(p); }
   }
-  if (freezeT > 0) freezeT = Math.max(0, freezeT - dt);
+  if (freezeT > 0) { freezeT = Math.max(0, freezeT - dt); if (freezeT === 0) shatterIce(); }
   if (magnetT > 0) { magnetT = Math.max(0, magnetT - dt); if (magnetT === 0) for (const s of shades) s.pulled = false; }
 }
 // The nearest star the bots drive gets pulled towards the smileys for a few seconds
@@ -1350,7 +1349,7 @@ function respawnAfterDeath() {
   setState('ready');
 }
 function deathText() {
-  if (phase === 2) return 'Осколки босса оказались быстрее. Щит поглощает один осколок, а под плащом они летят насквозь.';
+  if (phase === 2) return 'Осколки босса оказались быстрее. Призрака они пролетают насквозь, а заморозка останавливает их на месте.';
   if (gameMode === 'coop') return 'Звёзды поймали обоих смайликов. Держитесь ближе: так проще спасти друга сердцем.';
   return 'Звёзды поймали смайлик. Включи «Цели», чтобы видеть, кто куда метит, и подбирай щит.';
 }
@@ -1368,7 +1367,7 @@ function collide1() {
 }
 function collide2() {
   for (const p of players) {
-    if (p.down) continue;
+    if (p.down || p.ghost > 0) continue;                           // a ghost can't grab stars, and shards fly through it
     const [ax, ay] = pos(p);
     for (const s of shades) {
       if (s.caught) continue;
@@ -1406,6 +1405,7 @@ function catchShade(s) {
   score += 500;
   const [x, y] = center(s);
   catchFx(x, y, s.color);
+  if (freezeT > 0) burst(x, y, '#d8f6ff', 16, 4, 0.7);           // caught in the ice: the block bursts
   sfx.caught();
   netEvent(4, s.type, r2(x), r2(y));
   if (shades.every(z => z.caught)) finishHunt(true);
@@ -2124,7 +2124,7 @@ function drawShade(s) {
     ctx.setLineDash([]);
   }
   paintStar(ctx, col, s.i, frozen ? 0 : s.dx, frozen ? 0 : s.dy, frozen ? 0 : now, { scared, angry, lost });
-  if (frozen) iceShell(0.62);
+  if (frozen) iceShell(0.55);
   if (mine) labelText(ctx, 'ТЫ', -26, 12, '#ffffff');
   else if (s.human && net.names[s.key]) labelText(ctx, net.names[s.key], -26, 11, s.color);
   ctx.restore();
@@ -2168,18 +2168,58 @@ function drawBoss(s) {
   if (freezeT > 0) iceShell(0.72);
   ctx.restore();
 }
-// A block of ice around a frozen star, drawn around (0,0) in the current units
+// A block of ice around a frozen star, drawn over it in the current units so the star shows through.
+// It snaps shut when it forms, cracks and shakes in the last moments, then shatters (shatterIce).
 function iceShell(r) {
+  const formed = Math.min(1, 0.55 + (FREEZE_TIME - freezeT) / 0.18 * 0.45);
+  const thaw = freezeT < 0.7;
+  const s = r * 1.15 * formed;
   ctx.save();
-  ctx.globalAlpha = 0.22 + 0.1 * Math.min(1, freezeT);
-  ctx.fillStyle = '#bff4ff';
+  if (thaw && !reduceMotion) ctx.translate(Math.sin(now * 70) * 0.025, Math.cos(now * 53) * 0.015);
+  ctx.rotate(-0.08);
+  const g = ctx.createLinearGradient(-s, -s, s, s);
+  g.addColorStop(0, 'rgba(240,253,255,.7)'); g.addColorStop(0.45, 'rgba(160,225,255,.42)'); g.addColorStop(1, 'rgba(80,160,235,.58)');
+  ctx.fillStyle = g;
+  roundRectPath(-s, -s, 2 * s, 2 * s, s * 0.26); ctx.fill();
+  ctx.lineWidth = 0.055; ctx.strokeStyle = 'rgba(245,253,255,.95)'; ctx.stroke();
+  ctx.lineWidth = 0.022; ctx.strokeStyle = 'rgba(255,255,255,.45)';                // inner bevel
+  roundRectPath(-s * 0.8, -s * 0.8, s * 1.6, s * 1.6, s * 0.18); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.75)';                                        // shine
+  ctx.beginPath(); ctx.moveTo(-s * 0.78, -s * 0.22); ctx.lineTo(-s * 0.22, -s * 0.78); ctx.lineTo(-s * 0.04, -s * 0.78); ctx.lineTo(-s * 0.78, -s * 0.04); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.4)';
+  ctx.beginPath(); ctx.moveTo(s * 0.45, s * 0.78); ctx.lineTo(s * 0.78, s * 0.45); ctx.lineTo(s * 0.78, s * 0.6); ctx.lineTo(s * 0.6, s * 0.78); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = thaw ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.5)';      // cracks spread as it thaws
+  ctx.lineWidth = thaw ? 0.035 : 0.02;
   ctx.beginPath();
-  for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3 + 0.3; const x = Math.cos(a) * r, y = Math.sin(a) * r; k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
-  ctx.closePath(); ctx.fill();
-  ctx.globalAlpha = 0.85; ctx.strokeStyle = '#e6fbff'; ctx.lineWidth = 0.04; ctx.stroke();
-  ctx.globalAlpha = 0.7; ctx.lineWidth = 0.025;
-  ctx.beginPath(); ctx.moveTo(-r * 0.5, -r * 0.55); ctx.lineTo(-r * 0.15, -r * 0.2); ctx.moveTo(r * 0.2, -r * 0.6); ctx.lineTo(r * 0.35, -r * 0.35); ctx.stroke();
+  ctx.moveTo(s * 0.15, -s); ctx.lineTo(s * 0.05, -s * 0.45); ctx.lineTo(s * 0.35, -s * 0.12);
+  ctx.moveTo(s, s * 0.3); ctx.lineTo(s * 0.5, s * 0.2); ctx.lineTo(s * 0.38, s * 0.6);
+  if (thaw) { ctx.moveTo(-s, s * 0.4); ctx.lineTo(-s * 0.4, s * 0.32); ctx.lineTo(-s * 0.2, s); ctx.moveTo(-s * 0.3, -s); ctx.lineTo(-s * 0.12, -s * 0.48); ctx.lineTo(-s * 0.4, -s * 0.2); }
+  ctx.stroke();
+  ctx.fillStyle = '#ffffff';                                                     // frost glints
+  for (let i = 0; i < 3; i++) {
+    ctx.globalAlpha = 0.4 + 0.6 * Math.abs(Math.sin(now * 5 + i * 2.1));
+    const x = Math.cos(i * 2.3 + 0.6) * s * 0.62, y = Math.sin(i * 1.7 + 1.1) * s * 0.62, k = 0.035 * (1 + 0.5 * Math.sin(now * 7 + i));
+    ctx.fillRect(x - k / 2, y - k * 1.5, k, k * 3); ctx.fillRect(x - k * 1.5, y - k / 2, k * 3, k);
+  }
   ctx.restore();
+}
+function roundRectPath(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+// The ice breaks: a spray of shards around every star that was frozen
+function shatterIce() {
+  if (phase !== 2) return;
+  for (const s of shades) {
+    if (s.caught) continue;
+    const [x, y] = center(s);
+    burst(x, y, '#d8f6ff', 16, 4, 0.7); burst(x, y, '#ffffff', 6, 2.5, 0.5);
+    rings.push({ x, y, r: 0.4, life: 0.35, max: 0.35, col: '#bff4ff' });
+  }
+  tone(2400, 0.12, 'square', 0.025, 900); later(60, () => tone(1600, 0.15, 'triangle', 0.025, 500));
 }
 function drawMagnetBeam() {
   if (magnetT <= 0) return;
@@ -2991,7 +3031,7 @@ function applyView(A, B, al) {
   levelNote = typeof g.ln === 'string' ? g.ln.slice(0, 80) : '';
   if (typeof g.st === 'string' && g.st !== state) setViewState(g.st);
   stateT = A.st === B.st ? (+A.sT || 0) + ((+B.sT || 0) - (+A.sT || 0)) * al : (+B.sT || 0);
-  score = g.sc | 0; lives = g.lv | 0; timeLeft = +g.tl || 0; timeMax = +g.tm || 0; freezeT = +g.fz || 0; magnetT = +g.mt || 0;
+  score = g.sc | 0; lives = g.lv | 0; timeLeft = +g.tl || 0; timeMax = +g.tm || 0; const fz = +g.fz || 0; if (freezeT > 0 && fz === 0) shatterIce(); freezeT = fz; magnetT = +g.mt || 0;
   modeIdx = Math.min(MODES.length - 1, Math.max(0, g.md | 0)); v.el = g.el | 0;
   const dl = g.dl | 0;
   if (phase === 1 && v.dl >= 0 && dl < v.dl) { dotToggle = !dotToggle; tone(dotToggle ? 660 : 520, 0.05, 'triangle', 0.02); }
@@ -3599,6 +3639,7 @@ if (location.hostname === 'localhost') window.__ss = {
   give(type) { const p = players[0]; if (!p) return; const it = { x: p.x, y: p.y, type, born: now }; items.push(it); pickup(it, p); },
   steer(dx, dy) { want(dx, dy, 0); },
   buffs: () => ({ freezeT, magnetT, ghost: players[0] && players[0].ghost, pulled: shades.filter(s => s.pulled).map(s => s.key), p: players[0] && [players[0].x, players[0].y, grid[idx(players[0].x, players[0].y)]] }),
+  toStar() { const b = shades.find(s => !s.caught); if (b && players[0]) { players[0].x = b.x; players[0].y = b.y; players[0].t = 0; players[0].dx = players[0].dy = 0; updateCamera(0); } },
   toBoss() { const b = shades.find(s => s.boss && !s.caught); if (b && players[0]) { players[0].x = b.x; players[0].y = b.y; players[0].t = 0; players[0].dx = players[0].dy = 0; updateCamera(0); } },
   info: () => ({ state, phase, level, W, H, dotsLeft, players: players.map(p => [p.x, p.y, p.down]), shades: shades.map(s => [s.key, s.x, s.y, s.hp]), shards: shards.length, lives, score }),
   mazeCheck(n) {
