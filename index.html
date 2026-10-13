@@ -1,0 +1,3299 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Неоновая аркада: собери огоньки, переверни роли и охоться на звёзд. 9 уровней, боссы, скины и кооп по сети.">
+<meta name="theme-color" content="#0f0b22">
+<title>Смайлик и Звёзды</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23ffcf3a' stroke='%233a2400' stroke-width='3'/%3E%3Cellipse cx='23' cy='26' rx='3.5' ry='5' fill='%232a1a00'/%3E%3Cellipse cx='41' cy='26' rx='3.5' ry='5' fill='%232a1a00'/%3E%3Cpath d='M19 38 Q32 50 45 38' fill='none' stroke='%232a1a00' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}*,*::before,*::after{box-sizing:inherit}body{margin:0}[hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&family=Rubik:wght@400;500;700&display=swap">
+<style>
+/* Layout: one-screen arcade cabinet — HUD strip on top, maze canvas fills the rest, menus and lobby as overlays, touch pad below on phones */
+:root{
+  --bg:#0f0b22;
+  --panel:#1a1438;
+  --line:#2c2358;
+  --wall:#7b5cff;
+  --spark:#ffcf3a;
+  --hunter:#ff7a2f;
+  --ok:#5be38a;
+  --danger:#ff4d5e;
+  --ink:#efeaff;
+  --muted:#a59cd2;
+  --display:'Russo One','Arial Black',system-ui,sans-serif;
+  --body:'Rubik',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:radial-gradient(ellipse 80% 60% at 15% 0%,rgba(123,92,255,.22),transparent 60%),radial-gradient(ellipse 70% 55% at 90% 100%,rgba(255,79,163,.14),transparent 60%),var(--bg);color:var(--ink);font-family:var(--body);overflow:hidden}
+.app{height:100%;box-sizing:border-box;max-width:1480px;margin:0 auto;padding-inline:16px;padding-block:8px;display:flex;flex-direction:column;gap:8px}
+.hud{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px}
+.brand{font-family:var(--display);font-size:21px;letter-spacing:.02em;margin-right:auto;white-space:nowrap;text-shadow:0 0 14px rgba(123,92,255,.9),0 0 2px rgba(255,255,255,.6)}
+.brand b{color:var(--spark);font-weight:400;text-shadow:0 0 14px rgba(255,207,58,.8)}
+.stat{display:flex;flex-direction:column;gap:1px;min-width:0}
+.stat small{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stat span{font-family:var(--display);font-size:18px;font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 0 10px rgba(239,234,255,.35)}
+#lives{color:var(--spark);letter-spacing:.15em;text-shadow:0 0 10px rgba(255,207,58,.8)}
+.phase-chip{font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.phase-chip.hunt{border-color:var(--hunter);color:var(--hunter)}
+.phase-chip.boss{border-color:var(--danger);color:var(--danger);box-shadow:0 0 12px rgba(255,77,94,.35)}
+.btns{display:flex;gap:6px}
+.iconbtn{background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:8px;height:34px;min-width:34px;padding:0 10px;font:500 13px var(--body);cursor:pointer}
+.iconbtn[aria-pressed="true"]{border-color:var(--spark);color:var(--spark)}
+.iconbtn.off{color:var(--muted);text-decoration:line-through}
+.iconbtn:focus-visible,.btn:focus-visible,.btn2:focus-visible,.linkbtn:focus-visible,.seg button:focus-visible,.pad button:focus-visible,.skin:focus-visible{outline:2px solid var(--spark);outline-offset:2px}
+.stage{flex:1;min-height:240px;position:relative;border-radius:16px;overflow:hidden;background:var(--bg);border:1px solid color-mix(in srgb,var(--wall) 55%,transparent);box-shadow:0 0 0 1px rgba(255,255,255,.03) inset,0 0 40px color-mix(in srgb,var(--wall) 30%,transparent),0 20px 60px rgba(0,0,0,.5);touch-action:none;transition:border-color .8s,box-shadow .8s}
+.stage::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(255,255,255,.025) 0 1px,transparent 1px 3px);mix-blend-mode:overlay}
+#game{position:absolute;inset:0;display:block}
+.banner{position:absolute;left:50%;top:14px;transform:translateX(-50%);font-family:var(--display);font-size:clamp(16px,3.2vw,28px);text-align:center;color:#fff;text-shadow:0 0 6px rgba(255,255,255,.6),0 0 22px var(--wall),0 0 44px var(--wall);pointer-events:none;width:max-content;max-width:calc(100% - 32px);text-wrap:balance;z-index:1}
+.levelcard{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;pointer-events:none;z-index:1;width:max-content;max-width:calc(100% - 32px)}
+.lc-top{font-family:var(--display);font-size:clamp(13px,2.2vw,18px);letter-spacing:.32em;text-transform:uppercase;color:var(--muted);text-shadow:0 0 12px rgba(0,0,0,.9)}
+.lc-big{font-family:var(--display);font-size:clamp(46px,10vw,104px);line-height:1;color:#fff;text-shadow:0 0 6px #fff,0 0 30px var(--wall),0 0 70px var(--wall)}
+.lc-sub{font-family:var(--display);font-size:clamp(15px,2.8vw,22px);color:var(--spark);text-shadow:0 0 16px rgba(255,207,58,.7),0 0 4px rgba(0,0,0,.9);text-wrap:balance}
+.levelcard.boss .lc-sub{color:var(--danger);text-shadow:0 0 18px rgba(255,60,60,.9),0 0 4px rgba(0,0,0,.9)}
+@media (prefers-reduced-motion:no-preference){.levelcard:not([hidden]){animation:cardIn .7s cubic-bezier(.2,1.5,.4,1)}}
+@keyframes cardIn{from{opacity:0;transform:translate(-50%,-50%) scale(.55)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+.overlay{position:absolute;inset:0;display:flex;overflow-y:auto;padding:16px;background:radial-gradient(ellipse at 50% 40%,rgba(26,18,64,.78),rgba(8,5,20,.9));backdrop-filter:blur(4px);z-index:2}
+.card{margin:auto;max-width:460px;width:100%;display:flex;flex-direction:column;gap:14px}
+.card.wide{max-width:820px}
+.card h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,7.5vw,60px);line-height:1;margin:0;text-wrap:balance;color:#fff;text-shadow:0 0 4px rgba(255,255,255,.7),0 0 20px rgba(123,92,255,.95),0 0 50px rgba(123,92,255,.6)}
+.card h1 b{color:var(--spark);font-weight:400;text-shadow:0 0 4px rgba(255,255,255,.6),0 0 20px rgba(255,207,58,.9),0 0 46px rgba(255,122,47,.6)}
+@media (prefers-reduced-motion:no-preference){.card h1{animation:flicker 6s infinite}}
+@keyframes flicker{0%,92%,100%{opacity:1}93%{opacity:.55}94%{opacity:1}96%{opacity:.7}97%{opacity:1}}
+.card h2{font-family:var(--display);font-weight:400;font-size:30px;margin:0}
+.card p{margin:0;line-height:1.5;color:var(--muted)}
+.rules{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.rules li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;line-height:1.45}
+.rules .tag{font-family:var(--display);font-size:12px;padding:3px 8px;border-radius:6px;background:var(--panel);border:1px solid var(--line);color:var(--spark);white-space:nowrap}
+.rules .tag.t2{color:var(--hunter)}
+.rules .tag.t3{color:var(--danger)}
+.rules .tag.t4{color:#45e8a8}
+.keys{font-size:13px;color:var(--muted)}
+kbd{font:500 12px var(--body);background:var(--panel);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--ink)}
+.btn{font-family:var(--display);font-size:18px;color:#1b1200;background:linear-gradient(180deg,#ffe27a,var(--spark) 55%,#f2a91f);border:0;border-radius:10px;padding:12px 24px;cursor:pointer;box-shadow:0 0 24px rgba(255,207,58,.45),0 2px 0 rgba(255,255,255,.5) inset;transition:transform .12s,box-shadow .12s}
+.btn:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 0 36px rgba(255,207,58,.65),0 2px 0 rgba(255,255,255,.5) inset}
+.btn.on{background:var(--ok);box-shadow:0 0 24px rgba(91,227,138,.35)}
+.btn2{font-family:var(--display);font-size:16px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 18px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.btn2:hover{border-color:var(--spark);box-shadow:0 0 18px rgba(255,207,58,.2)}
+.btn2.coop{border-color:rgba(69,232,168,.5)}
+.btn2.coop:hover{border-color:#45e8a8;box-shadow:0 0 18px rgba(69,232,168,.3)}
+.btn2.small{font-size:13px;padding:7px 12px}
+.btn:disabled,.btn2:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.linkbtn{background:none;border:0;color:var(--muted);font:500 14px var(--body);cursor:pointer;padding:8px 2px}
+.linkbtn:hover{color:var(--ink)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row input{flex:1 1 150px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field span,.label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+input[type=text]{font:500 16px var(--body);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0;box-sizing:border-box}
+#codeIn{text-transform:uppercase;letter-spacing:.15em;font-family:var(--display)}
+input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap}
+.seg button{width:44px;height:40px;font-family:var(--display);font-size:16px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;cursor:pointer}
+.seg.wide button{width:auto;padding:0 14px;font-size:14px}
+.seg button[aria-pressed="true"]{border-color:var(--spark);color:#1b1200;background:var(--spark)}
+.mp-block{display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid var(--line)}
+.mp-block h3,.legend h3,.skin-block h3{font-family:var(--display);font-weight:400;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0}
+.card p.warn{color:var(--spark)}
+.card p.invite{color:var(--ink);background:var(--panel);border:1px solid var(--spark);border-radius:10px;padding:10px 12px}
+.lobby-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.code{font-family:var(--display);font-size:36px;letter-spacing:.14em;color:var(--spark);line-height:1.1}
+.card p.linkline{font-size:13px;color:var(--ink);word-break:break-all;user-select:all;-webkit-user-select:all;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.slots{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.slots li{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:rgba(26,20,56,.6)}
+.slots li.mine{border-color:var(--spark)}
+.slot-text{min-width:0}
+.slot-text b{display:block;font-weight:500;font-size:14px}
+.slot-text .who{display:block;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slot-side{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.chip{font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip.ok{border-color:var(--ok);color:var(--ok)}
+.chip:empty{display:none}
+.card p.status{font-family:var(--display);font-size:16px;color:var(--ink)}
+.big{font-family:var(--display);font-size:42px;color:var(--spark);font-variant-numeric:tabular-nums}
+.skin-block{display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid var(--line)}
+.skins{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.skin{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 6px 10px;border:1px solid var(--line);border-radius:12px;background:rgba(26,20,56,.6);color:var(--ink);font:500 13px var(--body);cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s}
+.skin:hover:not(:disabled){border-color:var(--muted);transform:translateY(-2px)}
+.skin[aria-pressed="true"]{border-color:var(--spark);box-shadow:0 0 18px rgba(255,207,58,.35)}
+.skin:disabled{cursor:not-allowed}
+.skin:disabled canvas{opacity:.3;filter:grayscale(1)}
+.skin canvas{width:56px;height:56px}
+.skin small{color:var(--muted);font-size:11px;line-height:1.25;text-align:center}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:20px 28px;padding-top:16px;border-top:1px solid var(--line)}
+.legend h3{margin-bottom:10px}
+.who-list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.who-list li{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;align-items:start}
+.who-list b{display:block;font-weight:500;color:var(--ink);margin-bottom:2px}
+.who-list b i{font-style:normal;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#45e8a8;margin-left:6px}
+.who-list b i.bs{color:var(--danger)}
+.who-list span{display:block;color:var(--muted);font-size:13.5px;line-height:1.45}
+.ico{width:36px;height:36px;display:block}
+.card p.note{font-size:13px;line-height:1.45}
+.legend p.note{margin-top:12px}
+.choice{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:rgba(26,20,56,.7);color:var(--ink);cursor:pointer;font:400 14px var(--body);transition:border-color .15s,box-shadow .15s}
+.choice b{font-family:var(--display);font-weight:400;font-size:17px}
+.choice span{color:var(--muted);line-height:1.4}
+.choice:hover{border-color:#45e8a8;box-shadow:0 0 18px rgba(69,232,168,.25)}
+.choice:focus-visible{outline:2px solid var(--spark);outline-offset:2px}
+.pad{display:none;justify-content:center;padding-bottom:4px}
+.pad.two{justify-content:space-between}
+.pad-tag{grid-column:1;grid-row:1;align-self:center;justify-self:center;font-family:var(--display);font-size:14px;color:var(--spark)}
+.pad-tag.p2{color:#45e8a8}
+.pad:not(.two) .pad-tag{display:none}
+.pad-grid{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(2,48px);gap:6px}
+.pad button{background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--ink);font-size:20px;touch-action:none;user-select:none;-webkit-user-select:none}
+.pad button:active{background:var(--line)}
+.pad .up{grid-column:2;grid-row:1}.pad .left{grid-column:1;grid-row:2}.pad .down{grid-column:2;grid-row:2}.pad .right{grid-column:3;grid-row:2}
+@media (pointer:coarse){.pad{display:flex}}
+@media (max-width:560px){.brand{width:100%;margin-right:0}.stat span{font-size:15px}.code{font-size:30px}}
+@media (max-width:440px){.pad.two .pad-grid{grid-template-columns:repeat(3,46px);grid-template-rows:repeat(2,44px);gap:4px}.pad.two button{font-size:17px}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="hud">
+    <div class="brand">Смайлик <b>и</b> Звёзды</div>
+    <span class="phase-chip" id="phaseChip">Фаза 1</span>
+    <div class="stat"><small>Уровень</small><span id="level">1/9</span></div>
+    <div class="stat"><small>Очки</small><span id="score">0</span></div>
+    <div class="stat"><small id="infoLabel">Огоньков</small><span id="info">—</span></div>
+    <div class="stat"><small>Жизни</small><span id="lives">✦✦✦</span></div>
+    <div class="btns">
+      <button class="iconbtn" id="pauseBtn" aria-label="Пауза">❚❚</button>
+      <button class="iconbtn" id="targetsBtn" aria-pressed="false" title="Показать, куда метит каждая звезда">Цели</button>
+      <button class="iconbtn" id="muteBtn" aria-pressed="true">Звук</button>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="game"></canvas>
+    <div class="banner" id="banner" hidden></div>
+    <div class="levelcard" id="levelCard" hidden><span class="lc-top" id="lcTop"></span><span class="lc-big" id="lcBig"></span><span class="lc-sub" id="lcSub"></span></div>
+
+    <div class="overlay" id="menu">
+      <div class="card wide">
+        <h1>Смайлик <b>и</b> Звёзды</h1>
+        <ul class="rules">
+          <li><span class="tag">Фаза 1</span><span>Ты смайлик. Собери все огоньки в лабиринте и не попадись звёздам. У каждой звезды свой характер.</span></li>
+          <li><span class="tag t2">Фаза 2</span><span>Лабиринт вырастает, улыбка переворачивается, и смайлик выходит на охоту. Теперь звёзды убегают: поймай всех, пока не кончилось время.</span></li>
+          <li><span class="tag t3">Уровни</span><span>9 уровней. Каждый раз новый лабиринт, больше огоньков и быстрее звёзды. На 3 и 6 уровне вместо охоты ждут боссы, на 9 уровне мега-босс.</span></li>
+          <li><span class="tag t4">Кооп</span><span>Два смайлика против шести звёзд на карте вдвое больше. Пойманный смайлик падает, и друг спасает его сердцем.</span></li>
+        </ul>
+        <p class="keys"><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> или <kbd>WASD</kbd> · свайп на телефоне · <kbd>P</kbd> пауза · <kbd>T</kbd> цели звёзд. В коопе за одним компьютером: игрок 1 на <kbd>WASD</kbd>, игрок 2 на стрелках.</p>
+        <div class="row">
+          <button class="btn" id="startBtn">Одиночная игра</button>
+          <button class="btn2 coop" id="coopBtn">Кооп вдвоём</button>
+          <button class="btn2" id="mpBtn">Играть по сети</button>
+        </div>
+        <p class="note warn" id="menuMsg" hidden></p>
+        <p class="keys" id="bestLine" hidden></p>
+
+        <section class="skin-block">
+          <h3>Скин смайлика</h3>
+          <div class="skins" id="skins"></div>
+        </section>
+
+        <div class="legend" id="legend">
+          <section>
+            <h3>Звёзды</h3>
+            <ul class="who-list">
+              <li><canvas class="ico" data-star="0" width="72" height="72"></canvas><div><b>Красная «Гончая»</b><span>Стартует снаружи домика и сразу бросается в погоню за ближайшим смайликом. Когда огоньков остаётся 20, впадает в ярость: быстрее и без передышек.</span></div></li>
+              <li><canvas class="ico" data-star="1" width="72" height="72"></canvas><div><b>Розовая «Засада»</b><span>Целится на 4 клетки впереди тебя. Когда ты идёшь вверх, метит ещё и на 4 клетки влево: это ошибка старых автоматов, мы её сохранили.</span></div></li>
+              <li><canvas class="ico" data-star="2" width="72" height="72"></canvas><div><b>Голубая «Клешня»</b><span>Продлевает вдвое линию от Гончей через точку перед тобой и заходит с другой стороны. Выходит после 30 огоньков.</span></div></li>
+              <li><canvas class="ico" data-star="3" width="72" height="72"></canvas><div><b>Оранжевая «Шальная»</b><span>На каждом перекрёстке сворачивает наугад. Выходит после 60 огоньков.</span></div></li>
+              <li><canvas class="ico" data-star="4" width="72" height="72"></canvas><div><b>Зелёная «Разлучница»<i>кооп</i></b><span>Целится в точку между двумя смайликами, чтобы разлучить друзей. Если на поле лежит сердце, сторожит его. Выходит после 90 огоньков.</span></div></li>
+              <li><canvas class="ico" data-star="5" width="72" height="72"></canvas><div><b>Серебряная «Ищейка»<i>кооп</i></b><span>Идёт по следу: метит туда, где ближайший смайлик был 2,5 секунды назад. Если долго бежать по прямой, догонит. Выходит после 120 огоньков.</span></div></li>
+            </ul>
+            <p class="note">Иногда звёзды берут передышку и уходят в свои углы. Если 4 секунды ничего не есть, следующая звезда выходит из домика раньше. С каждым уровнем звёзды быстрее, а передышки короче.</p>
+          </section>
+          <section>
+            <h3>Предметы</h3>
+            <ul class="who-list">
+              <li><canvas class="ico" data-item="boot" width="72" height="72"></canvas><div><b>Сапог</b><span>Скорость +15% на 10 секунд.</span></div></li>
+              <li><canvas class="ico" data-item="shield" width="72" height="72"></canvas><div><b>Щит</b><span>Один раз спасает от звезды или осколка босса: щит разлетается, загорается нимб, и 2,5 секунды тебя нельзя поймать.</span></div></li>
+              <li><canvas class="ico" data-item="cloak" width="72" height="72"></canvas><div><b>Плащ-невидимка</b><span>3 секунды тебя не видят: звёзды бродят наугад, осколки пролетают насквозь. В охоте звёзды перестают убегать.</span></div></li>
+              <li><canvas class="ico" data-item="heart" width="72" height="72"></canvas><div><b>Сердце<i>кооп</i></b><span>Появляется, когда друга поймали. Подбери его, и друг вернётся в игру. Если поймают обоих, команда теряет жизнь.</span></div></li>
+            </ul>
+            <p class="note">Новый предмет появляется через 15 секунд после того, как ты что-то подобрал.</p>
+          </section>
+          <section>
+            <h3>Боссы</h3>
+            <ul class="who-list">
+              <li><canvas class="ico" data-star="6" width="72" height="72"></canvas><div><b>Король Звёзд<i class="bs">уровень 3</i></b><span>Огромная золотая звезда в короне. Убегает и стреляет осколками, которые гонятся за тобой. Поймай её 3 раза.</span></div></li>
+              <li><canvas class="ico" data-star="7" width="72" height="72"></canvas><div><b>Звёзды-Близнецы<i class="bs">уровень 6</i></b><span>Сириус и Вега. Каждую нужно поймать по 2 раза, и обе стреляют.</span></div></li>
+              <li><canvas class="ico" data-star="9" width="72" height="72"></canvas><div><b>Чёрная Звезда<i class="bs">уровень 9</i></b><span>Мега-босс. Нужно поймать 6 раз. Раненая, она стреляет чаще и сама прыгает по лабиринту.</span></div></li>
+            </ul>
+            <p class="note">Осколок отнимает жизнь. После удара босс телепортируется и ускоряется. За каждого побеждённого босса +1 жизнь. В коопе боссы крепче.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="coopOv" hidden>
+      <div class="card">
+        <h2>Кооп вдвоём</h2>
+        <p>Два смайлика против шести звёзд на карте вдвое больше. Пойманного друга спасают сердцем. Как будете играть?</p>
+        <button class="choice" id="coopLocalBtn"><b>На одном устройстве</b><span id="coopLocalHint">Игрок 1 управляет на WASD, игрок 2 на стрелках.</span></button>
+        <button class="choice" id="coopNetBtn"><b>По сети, каждый со своего устройства</b><span>Ты создаёшь комнату и отправляешь другу ссылку. Лучший вариант для телефонов.</span></button>
+        <div class="row"><button class="linkbtn" id="coopBack">← Назад в меню</button></div>
+      </div>
+    </div>
+
+    <div class="overlay" id="mpOv" hidden>
+      <div class="card">
+        <h2>Игра по сети</h2>
+        <p class="invite" id="mpInvite" hidden></p>
+        <p class="note warn" id="mpState" hidden></p>
+        <label class="field" for="nick"><span>Твоё имя</span><input type="text" id="nick" maxlength="16" autocomplete="off" placeholder="Например, Макс"></label>
+        <section class="mp-block">
+          <h3>Создать комнату</h3>
+          <div class="seg wide" id="roomModeSeg" role="group" aria-label="Режим комнаты">
+            <button type="button" data-m="stars" aria-pressed="true">Друзья — звёзды</button>
+            <button type="button" data-m="coop" aria-pressed="false">Кооп: 2 смайлика</button>
+          </div>
+          <p id="roomModeText">Ты будешь смайликом. Сколько друзей будут звёздами? Остальными звёздами управляет компьютер.</p>
+          <div class="seg" id="countSeg" role="group" aria-label="Сколько друзей">
+            <button type="button" data-n="1" aria-pressed="true">1</button>
+            <button type="button" data-n="2" aria-pressed="false">2</button>
+            <button type="button" data-n="3" aria-pressed="false">3</button>
+            <button type="button" data-n="4" aria-pressed="false">4</button>
+          </div>
+          <div class="row"><button class="btn" id="createBtn">Создать комнату</button></div>
+        </section>
+        <section class="mp-block">
+          <h3>Войти по коду</h3>
+          <div class="row"><input type="text" id="codeIn" maxlength="8" autocomplete="off" placeholder="Код" aria-label="Код комнаты"><button class="btn2" id="joinBtn">Войти</button></div>
+        </section>
+        <p class="note">Создай комнату и отправь другу ссылку или код. Держи игру открытой на экране, пока вы играете: она считается у хозяина комнаты. Если сервер долго никто не использовал, первое подключение займёт до минуты, пока он просыпается.</p>
+        <div class="row"><button class="linkbtn" id="mpBack">← Назад в меню</button></div>
+      </div>
+    </div>
+
+    <div class="overlay" id="lobbyOv" hidden>
+      <div class="card">
+        <div class="lobby-head">
+          <div><span class="label" id="lobbyKind">Комната</span><div class="code" id="lobbyCode">—</div></div>
+          <button class="btn2" id="copyBtn">Скопировать ссылку</button>
+        </div>
+        <p class="linkline" id="lobbyLink"></p>
+        <p class="keys" id="copyMsg"></p>
+        <div class="row" id="countRow"><span class="keys">Друзей-звёзд:</span>
+          <div class="seg" id="lobbySeg" role="group" aria-label="Сколько друзей">
+            <button type="button" data-n="1" aria-pressed="true">1</button>
+            <button type="button" data-n="2" aria-pressed="false">2</button>
+            <button type="button" data-n="3" aria-pressed="false">3</button>
+            <button type="button" data-n="4" aria-pressed="false">4</button>
+          </div>
+        </div>
+        <ul class="slots">
+          <li id="slot-smiley"><canvas class="ico" data-hero="1" width="72" height="72"></canvas><div class="slot-text"><b id="slot-smiley-name">Смайлик</b><span class="who" id="slot-smiley-who">—</span></div><div class="slot-side"><span class="chip" id="slot-smiley-state"></span></div></li>
+          <li id="slot-p2" hidden><canvas class="ico" data-hero="2" width="72" height="72"></canvas><div class="slot-text"><b>Смайлик 2</b><span class="who" id="slot-p2-who">—</span></div><div class="slot-side"><span class="chip" id="slot-p2-state"></span><button class="btn2 small" id="slot-p2-btn" hidden>Занять</button></div></li>
+          <li id="slot-blinky"><canvas class="ico" data-star="0" width="72" height="72"></canvas><div class="slot-text"><b>Красная «Гончая»</b><span class="who" id="slot-blinky-who">—</span></div><div class="slot-side"><span class="chip" id="slot-blinky-state"></span><button class="btn2 small" id="slot-blinky-btn" hidden>Выбрать</button></div></li>
+          <li id="slot-pinky"><canvas class="ico" data-star="1" width="72" height="72"></canvas><div class="slot-text"><b>Розовая «Засада»</b><span class="who" id="slot-pinky-who">—</span></div><div class="slot-side"><span class="chip" id="slot-pinky-state"></span><button class="btn2 small" id="slot-pinky-btn" hidden>Выбрать</button></div></li>
+          <li id="slot-inky"><canvas class="ico" data-star="2" width="72" height="72"></canvas><div class="slot-text"><b>Голубая «Клешня»</b><span class="who" id="slot-inky-who">—</span></div><div class="slot-side"><span class="chip" id="slot-inky-state"></span><button class="btn2 small" id="slot-inky-btn" hidden>Выбрать</button></div></li>
+          <li id="slot-clyde"><canvas class="ico" data-star="3" width="72" height="72"></canvas><div class="slot-text"><b>Оранжевая «Шальная»</b><span class="who" id="slot-clyde-who">—</span></div><div class="slot-side"><span class="chip" id="slot-clyde-state"></span><button class="btn2 small" id="slot-clyde-btn" hidden>Выбрать</button></div></li>
+        </ul>
+        <p class="status" id="lobbyStatus">Подключаюсь…</p>
+        <div class="row">
+          <button class="btn" id="readyBtn">Готов</button>
+          <button class="linkbtn" id="leaveBtn">Выйти из комнаты</button>
+        </div>
+        <p class="note" id="hostNote" hidden>Отправь другу ссылку или код комнаты. Друг может открыть ссылку или зайти на сайт и ввести код в «Играть по сети».</p>
+      </div>
+    </div>
+
+    <div class="overlay" id="pauseOv" hidden>
+      <div class="card wide">
+        <h2>Пауза</h2>
+        <p>Нажми <kbd>P</kbd> или кнопку, чтобы продолжить.</p>
+        <div class="row"><button class="btn" id="resumeBtn">Продолжить</button></div>
+        <div id="pauseLegend"></div>
+      </div>
+    </div>
+
+    <div class="overlay" id="endOv" hidden>
+      <div class="card">
+        <h2 id="endTitle">Победа</h2>
+        <p id="endText"></p>
+        <div class="big" id="endScore">0</div>
+        <p class="keys" id="endBest"></p>
+        <div class="row">
+          <button class="btn" id="againBtn">Ещё раз</button>
+          <button class="linkbtn" id="endMenuBtn">В меню</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pad" id="pad">
+    <div class="pad-grid" data-who="0">
+      <span class="pad-tag">P1</span>
+      <button class="up" data-d="0,-1" aria-label="Вверх">▲</button>
+      <button class="left" data-d="-1,0" aria-label="Влево">◀</button>
+      <button class="down" data-d="0,1" aria-label="Вниз">▼</button>
+      <button class="right" data-d="1,0" aria-label="Вправо">▶</button>
+    </div>
+    <div class="pad-grid" data-who="1" id="pad2" hidden>
+      <span class="pad-tag p2">P2</span>
+      <button class="up" data-d="0,-1" aria-label="Игрок 2: вверх">▲</button>
+      <button class="left" data-d="-1,0" aria-label="Игрок 2: влево">◀</button>
+      <button class="down" data-d="0,1" aria-label="Игрок 2: вниз">▼</button>
+      <button class="right" data-d="1,0" aria-label="Игрок 2: вправо">▶</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const ART_URL = location.origin + location.pathname;
+// Room server (server/ in this repository, hosted on Render)
+const SERVER_URL = (location.hostname === 'localhost' && new URLSearchParams(location.search).get('server')) || 'wss://smiley-stars-server.onrender.com';
+/* Level 1 of the solo game. Legend: # wall, . огонёк, - gate of the stars' house, P smiley,
+   b/p/i/c start tiles of the four stars, B boot, S shield, V cloak (items sit on a огонёк).
+   Every other maze is generated from a seed, so everyone in a room builds the same one. */
+const MAP1 = [
+"###########################",
+"#............#............#",
+"#.####.#####.#.#####.####.#",
+"#B####.#####.#.#####.####V#",
+"#.........................#",
+"#.####.#.#########.#.####.#",
+"#......#.....#.....#......#",
+"######.#####.#.#####.######",
+"######.#.....b.....#.######",
+"######.#.####-####.#.######",
+"######.#.#  ipc  #.#.######",
+"######.#.#########.#.######",
+"#............P............#",
+"#.####.#####.#.#####.####.#",
+"#...#.................#...#",
+"###.#.##.#########.##.#.###",
+"#.....##.....#.....##.....#",
+"#.#########.###.#########.#",
+"#............S............#",
+"###########################"
+];
+const STAR_TYPES = [
+  { key: 'blinky', name: 'Гончая',        color: '#ff4d6d' },
+  { key: 'pinky',  name: 'Засада',        color: '#ff6bd6' },
+  { key: 'inky',   name: 'Клешня',        color: '#3ad7ff' },
+  { key: 'clyde',  name: 'Шальная',       color: '#ff9f43' },
+  { key: 'split',  name: 'Разлучница',    color: '#9dff4d' },
+  { key: 'hound',  name: 'Ищейка',        color: '#d9ceff' },
+  { key: 'king',   name: 'Король Звёзд',  color: '#ffd23a', boss: true, size: 1.7, hp: 3, fire: 4.2, pace: 0.82 },
+  { key: 'twinA',  name: 'Сириус',        color: '#ff5577', boss: true, size: 1.4, hp: 2, fire: 5.5, pace: 0.78 },
+  { key: 'twinB',  name: 'Вега',          color: '#4fd8ff', boss: true, size: 1.4, hp: 2, fire: 5.5, pace: 0.78 },
+  { key: 'black',  name: 'Чёрная Звезда', color: '#b14dff', boss: true, size: 2.2, hp: 6, fire: 3.2, pace: 0.8, mega: true }
+];
+const KEYS = ['blinky', 'pinky', 'inky', 'clyde'];             // stars a friend can drive
+const BOSS_OF = { 3: [6], 6: [7, 8], 9: [9] };
+const ITEMS = {
+  boot:   { color: '#5be38a', msg: 'Сапог: скорость +15% на 10 секунд', seen: 'Смайлик надел сапог' },
+  shield: { color: '#9fd0ff', msg: 'Щит: спасёт от одного удара', seen: 'У смайлика щит' },
+  cloak:  { color: '#b48cff', msg: 'Плащ: 3 секунды тебя не видят', seen: 'Смайлик в плаще-невидимке' },
+  heart:  { color: '#ff5c8a', msg: 'Сердце: друг снова в игре!', seen: 'Друга спасли сердцем' }
+};
+const ITEM_CODES = ['boot', 'shield', 'cloak', 'heart'];
+const SKINS = [
+  { id: 'classic', name: 'Классика', need: 1,  hint: '' },
+  { id: 'cool',    name: 'Крутой',   need: 2,  hint: 'Дойди до 2 уровня' },
+  { id: 'cat',     name: 'Котик',    need: 4,  hint: 'Победи Короля Звёзд' },
+  { id: 'robot',   name: 'Робот',    need: 5,  hint: 'Дойди до 5 уровня' },
+  { id: 'ninja',   name: 'Ниндзя',   need: 7,  hint: 'Победи Близнецов' },
+  { id: 'king',    name: 'Король',   need: 10, hint: 'Победи Чёрную Звезду' }
+];
+const P_COLORS = [
+  { calm: '#ffcf3a', light: '#fff4bf', hunt: '#ff7a2f', huntLight: '#ffd9a8' },
+  { calm: '#45e8a8', light: '#d8fff0', hunt: '#14b87c', huntLight: '#a8f5d6' }
+];
+// one neon colour per level; the hunt and the boss fights get their own
+const PALETTES = [
+  { line: '#7b5cff', fill: '#1a1438', core: '#e6dcff' },
+  { line: '#2fd6ff', fill: '#0c2238', core: '#dff8ff' },
+  { line: '#ff4fa3', fill: '#2a0f2c', core: '#ffe0f0' },
+  { line: '#3dff9a', fill: '#0c2a22', core: '#e0fff0' },
+  { line: '#ff9f2f', fill: '#2c1a0a', core: '#fff0d8' },
+  { line: '#ff3b5c', fill: '#2c0c14', core: '#ffe0e6' },
+  { line: '#b06bff', fill: '#1e0f36', core: '#f0e2ff' },
+  { line: '#4d7bff', fill: '#0e1636', core: '#e0e8ff' },
+  { line: '#ffe14d', fill: '#2a240a', core: '#fffbe0' }
+];
+const HUNT_PAL = { line: '#ff4fa3', fill: '#2a0f2c', core: '#ffe0f0' };
+const BOSS_PAL = { line: '#ff3b3b', fill: '#2a0a0e', core: '#ffe0e0' };
+const MEGA_PAL = { line: '#c77dff', fill: '#0b0418', core: '#ffffff' };
+// lattice size [columns, rows] of the generated first-phase mazes; level 1 solo uses MAP1
+const SOLO_DIMS = [null, [9, 8], [11, 8], [11, 9], [11, 9], [13, 9], [13, 10], [13, 10], [15, 10]];
+const COOP_DIMS = [[13, 10], [13, 10], [13, 11], [15, 11], [15, 11], [15, 12], [17, 12], [17, 12], [17, 13]];
+// Scatter/chase schedule (seconds); the last chase never ends
+const MODES = [['scatter', 7], ['chase', 20], ['scatter', 7], ['chase', 20], ['scatter', 5], ['chase', 20], ['scatter', 5], ['chase', Infinity]];
+const PERSONAL_LIMIT = { pinky: 0, inky: 30, clyde: 60, split: 90, hound: 120 };   // огоньков до выхода из домика
+const GLOBAL_LIMIT = { pinky: 7, inky: 17, clyde: 32, split: 45, hound: 60 };      // после потери жизни
+const ELROY1 = 20, ELROY2 = 10;                                                     // ярость Гончей
+const NO_EAT_LIMIT = 4, BOOT_TIME = 10, BOOT_MULT = 1.15, CLOAK_TIME = 3, HALO_TIME = 2.5, ITEM_RESPAWN = 15;
+const MAX_LEVEL = 9, MAX_LIVES = 5, MAX_SHARDS = 16;
+const HUMAN_RELEASE = [0, 0.5, 1.2, 1.9, 2.6, 3.3];          // stars driven by friends leave the house quickly
+const SNAP_MS = 40, INTERP_MS = 110;
+const BG = '#0f0b22', DOT = '#ffe9a8', SHARD = '#ff5a36', HEART = '#ff5c8a';
+const MIN_TILE1 = 17;                                         // below this tile size the first maze scrolls with the camera
+const DIRS = [[0, -1], [-1, 0], [0, 1], [1, 0]];              // up, left, down, right — the classic tie-break order
+const DIR_CODES = [[0, 0], [0, -1], [-1, 0], [0, 1], [1, 0]];
+const dirCode = (dx, dy) => dy < 0 ? 1 : dx < 0 ? 2 : dy > 0 ? 3 : dx > 0 ? 4 : 0;
+const OVERLAYS = ['menu', 'coopOv', 'mpOv', 'lobbyOv', 'pauseOv', 'endOv'];
+const touchDevice = matchMedia('(pointer: coarse)').matches;
+
+const $ = id => document.getElementById(id);
+const cvs = $('game');
+const ctx = cvs.getContext('2d');
+const stage = $('stage');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let W = 1, H = 1, grid = new Uint8Array(1), dots = new Uint8Array(1), dotsLeft = 0, starts = {};
+let off = null, mini = null, lines = null, sweep = null, sky = null, vig = null;
+let phase = 1, state = 'menu', pausedFrom = null;
+let gameMode = 'solo', localCoop = false, level = 1, seed1 = 0, mazeSeed = 1;
+let players = [], shades = [], shards = [], particles = [], rings = [], floaters = [], items = [], spawnQ = [], meteors = [];
+let score = 0, lives = 3, timeLeft = 0, timeMax = 0, stateT = 0, now = 0, frameDt = 0;
+let modeIdx = 0, modeT = 0;
+let dotsEaten = 0, sinceDeath = null, noEatT = 0, houseT = 0, elroySuspended = false, elroyAnnounced = false;
+let humans = emptySlots(), p2Skin = 0, levelNote = '', fireworkT = 0;
+let showTargets = false;
+let cam = { x: 0, y: 0, s: 20 }, growFrom = null;
+let cw = 0, ch = 0, dpr = 1;
+let distMap = null, distKey = '';
+let toastT = 0, toastText = '', stateMsg = null;
+let dotToggle = false, shake = 0;
+const glowCache = {};
+let best = 0, progress = 1, skin = 0;
+try { best = +localStorage.getItem('smiley-stars-best') || 0; } catch (e) {}
+try { progress = Math.max(1, +localStorage.getItem('smiley-stars-progress') || 1); } catch (e) {}
+try { skin = Math.max(0, Math.min(SKINS.length - 1, +localStorage.getItem('smiley-stars-skin') || 0)); } catch (e) {}
+if (SKINS[skin].need > progress) skin = 0;
+
+function emptySlots() { return { blinky: null, pinky: null, inky: null, clyde: null, p2: null }; }
+function freshNet() {
+  return {
+    mode: 'off', rm: 'stars', room: null, lobbyFallback: false, unsubs: [], code: '', myPeer: null, name: '',
+    n: 1, slots: emptySlots(), hostReady: false, stage: 'lobby', cdEnd: 0, cdShown: 0, hs: 0,
+    seq: 0, events: [], evId: 0, lastPub: 0, lastPubState: '', result: null,
+    hostPeer: null, hostSeenAt: 0, joinedAt: 0, warnedNoHost: false, want: null, wantT: 0, ready: false, dir: 0,
+    snaps: [], lastK: -1, lastEv: 0, lastSnapAt: 0, stall: false, myStar: -1, isP2: false, names: {}, lastSlow: 0, confirmLeave: 0,
+    view: { grid: 0, seed: -1, s1: -1, lvl: -1, dots: null, dl: -1, el: 0, born: new Map(), players: null, shades: null }
+  };
+}
+const net = Object.assign(freshNet(), { api: null, apiState: 'pending' });
+
+/* ---------- grid helpers ---------- */
+const idx = (x, y) => y * W + x;
+const inb = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
+function canEnter(e, x, y) {
+  if (!inb(x, y)) return false;
+  const v = grid[idx(x, y)];
+  if (v === 0) return true;
+  if (v === 2) return !!(e.isShade && e.exiting);
+  return false;
+}
+const pos = e => [e.x + e.dx * e.t, e.y + e.dy * e.t];
+const center = e => { const [x, y] = pos(e); return [x + 0.5, y + 0.5]; };
+const rnd = n => Math.floor(Math.random() * n);
+const r1 = v => Math.round(v * 10) / 10;
+const r2 = v => Math.round(v * 100) / 100;
+function mk(x, y, speed) { return { x, y, dx: 0, dy: 0, t: 0, speed, wx: 0, wy: 0, fx: -1, fy: 0, isShade: false }; }
+function mulberry32(a) {
+  return () => {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function shuffle(a, R) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+const isBossLevel = () => !!BOSS_OF[level];
+const lvlK = () => 1 + 0.03 * (level - 1);
+const playerSpeed = ph => (ph === 1 ? 7.2 : 8.6) * (1 + 0.015 * (level - 1));
+const starSpeedBase = ph => (ph === 1 ? 6.3 : 6.7) * lvlK();
+function bossTitle() { return level === 6 ? 'Звёзды-Близнецы' : level === 9 ? 'Чёрная Звезда' : 'Король Звёзд'; }
+
+/* ---------- mazes ---------- */
+function buildFromMap(map) {
+  H = map.length; W = map[0].length;
+  grid = new Uint8Array(W * H); dots = new Uint8Array(W * H); dotsLeft = 0;
+  const itemChars = { B: 'boot', S: 'shield', V: 'cloak' };
+  const starChars = { b: 'blinky', p: 'pinky', i: 'inky', c: 'clyde' };
+  starts.p = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const c0 = map[y][x], i = idx(x, y);
+    if (c0 === '#') { grid[i] = 1; continue; }
+    if (c0 === '-') { grid[i] = 2; starts.gate = [x, y]; continue; }
+    if (c0 === '.' || itemChars[c0]) { dots[i] = 1; dotsLeft++; }
+    if (itemChars[c0]) items.push({ x, y, type: itemChars[c0], born: -1 });
+    if (c0 === 'P') starts.p.push([x, y]);
+    if (starChars[c0]) starts[starChars[c0]] = [x, y];
+  }
+}
+
+/* An arcade-style maze: corridors run on a lattice every 3 tiles, so walls are 2-tile blocks.
+   Random lattice edges are closed, mirrored left to right, while every crossing keeps 2+ exits
+   and everything stays connected. The closed edges merge blocks into the familiar wall islands. */
+function genLevelMaze(NX, NY, seed) {
+  const R = mulberry32(seed);
+  const MW = 3 * NX, MH = 3 * NY, g = new Uint8Array(MW * MH).fill(1);
+  const ci = (NX - 1) >> 1, jr = Math.max(1, (NY >> 1) - 2);
+  const N = NX * NY, id = (i, j) => j * NX + i;
+  const dead = new Uint8Array(N);                                // lattice nodes swallowed by the stars' house
+  for (let i = ci - 1; i <= ci + 1; i++) dead[id(i, jr + 1)] = 1;
+  const hE = new Uint8Array(N), vE = new Uint8Array(N);          // hE: (i,j)-(i+1,j), vE: (i,j)-(i,j+1)
+  for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+    if (i < NX - 1 && !dead[id(i, j)] && !dead[id(i + 1, j)]) hE[id(i, j)] = 1;
+    if (j < NY - 1 && !dead[id(i, j)] && !dead[id(i, j + 1)]) vE[id(i, j)] = 1;
+  }
+  const locked = new Set();                                      // the corridor ring around the house
+  for (let i = ci - 2; i < ci + 2; i++) { locked.add('h' + id(i, jr)); locked.add('h' + id(i, jr + 2)); }
+  for (const i of [ci - 2, ci + 2]) for (let j = jr; j < jr + 2; j++) locked.add('v' + id(i, j));
+  const deg = (i, j) => (i > 0 && hE[id(i - 1, j)] ? 1 : 0) + (i < NX - 1 && hE[id(i, j)] ? 1 : 0) + (j > 0 && vE[id(i, j - 1)] ? 1 : 0) + (j < NY - 1 && vE[id(i, j)] ? 1 : 0);
+  let aliveN = 0;
+  for (let k = 0; k < N; k++) if (!dead[k]) aliveN++;
+  const connected = () => {
+    const seen = new Uint8Array(N), q = [id(ci, jr)];
+    seen[q[0]] = 1; let cnt = 1;
+    while (q.length) {
+      const c = q.pop(), i = c % NX, j = (c / NX) | 0;
+      const nb = [];
+      if (i > 0 && hE[id(i - 1, j)]) nb.push(id(i - 1, j));
+      if (i < NX - 1 && hE[c]) nb.push(id(i + 1, j));
+      if (j > 0 && vE[id(i, j - 1)]) nb.push(id(i, j - 1));
+      if (j < NY - 1 && vE[c]) nb.push(id(i, j + 1));
+      for (const n of nb) if (!seen[n]) { seen[n] = 1; cnt++; q.push(n); }
+    }
+    return cnt === aliveN;
+  };
+  const cands = [];
+  for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+    if (i < ci && hE[id(i, j)]) cands.push(['h', i, j]);
+    if (i <= ci && j < NY - 1 && vE[id(i, j)]) cands.push(['v', i, j]);
+  }
+  shuffle(cands, R);
+  const arr = t => t === 'h' ? hE : vE;
+  const ends = (t, i, j) => t === 'h' ? [[i, j], [i + 1, j]] : [[i, j], [i, j + 1]];
+  for (const c of cands) {
+    if (R() > 0.62) continue;
+    const m = c[0] === 'h' ? ['h', NX - 2 - c[1], c[2]] : ['v', NX - 1 - c[1], c[2]];
+    const es = (m[1] === c[1]) ? [c] : [c, m];
+    if (es.some(e => locked.has(e[0] + id(e[1], e[2])) || !arr(e[0])[id(e[1], e[2])])) continue;
+    for (const e of es) arr(e[0])[id(e[1], e[2])] = 0;
+    const ok = es.every(e => ends(e[0], e[1], e[2]).every(([a, b]) => deg(a, b) >= 2)) && connected();
+    if (!ok) for (const e of es) arr(e[0])[id(e[1], e[2])] = 1;
+  }
+  const X = i => 1 + 3 * i, Y = j => 1 + 3 * j;
+  for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+    if (dead[id(i, j)]) continue;
+    g[Y(j) * MW + X(i)] = 0;
+    if (i < NX - 1 && hE[id(i, j)]) { g[Y(j) * MW + X(i) + 1] = 0; g[Y(j) * MW + X(i) + 2] = 0; }
+    if (j < NY - 1 && vE[id(i, j)]) { g[(Y(j) + 1) * MW + X(i)] = 0; g[(Y(j) + 2) * MW + X(i)] = 0; }
+  }
+  const bx0 = X(ci - 2) + 1, bx1 = X(ci + 2) - 1, by0 = Y(jr) + 1, by1 = Y(jr + 2) - 1;
+  for (let y = by0; y <= by1; y++) for (let x = bx0; x <= bx1; x++) g[y * MW + x] = (y > by0 && y < by1 && x > bx0 && x < bx1) ? 0 : 1;
+  g[by0 * MW + X(ci)] = 2;
+  return { W: MW, H: MH, g, X, Y, ci, jr, NX, NY, gate: [X(ci), by0], starRow: by0 + 2, box: [bx0, by0, bx1, by1] };
+}
+
+function buildGenerated() {
+  const [NX, NY] = (gameMode === 'coop' ? COOP_DIMS : SOLO_DIMS)[level - 1] || [9, 8];
+  const m = genLevelMaze(NX, NY, seed1 || 1);
+  W = m.W; H = m.H; grid = m.g;
+  dots = new Uint8Array(W * H); dotsLeft = 0;
+  const cx = m.X(m.ci), top = m.Y(m.jr), py = m.Y(m.jr + 2);
+  starts.gate = m.gate;
+  starts.blinky = [cx, top];
+  const offs = { pinky: 0, inky: -1, clyde: 1, split: -2, hound: 2 };
+  for (const k in offs) starts[k] = [cx + offs[k], m.starRow];
+  starts.p = gameMode === 'coop' ? [[m.X(m.ci - 1), py], [m.X(m.ci + 1), py]] : [[cx, py]];
+  const skip = new Set([idx(cx, top)].concat(starts.p.map(p => idx(p[0], p[1]))));
+  const [bx0, by0, bx1, by1] = m.box;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = idx(x, y);
+    if (grid[i] !== 0 || skip.has(i) || (x >= bx0 && x <= bx1 && y >= by0 && y <= by1)) continue;
+    dots[i] = 1; dotsLeft++;
+  }
+  const place = (x, y, type) => { if (inb(x, y) && grid[idx(x, y)] === 0) items.push({ x, y, type, born: -1 }); };
+  place(m.X(0), m.Y(1), 'boot'); place(m.X(m.NX - 1), m.Y(1), 'cloak'); place(cx, m.Y(m.NY - 1), 'shield');
+  if (gameMode === 'coop') { place(m.X(0), m.Y(m.NY - 2), 'cloak'); place(m.X(m.NX - 1), m.Y(m.NY - 2), 'boot'); }
+}
+function buildPhase1Grid() {
+  phase = 1;
+  starts = {}; items = []; spawnQ = [];
+  if (gameMode === 'solo' && level === 1) buildFromMap(MAP1); else buildGenerated();
+}
+function loadPhase1() {
+  buildPhase1Grid();
+  dotsEaten = 0; sinceDeath = null; elroySuspended = false; elroyAnnounced = false;
+  for (const p of players) p.shield = false;
+  shards = [];
+  renderMaze();
+  resetActors();
+}
+
+function makePlayers(speed, spawn) {
+  const old = players;
+  const n = gameMode === 'coop' ? 2 : 1;
+  players = [];
+  for (let k = 0; k < n; k++) {
+    const sp = spawn[k] || spawn[0];
+    const p = mk(sp[0], sp[1], speed);
+    Object.assign(p, {
+      id: k, isPlayer: true, down: false, boot: 0, cloak: 0, shield: !!(old[k] && old[k].shield), invuln: 0, halo: 0,
+      hist: [], histT: 0, trail: [], m: 1, skin: k === 0 || localCoop ? skin : p2Skin
+    });
+    players.push(p);
+  }
+}
+function resetActors() {
+  makePlayers(playerSpeed(1), starts.p);
+  const types = gameMode === 'coop' ? [0, 1, 2, 3, 4, 5] : [0, 1, 2, 3];
+  shades = types.map((t, i) => {
+    const d = STAR_TYPES[t], st = starts[d.key];
+    const s = mk(st[0], st[1], starSpeedBase(1));
+    Object.assign(s, { isShade: true, i, type: t, key: d.key, color: d.color, inHouse: d.key !== 'blinky', exiting: false, caught: false, human: humans[d.key] || null, releaseAt: HUMAN_RELEASE[i], boss: false, hp: 0, maxHp: 0, inv: 0 });
+    return s;
+  });
+  modeIdx = 0; modeT = 0; noEatT = 0; houseT = 0;
+  shards = []; distKey = '';
+}
+
+function genMaze(cwc, chc, seed) {
+  const R = mulberry32(seed);
+  const rn = n => Math.floor(R() * n);
+  const MW = cwc * 2 + 1, MH = chc * 2 + 1, g = new Uint8Array(MW * MH).fill(1);
+  const vis = new Uint8Array(cwc * chc);
+  const sx = rn(cwc), sy = rn(chc);
+  vis[sy * cwc + sx] = 1; g[(sy * 2 + 1) * MW + sx * 2 + 1] = 0;
+  const st = [[sx, sy]];
+  while (st.length) {
+    const [cx, cy] = st[st.length - 1];
+    const nb = [];
+    for (const d of DIRS) {
+      const nx = cx + d[0], ny = cy + d[1];
+      if (nx >= 0 && ny >= 0 && nx < cwc && ny < chc && !vis[ny * cwc + nx]) nb.push([nx, ny, d]);
+    }
+    if (!nb.length) { st.pop(); continue; }
+    const [nx, ny, d] = nb[rn(nb.length)];
+    vis[ny * cwc + nx] = 1;
+    g[(cy * 2 + 1 + d[1]) * MW + cx * 2 + 1 + d[0]] = 0;
+    g[(ny * 2 + 1) * MW + nx * 2 + 1] = 0;
+    st.push([nx, ny]);
+  }
+  const wallsOf = (cx, cy) => DIRS.filter(d => {
+    const nx = cx + d[0], ny = cy + d[1];
+    return nx >= 0 && ny >= 0 && nx < cwc && ny < chc && g[(cy * 2 + 1 + d[1]) * MW + cx * 2 + 1 + d[0]] === 1;
+  });
+  // braid: remove every dead end so the hunt has loops to run around
+  for (let cy = 0; cy < chc; cy++) for (let cx = 0; cx < cwc; cx++) {
+    let openN = 0;
+    for (const d of DIRS) if (g[(cy * 2 + 1 + d[1]) * MW + cx * 2 + 1 + d[0]] === 0) openN++;
+    if (openN <= 1) {
+      const ws = wallsOf(cx, cy);
+      if (ws.length) { const d = ws[rn(ws.length)]; g[(cy * 2 + 1 + d[1]) * MW + cx * 2 + 1 + d[0]] = 0; }
+    }
+  }
+  for (let k = 0; k < cwc * chc * 0.06; k++) {
+    const cx = rn(cwc), cy = rn(chc), ws = wallsOf(cx, cy);
+    if (ws.length) { const d = ws[rn(ws.length)]; g[(cy * 2 + 1 + d[1]) * MW + cx * 2 + 1 + d[0]] = 0; }
+  }
+  for (let k = 0; k < 6; k++) {
+    const cx = 1 + rn(cwc - 3), cy = 1 + rn(chc - 3);
+    for (let y = cy * 2 + 1; y <= cy * 2 + 3; y++) for (let x = cx * 2 + 1; x <= cx * 2 + 3; x++) g[y * MW + x] = 0;
+  }
+  return { W: MW, H: MH, g };
+}
+function huntCells() { const l = level - 1; return gameMode === 'coop' ? [35 + l, 31 + (l >> 1)] : [25 + l, 22 + (l >> 1)]; }
+function buildPhase2Grid(seed) {
+  phase = 2;
+  const [a, b] = huntCells();
+  const m = genMaze(a, b, seed);
+  W = m.W; H = m.H; grid = m.g;
+  dots = new Uint8Array(W * H); dotsLeft = 0;
+  const px = 2 * (a >> 1) + 1, py = 2 * (b >> 1) + 1;
+  starts.p = gameMode === 'coop' ? [[px - 2, py], [px + 2, py]] : [[px, py]];
+}
+function loadPhase2() {
+  mazeSeed = 1 + rnd(2147483646);
+  buildPhase2Grid(mazeSeed);
+  items = []; spawnQ = []; shards = [];
+  makePlayers(playerSpeed(2), starts.p);
+  for (const p of players) { p.fx = 0; p.fy = -1; p.shield = false; p.m = 1; }
+  distKey = ''; ensureDist();
+  shades = [];
+  const coop = gameMode === 'coop';
+  if (isBossLevel()) spawnBosses(); else spawnHuntStars(coop ? 6 : 4);
+  const kit = isBossLevel() ? ['boot', 'boot', 'boot', 'shield', 'shield', 'cloak', 'cloak'] : ['boot', 'boot', 'boot', 'boot', 'cloak', 'cloak', 'cloak'];
+  for (const type of coop ? kit.concat(kit.slice(0, 4)) : kit) {
+    const p = findSpot(9);
+    if (p) items.push({ x: p[0], y: p[1], type, born: now });
+  }
+  timeMax = timeLeft = isBossLevel() ? (level === 9 ? 180 : 150) : (coop ? 150 : 120) + 5 * (level - 1);
+  renderMaze();
+}
+function farCell(test) {
+  let bestT = null, bd = -1;
+  for (let k = 0; k < 500; k++) {
+    const x = 1 + 2 * rnd((W - 1) / 2), y = 1 + 2 * rnd((H - 1) / 2);
+    if (test && !test(x, y)) continue;
+    const d = distMap[idx(x, y)];
+    if (d < 1e6 && d > bd) { bd = d; bestT = [x, y]; }
+  }
+  return bestT || [1, 1];
+}
+function spawnHuntStars(n) {
+  const cols = n === 6 ? 3 : 2;
+  for (let i = 0; i < n; i++) {
+    const qx = i % cols, qy = (i / cols) | 0;
+    const [x, y] = farCell((x, y) => Math.floor(x * cols / W) === qx && Math.floor(y * 2 / H) === qy);
+    const d = STAR_TYPES[i];
+    const s = mk(x, y, starSpeedBase(2));
+    Object.assign(s, { isShade: true, i, type: i, key: d.key, color: d.color, inHouse: false, exiting: false, caught: false, human: humans[d.key] || null, releaseAt: 0, boss: false, hp: 0, maxHp: 0, inv: 0 });
+    shades.push(s);
+  }
+}
+function spawnBosses() {
+  const list = BOSS_OF[level], coop = gameMode === 'coop';
+  list.forEach((t, i) => {
+    const d = STAR_TYPES[t];
+    const [x, y] = farCell(list.length > 1 ? ((x) => (x < W / 2 ? 0 : 1) === i) : null);
+    const hp = d.hp + (coop ? (d.mega ? 2 : 1) : 0);
+    const s = mk(x, y, playerSpeed(2) * d.pace);
+    Object.assign(s, { isShade: true, i, type: t, key: d.key, color: d.color, inHouse: false, exiting: false, caught: false, human: null, releaseAt: 0, boss: true, hp, maxHp: hp, inv: 0, shardT: 2.5 + i * 1.6, jumpT: 9 });
+    shades.push(s);
+  });
+}
+
+/* ---------- pathing ---------- */
+const alivePlayers = () => players.filter(p => !p.down);
+const visiblePlayers = () => players.filter(p => !p.down && p.cloak <= 0);
+// distance (in steps) from the nearest smiley the stars can see; falls back to every standing smiley
+function ensureDist() {
+  const vis = visiblePlayers(), src = vis.length ? vis : alivePlayers();
+  const key = src.map(p => idx(p.x, p.y)).join(',') + '|' + W + 'x' + H;
+  if (key === distKey && distMap) return;
+  distKey = key;
+  distMap = new Float32Array(W * H).fill(1e9);
+  const q = new Int32Array(W * H);
+  let h = 0, t = 0;
+  for (const p of src) { const k = idx(p.x, p.y); if (distMap[k] !== 0) { distMap[k] = 0; q[t++] = k; } }
+  while (h < t) {
+    const c = q[h++], cx = c % W, cy = (c / W) | 0;
+    for (const d of DIRS) {
+      const nx = cx + d[0], ny = cy + d[1];
+      if (!inb(nx, ny) || grid[idx(nx, ny)] !== 0) continue;
+      const n = idx(nx, ny);
+      if (distMap[n] > distMap[c] + 1) { distMap[n] = distMap[c] + 1; q[t++] = n; }
+    }
+  }
+}
+
+/* ---------- star personalities (phase 1) ---------- */
+function elroyLevel() {
+  if (net.mode === 'guest') return net.view.el;
+  if (phase !== 1 || elroySuspended) return 0;
+  if (dotsLeft <= ELROY2) return 2;
+  if (dotsLeft <= ELROY1) return 1;
+  return 0;
+}
+function corners() {
+  return { blinky: [W - 2, -3], pinky: [1, -3], inky: [W - 1, H + 2], clyde: [0, H + 2], split: [-3, H >> 1], hound: [W + 2, H >> 1] };
+}
+function preyOf(s) {
+  let bestP = null, bd = Infinity;
+  for (const p of visiblePlayers()) { const d = (p.x - s.x) ** 2 + (p.y - s.y) ** 2; if (d < bd) { bd = d; bestP = p; } }
+  return bestP;
+}
+// The tile n steps in front of a smiley. Facing up also shifts n tiles left: the arcade overflow quirk.
+function ahead(p, n) {
+  if (p.fx === 0 && p.fy === -1) return [p.x - n, p.y - n];
+  return [p.x + p.fx * n, p.y + p.fy * n];
+}
+function targetFor(s) {
+  if (phase !== 1 || s.inHouse || s.exiting || s.caught || s.human || s.boss) return null;
+  const p = preyOf(s);
+  if (!p) return null;                                            // nobody visible: wander
+  const elroy = s.key === 'blinky' && elroyLevel() > 0;
+  const blinkyRushes = s.key === 'blinky' && modeIdx === 0;      // starts straight on the hunt
+  if (MODES[modeIdx][0] === 'scatter' && !elroy && !blinkyRushes) return corners()[s.key];
+  switch (s.key) {
+    case 'blinky': return [p.x, p.y];
+    case 'pinky': return ahead(p, 4);
+    case 'inky': { const [ax, ay] = ahead(p, 2), b = shades[0]; return [2 * ax - b.x, 2 * ay - b.y]; }
+    case 'split': {                                               // guards the heart, otherwise cuts between the friends
+      const heart = items.find(o => o.type === 'heart');
+      if (heart) return [heart.x, heart.y];
+      const vs = visiblePlayers();
+      if (vs.length >= 2) return [Math.round((vs[0].x + vs[1].x) / 2), Math.round((vs[0].y + vs[1].y) / 2)];
+      return ahead(p, 2);
+    }
+    case 'hound': return p.hist.length ? p.hist[0] : [p.x, p.y];  // where its prey was ~2.5 s ago
+    default: return null;                                         // clyde: random turn at every junction
+  }
+}
+
+function chooseDir(s) {
+  let opts = DIRS.filter(d => canEnter(s, s.x + d[0], s.y + d[1]));
+  if (!opts.length) return null;
+  const isRev = d => (s.dx || s.dy) && d[0] === -s.dx && d[1] === -s.dy;
+  const fwd = opts.filter(d => !isRev(d));
+  if (phase === 1) {
+    if (fwd.length) opts = fwd;
+    const tgt = s.exiting ? [starts.gate[0], starts.gate[1] - 2] : targetFor(s);
+    if (!tgt) return opts[rnd(opts.length)];
+    let bestD = null, bd = Infinity;
+    for (const d of opts) {                                       // strict < keeps the up/left/down/right priority on ties
+      const v = (s.x + d[0] - tgt[0]) ** 2 + (s.y + d[1] - tgt[1]) ** 2;
+      if (v < bd) { bd = v; bestD = d; }
+    }
+    return bestD;
+  }
+  // phase 2: run away from the smileys, unless every one of them is cloaked
+  if (!visiblePlayers().length) { const o = fwd.length ? fwd : opts; return o[rnd(o.length)]; }
+  ensureDist();
+  const pd = distMap[idx(s.x, s.y)];
+  const far = s.boss ? 20 : 14, noise = s.boss ? 0.6 : 1.4;
+  let bestD = null, bv = -Infinity;
+  for (const d of opts) {
+    const n = idx(s.x + d[0], s.y + d[1]);
+    let v = pd > far ? Math.random() * 3 : distMap[n] + Math.random() * noise;
+    if (isRev(d)) v -= pd > 6 ? 3 : 0.4;
+    if (v > bv) { bv = v; bestD = d; }
+  }
+  return bestD;
+}
+
+/* ---------- the stars' house ---------- */
+function release(s) {
+  s.inHouse = false; s.exiting = true; s.dx = 0; s.dy = 0; s.t = 0;
+  if (s.key === 'clyde') elroySuspended = false;
+}
+function stepHouse(dt) {
+  houseT += dt;
+  for (const s of shades) if (s.inHouse && s.human && houseT >= s.releaseAt) release(s);
+  const waiting = shades.filter(s => s.inHouse && !s.human);
+  if (!waiting.length) { if (!shades.some(s => s.inHouse)) sinceDeath = null; return; }
+  noEatT += dt;
+  const s = waiting[0];                                           // only the first one in line counts
+  const ready = sinceDeath !== null ? sinceDeath >= GLOBAL_LIMIT[s.key] : dotsEaten >= PERSONAL_LIMIT[s.key];
+  if (ready || noEatT >= NO_EAT_LIMIT) { release(s); noEatT = 0; }
+}
+function stepModes(dt) {
+  const [kind, base] = MODES[modeIdx];
+  const dur = kind === 'scatter' ? base * Math.max(0.45, 1 - 0.07 * (level - 1)) : base;
+  modeT += dt;
+  if (modeT >= dur) {
+    modeT -= dur;
+    const prev = modeIdx;
+    modeIdx = Math.min(modeIdx + 1, MODES.length - 1);
+    reverseAll(prev === 0 ? 'blinky' : null);                     // Гончая already chased, no U-turn for her
+  }
+}
+function reverseAll(except) {
+  for (const s of shades) {
+    if (s.inHouse || s.exiting || s.caught || s.human || s.boss || s.key === except) continue;
+    if (s.dx || s.dy) { s.x += s.dx; s.y += s.dy; s.dx = -s.dx; s.dy = -s.dy; s.t = 1 - s.t; }
+  }
+}
+
+/* ---------- movement ---------- */
+// Grid walker steered by a wanted direction (the smileys, and stars driven by friends)
+function stepWalker(p, dt, speed, onArrive) {
+  const wantMove = p.wx || p.wy;
+  if ((p.dx || p.dy) && wantMove) {
+    if (p.wx === -p.dx && p.wy === -p.dy) {
+      p.x += p.dx; p.y += p.dy; p.dx = -p.dx; p.dy = -p.dy; p.t = 1 - p.t;
+    } else if ((p.wx !== p.dx || p.wy !== p.dy) && p.t < 0.22 && canEnter(p, p.x + p.wx, p.y + p.wy)) {
+      p.dx = p.wx; p.dy = p.wy; p.t = 0;
+    }
+  }
+  if (!p.dx && !p.dy) {
+    if (wantMove && canEnter(p, p.x + p.wx, p.y + p.wy)) { p.dx = p.wx; p.dy = p.wy; p.t = 0; }
+    else return;
+  }
+  p.fx = p.dx; p.fy = p.dy;
+  p.t += speed * dt;
+  while (p.t >= 1) {
+    p.t -= 1; p.x += p.dx; p.y += p.dy;
+    if (onArrive) onArrive(p);
+    if ((p.wx || p.wy) && canEnter(p, p.x + p.wx, p.y + p.wy)) { p.dx = p.wx; p.dy = p.wy; p.fx = p.dx; p.fy = p.dy; }
+    else if (!canEnter(p, p.x + p.dx, p.y + p.dy)) { p.dx = p.dy = 0; p.t = 0; break; }
+  }
+}
+function stepPlayer(p, dt) { if (!p.down) stepWalker(p, dt, p.speed * (p.boot > 0 ? BOOT_MULT : 1), arrive); }
+
+function starSpeed(s) {
+  if (phase === 2) return s.human ? 7.0 * lvlK() : s.speed;
+  let sp = s.speed;
+  if (s.exiting) sp *= 0.55;
+  else if (s.key === 'blinky') { const e = elroyLevel(); if (e === 1) sp *= 1.05; else if (e === 2) sp *= 1.1; }
+  return sp;
+}
+function stepShade(s, dt) {
+  if (s.caught || s.inHouse) return;
+  if (s.human && !s.exiting) { stepWalker(s, dt, starSpeed(s), null); return; }
+  if (!s.dx && !s.dy) {
+    const d = chooseDir(s); if (!d) return;
+    s.dx = d[0]; s.dy = d[1]; s.t = 0;
+  }
+  s.t += starSpeed(s) * dt;
+  while (s.t >= 1) {
+    s.t -= 1; s.x += s.dx; s.y += s.dy;
+    if (s.exiting && s.y <= starts.gate[1] - 1) {
+      s.exiting = false;
+      if (s.human) { s.dx = s.dy = 0; s.t = 0; return; }        // the friend takes over outside the house
+    }
+    const d = chooseDir(s);
+    if (!d) { s.dx = s.dy = 0; s.t = 0; break; }
+    s.dx = d[0]; s.dy = d[1];
+  }
+}
+
+/* ---------- boss shards: small hot sparks that run down the corridors after the smileys ---------- */
+function shardDir(z) {
+  let opts = DIRS.filter(d => canEnter(z, z.x + d[0], z.y + d[1]));
+  if (!opts.length) return null;
+  const fwd = opts.filter(d => !((z.dx || z.dy) && d[0] === -z.dx && d[1] === -z.dy));
+  if (fwd.length) opts = fwd;
+  if (!visiblePlayers().length || Math.random() < z.wander) return opts[rnd(opts.length)];
+  ensureDist();
+  let bestD = null, bv = Infinity;
+  for (const d of opts) { const v = distMap[idx(z.x + d[0], z.y + d[1])]; if (v < bv) { bv = v; bestD = d; } }
+  return bestD;
+}
+function stepShard(z, dt) {
+  if (!z.dx && !z.dy) { const d = shardDir(z); if (!d) return; z.dx = d[0]; z.dy = d[1]; z.t = 0; }
+  z.t += z.speed * dt;
+  while (z.t >= 1) {
+    z.t -= 1; z.x += z.dx; z.y += z.dy;
+    const d = shardDir(z);
+    if (!d) { z.dx = z.dy = 0; z.t = 0; break; }
+    z.dx = d[0]; z.dy = d[1];
+  }
+}
+function fireShard(s) {
+  if (shards.length >= MAX_SHARDS) return;
+  const z = mk(s.x, s.y, 5.2 * lvlK() * (s.hp <= s.maxHp / 2 ? 1.12 : 1));
+  z.life = 7; z.wander = Math.random() < 0.35 ? 0.35 : 0.12;
+  shards.push(z);
+  const [x, y] = center(s);
+  rings.push({ x, y, r: 0.3, life: 0.35, max: 0.35, col: SHARD });
+  sfx.shard();
+}
+function stepBossExtras(s, dt) {
+  if (s.inv > 0) s.inv = Math.max(0, s.inv - dt);
+  const d = STAR_TYPES[s.type], rage = s.hp <= s.maxHp / 2;
+  s.shardT -= dt;
+  if (s.shardT <= 0) {
+    fireShard(s);
+    if (d.mega && rage) later(260, () => { if (!s.caught && state === 'play2') fireShard(s); });
+    s.shardT = d.fire * (rage ? 0.6 : 1) * (0.85 + Math.random() * 0.3);
+  }
+  if (d.mega && rage) {
+    s.jumpT -= dt;
+    if (s.jumpT <= 0) { s.jumpT = 9; teleportBoss(s); }
+  }
+}
+function teleportBoss(s) {
+  distKey = ''; ensureDist();
+  const [x, y] = farCell((x, y) => !shades.some(o => o !== s && !o.caught && Math.abs(o.x - x) + Math.abs(o.y - y) < 6));
+  const [ox, oy] = center(s);
+  rings.push({ x: ox, y: oy, r: 0.5, life: 0.6, max: 0.6, col: s.color });
+  burst(ox, oy, s.color, 24, 5);
+  s.x = x; s.y = y; s.dx = s.dy = 0; s.t = 0;
+  rings.push({ x: x + 0.5, y: y + 0.5, r: 0.2, life: 0.7, max: 0.7, col: s.color });
+  burst(x + 0.5, y + 0.5, '#ffffff', 14, 4);
+}
+
+function arrive(p) {
+  const it = items.find(o => o.x === p.x && o.y === p.y);
+  if (it) pickup(it, p);
+  if (phase !== 1) return;
+  const i = idx(p.x, p.y);
+  if (dots[i]) {
+    dots[i] = 0; dotsLeft--; dotsEaten++; score += 10; noEatT = 0;
+    if (sinceDeath !== null) sinceDeath++;
+    burst(p.x + 0.5, p.y + 0.5, DOT, 3, 1.4, 0.35);
+    dotToggle = !dotToggle;
+    tone(dotToggle ? 660 : 520, 0.05, 'triangle', 0.025);
+    if (dotsLeft <= 0 && state === 'play1') startCleared();
+  }
+}
+
+/* ---------- items ---------- */
+function findSpot(minGap) {
+  ensureDist();
+  for (let k = 0; k < 800; k++) {
+    const x = rnd(W), y = rnd(H), i = idx(x, y);
+    if (grid[i] !== 0) continue;
+    const d = distMap[i];
+    if (d < 6 || d >= 1e6) continue;
+    if (items.some(o => Math.abs(o.x - x) + Math.abs(o.y - y) < minGap)) continue;
+    if (shades.some(s => !s.caught && s.x === x && s.y === y)) continue;
+    return [x, y];
+  }
+  return null;
+}
+function pickType() {
+  const r = Math.random();
+  if (phase === 2) return isBossLevel() ? (r < 0.4 ? 'boot' : r < 0.72 ? 'shield' : 'cloak') : (r < 0.6 ? 'boot' : 'cloak');
+  if (r < 0.45) return 'boot';
+  if (r < 0.8) return 'cloak';
+  return players.every(p => p.shield) ? 'boot' : 'shield';
+}
+function stepItems(dt) {
+  for (let k = spawnQ.length - 1; k >= 0; k--) {
+    spawnQ[k] -= dt;
+    if (spawnQ[k] <= 0) {
+      spawnQ.splice(k, 1);
+      const p = findSpot(phase === 1 ? 4 : 9);
+      if (p) items.push({ x: p[0], y: p[1], type: pickType(), born: now });
+      else spawnQ.push(3);
+    }
+  }
+}
+// the heart lands a fair run away from the smiley who is still standing
+function spawnHeart() {
+  if (gameMode !== 'coop' || items.some(o => o.type === 'heart')) return;
+  distKey = ''; ensureDist();
+  let spot = null, bestScore = -Infinity;
+  for (let k = 0; k < 700; k++) {
+    const x = rnd(W), y = rnd(H), i = idx(x, y);
+    if (grid[i] !== 0) continue;
+    const d = distMap[i];
+    if (d >= 1e6 || d < 8) continue;
+    const sc = -Math.abs(d - 16) + Math.random() * 3;
+    if (sc > bestScore) { bestScore = sc; spot = [x, y]; }
+  }
+  if (!spot) spot = findSpot(2);
+  if (spot) items.push({ x: spot[0], y: spot[1], type: 'heart', born: now });
+}
+function pickup(it, p) {
+  items.splice(items.indexOf(it), 1);
+  score += 50;
+  const col = ITEMS[it.type].color;
+  burst(it.x + 0.5, it.y + 0.5, col, 18, 3.5);
+  rings.push({ x: it.x + 0.5, y: it.y + 0.5, r: 0.3, life: 0.45, max: 0.45, col });
+  floatText(it.x + 0.5, it.y + 0.2, '+50', col);
+  if (it.type === 'boot') p.boot = BOOT_TIME;
+  else if (it.type === 'shield') p.shield = true;
+  else if (it.type === 'cloak') p.cloak = CLOAK_TIME;
+  else for (const q of players) if (q.down) revive(q);
+  sfx.pick(it.type);
+  if (it.type !== 'heart') {
+    toast(it.type === 'cloak' && phase === 2 ? (isBossLevel() ? 'Плащ: 3 секунды осколки летят сквозь тебя' : 'Плащ: 3 секунды звёзды не убегают') : ITEMS[it.type].msg, 1.6);
+    spawnQ.push(ITEM_RESPAWN);
+  }
+  netEvent(1, ITEM_CODES.indexOf(it.type), it.x, it.y);
+}
+function revive(q) {
+  q.down = false; q.invuln = HALO_TIME; q.halo = HALO_TIME;
+  const [x, y] = center(q);
+  reviveFx(x, y);
+  toast('Друг снова в игре!', 1.6);
+  sfx.revive();
+  netEvent(12, q.id, r2(x), r2(y));
+}
+function tickBuffs(dt) {
+  for (const p of players) {
+    if (p.boot > 0) p.boot = Math.max(0, p.boot - dt);
+    if (p.cloak > 0) p.cloak = Math.max(0, p.cloak - dt);
+    if (p.invuln > 0) p.invuln = Math.max(0, p.invuln - dt);
+    if (p.halo > 0) p.halo = Math.max(0, p.halo - dt);
+  }
+}
+function recordHist(dt) {
+  for (const p of players) {
+    p.histT += dt;
+    if (p.histT >= 0.25) { p.histT -= 0.25; p.hist.push([p.x, p.y]); if (p.hist.length > 10) p.hist.shift(); }
+  }
+}
+
+/* ---------- state changes ---------- */
+function startGame(mode, local) {
+  ensureAudio();
+  gameMode = mode === 'coop' ? 'coop' : 'solo'; localCoop = !!local && gameMode === 'coop';
+  score = 0; lives = 3; level = 1;
+  particles = []; rings = []; floaters = []; shards = []; toastT = 0; players = [];
+  seed1 = gameMode === 'solo' ? 0 : 1 + rnd(2147483646);
+  syncPads();
+  loadPhase1();
+  updateCamera(0);
+  setState('intro');
+  sfx.intro();
+  showOverlay(null);
+  saveProgress(1);
+}
+function nextLevel() {
+  level++;
+  seed1 = 1 + rnd(2147483646);
+  loadPhase1();
+  updateCamera(0);
+  saveProgress(level);
+  setState('intro');
+  sfx.intro();
+}
+function stateMessage(st) {
+  const guest = net.mode === 'guest', star = guest && net.myStar >= 0, watcher = guest && !star && !net.isP2;
+  const team = gameMode === 'coop';
+  if (st === 'ready') {
+    if (phase === 2) return 'Снова в бой!';
+    return star ? 'Готов? Лови смайлик!' : watcher ? 'Игра начинается' : (team ? 'Готовы? Собирайте огоньки!' : 'Готов? Собирай огоньки!');
+  }
+  if (st === 'cleared') return 'Все огоньки собраны!';
+  if (st === 'grow') {
+    if (isBossLevel()) return 'Появляется босс: ' + bossTitle() + '!';
+    return star ? 'Лабиринт растёт. Теперь беги!' : watcher ? 'Лабиринт растёт. Смайлик выходит на охоту!' : (team ? 'Лабиринт растёт. Теперь охотитесь вы!' : 'Лабиринт растёт. Теперь охотишься ты!');
+  }
+  return null;
+}
+function setState(s) { state = s; stateT = 0; stateMsg = stateMessage(s); refreshBanner(); refreshCard(); applyPaletteCss(); }
+function toast(text, d) { toastText = text; toastT = d || 1.8; refreshBanner(); }
+function refreshBanner() {
+  const b = $('banner');
+  const t = (net.stall && net.mode === 'guest' ? 'Ждём хозяина комнаты…' : null) || stateMsg || (toastT > 0 ? toastText : null);
+  if (t && state !== 'intro' && state !== 'levelup') { b.textContent = t; b.hidden = false; } else b.hidden = true;
+}
+function refreshCard() {
+  const c = $('levelCard');
+  if (state === 'intro') {
+    setText('lcTop', 'Уровень');
+    setText('lcBig', level + ' / ' + MAX_LEVEL);
+    setText('lcSub', level === MAX_LEVEL ? 'Финал: в конце ждёт Чёрная Звезда' : isBossLevel() ? 'В конце уровня ждёт босс' :
+      level === 1 ? (gameMode === 'coop' ? 'Кооп: карта вдвое больше, 6 звёзд' : 'Собери все огоньки') : 'Звёзды стали быстрее');
+    c.classList.toggle('boss', isBossLevel());
+    c.hidden = false;
+  } else if (state === 'levelup') {
+    setText('lcTop', 'Уровень ' + level);
+    setText('lcBig', 'Пройден!');
+    setText('lcSub', levelNote || 'Дальше будет сложнее');
+    c.classList.remove('boss');
+    c.hidden = false;
+  } else c.hidden = true;
+}
+function currentPalette() {
+  if (phase === 2) return isBossLevel() ? (level === MAX_LEVEL ? MEGA_PAL : BOSS_PAL) : HUNT_PAL;
+  return PALETTES[(level - 1) % PALETTES.length];
+}
+let cssWall = '';
+function applyPaletteCss() {
+  const c = currentPalette().line;
+  if (c !== cssWall) { cssWall = c; document.documentElement.style.setProperty('--wall', c); }
+}
+
+function playerName(p) {
+  if (localCoop) return 'Игрок ' + (p.id + 1);
+  if (players.length < 2) return 'Смайлик';
+  return net.names['p' + (p.id + 1)] || ('Смайлик ' + (p.id + 1));
+}
+function hitPlayer(p, s) {
+  if (p.shield) { popShield(p, s); return; }
+  if (p.t > 0.5 && (p.dx || p.dy)) { p.x += p.dx; p.y += p.dy; }
+  p.dx = p.dy = 0; p.t = 0; p.wx = p.wy = 0;
+  p.down = true; p.boot = 0; p.cloak = 0;
+  const [x, y] = center(p);
+  deathFx(x, y);
+  sfx.die();
+  netEvent(3, p.id, r2(x), r2(y));
+  if (alivePlayers().length) {                                    // co-op: the friend can still save you
+    spawnHeart();
+    toast(playerName(p) + ' пойман! Подберите сердце, чтобы спасти', 2.6);
+    return;
+  }
+  setState('dying');
+}
+function popShield(p, s) {
+  p.shield = false; p.invuln = HALO_TIME; p.halo = HALO_TIME;
+  const [x, y] = center(p);
+  shieldBurst(x, y);
+  if (s && !s.exiting && !s.human && !s.boss && (s.dx || s.dy)) { s.x += s.dx; s.y += s.dy; s.dx = -s.dx; s.dy = -s.dy; s.t = 1 - s.t; }
+  sfx.pop();
+  toast('Щит спас тебя!', 1.4);
+  netEvent(2, p.id, r2(x), r2(y));
+}
+function respawnAfterDeath() {
+  items = items.filter(o => o.type !== 'heart');
+  if (phase === 1) { resetActors(); sinceDeath = 0; elroySuspended = true; setState('ready'); return; }
+  makePlayers(playerSpeed(2), starts.p);                          // the hunt goes on from the start point
+  for (const p of players) { p.fx = 0; p.fy = -1; p.m = -1; p.invuln = 2; p.halo = 2; }
+  shards = []; distKey = '';
+  setState('ready');
+}
+function deathText() {
+  if (phase === 2) return 'Осколки босса оказались быстрее. Щит поглощает один осколок, а под плащом они летят насквозь.';
+  if (gameMode === 'coop') return 'Звёзды поймали обоих смайликов. Держитесь ближе: так проще спасти друга сердцем.';
+  return 'Звёзды поймали смайлик. Включи «Цели», чтобы видеть, кто куда метит, и подбирай щит.';
+}
+function collide1() {
+  for (const p of players) {
+    if (p.down || p.invuln > 0 || p.cloak > 0) continue;
+    const [ax, ay] = pos(p);
+    for (const s of shades) {
+      if (s.inHouse) continue;
+      const [bx, by] = pos(s);
+      if (Math.hypot(ax - bx, ay - by) < 0.62) { hitPlayer(p, s); break; }
+    }
+    if (state !== 'play1') return;
+  }
+}
+function collide2() {
+  for (const p of players) {
+    if (p.down) continue;
+    const [ax, ay] = pos(p);
+    for (const s of shades) {
+      if (s.caught) continue;
+      const [bx, by] = pos(s);
+      const d = Math.hypot(ax - bx, ay - by);
+      if (s.boss) { if (s.inv <= 0 && d < 0.55 + STAR_TYPES[s.type].size * 0.3) bossHit(s, p); }
+      else if (d < 0.75) catchShade(s, p);
+      if (state !== 'play2') return;
+    }
+    if (p.invuln > 0 || p.cloak > 0) continue;
+    for (let k = shards.length - 1; k >= 0; k--) {
+      const [zx, zy] = pos(shards[k]);
+      if (Math.hypot(ax - zx, ay - zy) < 0.55) { shards.splice(k, 1); hitPlayer(p, null); break; }
+    }
+    if (state !== 'play2') return;
+  }
+}
+
+function startCleared() {
+  setState('cleared');
+  sfx.cleared();
+  netEvent(6);
+}
+function startGrow() {
+  growFrom = null;
+  loadPhase2();
+  growFrom = { s: Math.min(cw / W, ch / H) * 0.96, x: W / 2, y: H / 2 };
+  cam.s = growFrom.s; cam.x = growFrom.x; cam.y = growFrom.y;
+  setState('grow');
+  sfx.grow();
+  netEvent(7);
+}
+function catchShade(s) {
+  s.caught = true;
+  score += 500;
+  const [x, y] = center(s);
+  catchFx(x, y, s.color);
+  sfx.caught();
+  netEvent(4, s.type, r2(x), r2(y));
+  if (shades.every(z => z.caught)) finishHunt(true);
+}
+function hitsWord(n) { const a = n % 10, b = n % 100; if (a === 1 && b !== 11) return 'удар'; if (a >= 2 && a <= 4 && (b < 12 || b > 14)) return 'удара'; return 'ударов'; }
+function bossHit(s) {
+  s.hp--;
+  score += 300;
+  const [x, y] = center(s);
+  burst(x, y, s.color, 34, 6); burst(x, y, '#ffffff', 14, 4);
+  rings.push({ x, y, r: 0.6, life: 0.6, max: 0.6, col: s.color });
+  floatText(x, y - 0.6, '+300', s.color);
+  addShake(0.32);
+  sfx.bossHit();
+  netEvent(9, s.type, r2(x), r2(y));
+  if (s.hp <= 0) {
+    s.caught = true;
+    const mega = !!STAR_TYPES[s.type].mega, reward = mega ? 5000 : 1500;
+    score += reward;
+    megaFx(x, y, s.color);
+    floatText(x, y - 1.1, '+' + reward, '#ffffff');
+    sfx.bossDown();
+    netEvent(10, s.type, r2(x), r2(y));
+    if (shades.every(z => !z.boss || z.caught)) {
+      for (const z of shards) { const [zx, zy] = center(z); burst(zx, zy, SHARD, 6, 2, 0.5); }
+      shards = [];
+      if (lives < MAX_LIVES) lives++;
+      finishHunt(true);
+    } else toast(STAR_TYPES[s.type].name + ' повержена! Осталась вторая', 2);
+    return;
+  }
+  s.inv = 2.2; s.speed *= 1.07;
+  toast(STAR_TYPES[s.type].name + ': осталось ' + s.hp + ' ' + hitsWord(s.hp), 1.6);
+  teleportBoss(s);
+  later(500, () => { if (!s.caught && state === 'play2') fireShard(s); });
+}
+function finishHunt(won) {
+  shards = [];
+  if (won) {
+    const bonus = Math.ceil(timeLeft) * 20;
+    score += bonus;
+    levelNote = (isBossLevel() ? 'Босс повержен! +1 жизнь. ' : 'Все звёзды пойманы! ') + 'Бонус за время: ' + bonus;
+  } else levelNote = 'Звёзды ускользнули, но вы идёте дальше';
+  fireworkT = 0;
+  setState('levelup');
+  sfx.levelup();
+  netEvent(11);
+}
+function checkHuntTime() {
+  if (timeLeft > 0) return;
+  timeLeft = 0;
+  lives--;
+  sfx.die();
+  if (lives <= 0) { endGame(false, isBossLevel() ? bossTitle() + ' оказалась сильнее, и жизни кончились.' : 'Время охоты вышло, и жизни кончились.'); return; }
+  if (isBossLevel()) { timeLeft = timeMax; toast('Время вышло: −1 жизнь. Босс ещё не повержен!', 2.4); return; }
+  const left = shades.filter(s => !s.caught).length;
+  toast('Не поймано звёзд: ' + left + '. −1 жизнь', 2.2);
+  finishHunt(false);
+}
+function victory() {
+  saveProgress(10);
+  endGame(true, gameMode === 'coop' ? 'Вы победили Чёрную Звезду и вместе прошли все 9 уровней!' : 'Ты победил Чёрную Звезду и прошёл все 9 уровней!');
+  for (let k = 0; k < 6; k++) later(k * 220, () => { if (state === 'over') firework(); });
+}
+function endGame(won, text) {
+  state = 'over'; stateMsg = null; toastT = 0; refreshBanner(); refreshCard();
+  if (net.mode === 'host') { net.result = { w: won ? 1 : 0, ph: phase, lvl: level }; netEvent(8, won ? 1 : 0); }
+  const title = won ? 'Победа!' : (phase === 2 && isBossLevel() ? 'Босс победил' : phase === 2 ? 'Жизни кончились' : 'Звёзды победили');
+  showEnd(title, text + (won ? '' : ' Ты дошёл до уровня ' + level + '.'), true);
+  if (won) sfx.win();
+}
+function showEnd(title, text, countScore) {
+  $('endTitle').textContent = title;
+  $('endText').textContent = text;
+  $('endScore').textContent = score;
+  if (countScore) {
+    if (score > best) { best = score; try { localStorage.setItem('smiley-stars-best', best); } catch (e) {} $('endBest').textContent = 'Новый рекорд!'; }
+    else $('endBest').textContent = `Рекорд: ${best}`;
+  } else $('endBest').textContent = '';
+  $('againBtn').hidden = net.mode === 'guest';
+  $('againBtn').textContent = net.mode === 'host' ? 'Ещё раз с теми же' : 'Ещё раз';
+  $('endMenuBtn').textContent = net.mode === 'off' ? 'В меню' : 'Выйти из комнаты';
+  showOverlay('endOv');
+}
+function saveProgress(n) {
+  if (n <= progress) return;
+  const before = SKINS.filter(s => s.need <= progress).length;
+  progress = n;
+  try { localStorage.setItem('smiley-stars-progress', progress); } catch (e) {}
+  const opened = SKINS.filter(s => s.need <= progress);
+  if (opened.length > before) { const s = opened[opened.length - 1]; setTimeout(() => toast('Открыт скин «' + s.name + '»! Выбери его в меню', 2.8), 2600); }
+  renderSkins();
+}
+
+/* ---------- particles & effects ---------- */
+function burst(x, y, col, n, sp, life) {
+  if (reduceMotion) n = Math.ceil(n / 3);
+  const L = life || 1.1;
+  for (let k = 0; k < n; k++) {
+    const a = Math.random() * Math.PI * 2, v = sp * (0.3 + Math.random());
+    particles.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: L * (0.55 + Math.random() * 0.45), max: L, col, r: 0.05 + Math.random() * 0.07 });
+  }
+}
+function shieldBurst(x, y) {
+  burst(x, y, '#cfe8ff', 26, 7); burst(x, y, '#ffffff', 10, 5);
+  rings.push({ x, y, r: 0.35, life: 0.5, max: 0.5, col: '#9fd0ff' });
+  addShake(0.18);
+}
+function deathFx(x, y) {
+  burst(x, y, '#ffcf3a', 36, 5); burst(x, y, '#ffffff', 12, 3);
+  rings.push({ x, y, r: 0.3, life: 0.7, max: 0.7, col: '#ff4d6d' }, { x, y, r: 0.1, life: 0.5, max: 0.5, col: '#ffcf3a' });
+  addShake(0.35);
+}
+function catchFx(x, y, col) {
+  burst(x, y, col, 40, 6); burst(x, y, '#ffffff', 14, 4);
+  rings.push({ x, y, r: 0.3, life: 0.6, max: 0.6, col });
+  floatText(x, y - 0.3, '+500', col);
+  addShake(0.2);
+}
+function megaFx(x, y, col) {
+  burst(x, y, col, 90, 9, 1.6); burst(x, y, '#ffffff', 40, 6, 1.3); burst(x, y, '#ffd23a', 30, 4, 1.4);
+  for (let k = 0; k < 4; k++) rings.push({ x, y, r: 0.3 + k * 0.5, life: 0.7 + k * 0.2, max: 0.7 + k * 0.2, col: k % 2 ? '#ffffff' : col });
+  addShake(0.6);
+}
+function reviveFx(x, y) {
+  burst(x, y, HEART, 30, 5); burst(x, y, '#ffffff', 12, 3);
+  rings.push({ x, y, r: 0.3, life: 0.7, max: 0.7, col: HEART });
+  floatText(x, y - 0.5, 'Спасён!', '#ff9fbd');
+}
+function firework() {
+  const cols = ['#ffcf3a', '#ff4fa3', '#3ad7ff', '#9dff4d', '#b14dff', '#ff9f43'];
+  const vw = cw / cam.s, vh = ch / cam.s;
+  const x = cam.x + (Math.random() - 0.5) * vw * 0.8, y = cam.y + (Math.random() - 0.5) * vh * 0.7;
+  const col = cols[rnd(cols.length)];
+  burst(x, y, col, 34, 5, 1.4); burst(x, y, '#ffffff', 8, 2.5, 0.8);
+  rings.push({ x, y, r: 0.2, life: 0.5, max: 0.5, col });
+  tone(300 + Math.random() * 500, 0.18, 'triangle', 0.02, 900);
+}
+function addShake(v) { if (!reduceMotion) shake = Math.max(shake, v); }
+function floatText(x, y, text, col) { floaters.push({ x, y, text, col, life: 1.1, max: 1.1 }); }
+function stepParticles(dt) {
+  for (const p of particles) { p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.94; p.vy *= 0.94; p.life -= dt; }
+  particles = particles.filter(p => p.life > 0);
+  if (particles.length > 800) particles.splice(0, particles.length - 800);
+  for (const g of rings) g.life -= dt;
+  rings = rings.filter(g => g.life > 0);
+  for (const f of floaters) { f.y -= dt * 0.9; f.life -= dt; }
+  floaters = floaters.filter(f => f.life > 0);
+  shake = Math.max(0, shake - dt * 1.1);
+  for (const m of meteors) { m.x += m.vx * dt; m.y += m.vy * dt; m.life -= dt; }
+  meteors = meteors.filter(m => m.life > 0);
+  if (!reduceMotion && Math.random() < dt * 0.22) meteors.push({ x: Math.random() * cw * 0.8, y: Math.random() * ch * 0.4, vx: 520 + Math.random() * 380, vy: 200 + Math.random() * 160, life: 0.9, max: 0.9 });
+}
+function trails() {
+  if (reduceMotion || !players.length) return;
+  for (const p of players) {
+    if (p.down) continue;
+    const [x, y] = center(p);
+    if (p.boot > 0 && Math.random() < 0.6) particles.push({ x: x - p.fx * 0.3 + (Math.random() - 0.5) * 0.25, y: y - p.fy * 0.3 + (Math.random() - 0.5) * 0.25, vx: -p.fx * 2, vy: -p.fy * 2, life: 0.3, max: 0.3, col: '#5be38a', r: 0.06 });
+    if (phase === 2 && Math.random() < 0.5) particles.push({ x: x + (Math.random() - 0.5) * 0.3, y: y + (Math.random() - 0.5) * 0.3, vx: -p.fx * 1.5, vy: -p.fy * 1.5, life: 0.35, max: 0.35, col: (P_COLORS[p.id] || P_COLORS[0]).hunt, r: 0.07 });
+  }
+  if (phase === 1 && elroyLevel() > 0 && shades[0] && shades[0].key === 'blinky' && !shades[0].inHouse && Math.random() < 0.5) {
+    const [x, y] = center(shades[0]);
+    particles.push({ x: x + (Math.random() - 0.5) * 0.4, y: y + (Math.random() - 0.5) * 0.4, vx: (Math.random() - 0.5) * 0.6, vy: -1.2, life: 0.4, max: 0.4, col: '#ff4d6d', r: 0.06 });
+  }
+  for (const s of shades) {                                       // stardust behind every star on the move
+    if (s.caught || s.inHouse || !(s.dx || s.dy) || Math.random() > (s.boss ? 0.8 : 0.3)) continue;
+    const [x, y] = center(s);
+    const col = phase === 2 && !s.boss ? '#8fa0ff' : s.color, spread = s.boss ? 0.9 : 0.3;
+    particles.push({ x: x - s.dx * 0.35 + (Math.random() - 0.5) * spread, y: y - s.dy * 0.35 + (Math.random() - 0.5) * spread, vx: -s.dx * 0.8 + (Math.random() - 0.5) * 0.5, vy: -s.dy * 0.8 + (Math.random() - 0.5) * 0.5, life: s.boss ? 0.7 : 0.45, max: s.boss ? 0.7 : 0.45, col, r: s.boss ? 0.06 + Math.random() * 0.05 : 0.035 + Math.random() * 0.03 });
+  }
+  for (const z of shards) {
+    if (Math.random() > 0.7) continue;
+    const [x, y] = center(z);
+    particles.push({ x: x + (Math.random() - 0.5) * 0.2, y: y + (Math.random() - 0.5) * 0.2, vx: -z.dx * 1.2, vy: -z.dy * 1.2, life: 0.3, max: 0.3, col: SHARD, r: 0.05 });
+  }
+}
+
+/* ---------- update (the authoritative simulation: single player, local co-op and room host) ---------- */
+function update(dt) {
+  now += dt;
+  stepParticles(dt);
+  if (state === 'menu' || state === 'over' || state === 'paused') return;
+  if (toastT > 0) { toastT -= dt; if (toastT <= 0) refreshBanner(); }
+  stateT += dt;
+
+  if (state === 'intro') { if (stateT > 1.9) setState('ready'); }
+  else if (state === 'ready') { if (stateT > (phase === 2 ? 0.9 : 1.2)) setState(phase === 2 ? 'play2' : 'play1'); }
+  else if (state === 'play1') {
+    tickBuffs(dt);
+    stepModes(dt);
+    stepHouse(dt);
+    stepItems(dt);
+    recordHist(dt);
+    for (const p of players) stepPlayer(p, dt);
+    if (state === 'play1') {
+      for (const s of shades) stepShade(s, dt);
+      if (!elroyAnnounced && elroyLevel() > 0) {
+        elroyAnnounced = true;
+        toast('Гончая в ярости: быстрее и без передышек!', 2.2);
+        sfx.elroy();
+        netEvent(5);
+      }
+      collide1();
+      trails();
+    }
+  }
+  else if (state === 'dying') {
+    if (stateT > 1.5) {
+      lives--;
+      if (lives <= 0) endGame(false, deathText());
+      else respawnAfterDeath();
+    }
+  }
+  else if (state === 'cleared') { if (stateT > 1.3) startGrow(); }
+  else if (state === 'grow') { if (stateT > 2.6) setState('play2'); }
+  else if (state === 'play2') {
+    timeLeft -= dt;
+    tickBuffs(dt);
+    stepItems(dt);
+    recordHist(dt);
+    for (const p of players) stepPlayer(p, dt);
+    for (const s of shades) { if (s.boss && !s.caught) stepBossExtras(s, dt); stepShade(s, dt); }
+    for (let k = shards.length - 1; k >= 0; k--) {
+      const z = shards[k];
+      z.life -= dt;
+      if (z.life <= 0) { const [x, y] = center(z); burst(x, y, SHARD, 6, 2, 0.5); shards.splice(k, 1); continue; }
+      stepShard(z, dt);
+    }
+    collide2();
+    if (state === 'play2') { trails(); checkHuntTime(); }
+  }
+  else if (state === 'levelup') {
+    fireworkT -= dt;
+    if (fireworkT <= 0 && stateT < 2.6) { fireworkT = 0.32; firework(); }
+    if (stateT > 3.4) { if (level >= MAX_LEVEL) victory(); else nextLevel(); }
+  }
+  updateCamera(dt);
+}
+
+/* ---------- camera ---------- */
+function focusPoint() {
+  if (net.mode === 'guest') {
+    if (net.myStar >= 0) { const s = shades.find(z => z.key === KEYS[net.myStar] && !z.caught); if (s) return center(s); }
+    if (net.isP2 && players[1]) return center(players[1]);
+  }
+  if (localCoop && players.length > 1) {
+    const a = alivePlayers(), L = a.length ? a : players;
+    let x = 0, y = 0;
+    for (const p of L) { const [px, py] = center(p); x += px; y += py; }
+    return [x / L.length, y / L.length];
+  }
+  return players[0] ? center(players[0]) : [W / 2, H / 2];
+}
+function updateCamera(dt) {
+  const [px, py] = focusPoint();
+  const fitAll = Math.min(cw / W, ch / H) * 0.96;
+  const target = s => {
+    const hw = cw / 2 / s, hh = ch / 2 / s;
+    return [W <= hw * 2 ? W / 2 : Math.min(Math.max(px, hw), W - hw), H <= hh * 2 ? H / 2 : Math.min(Math.max(py, hh), H - hh)];
+  };
+  let s = phase === 1 ? (fitAll >= MIN_TILE1 ? fitAll : MIN_TILE1) : Math.max(fitAll, Math.min(cw, ch) / 17);
+  if (localCoop && players.length > 1 && s > fitAll) {             // keep both smileys on screen
+    const a = alivePlayers(), L = a.length > 1 ? a : players;
+    const xs = L.map(p => center(p)[0]), ys = L.map(p => center(p)[1]);
+    const spanX = Math.max(...xs) - Math.min(...xs), spanY = Math.max(...ys) - Math.min(...ys);
+    s = Math.max(fitAll, Math.min(s, cw / (spanX + 12), ch / (spanY + 9)));
+  }
+  if (phase === 2 && state === 'grow' && growFrom) {
+    const k = Math.min(1, Math.max(0, (stateT - 0.5) / 1.9));
+    const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+    cam.s = growFrom.s + (s - growFrom.s) * e;
+    const [tx, ty] = target(cam.s);
+    cam.x = growFrom.x + (tx - growFrom.x) * e;
+    cam.y = growFrom.y + (ty - growFrom.y) * e;
+    return;
+  }
+  const a = dt > 0 ? 1 - Math.pow(0.0005, dt) : 1, as = dt > 0 ? 1 - Math.pow(0.02, dt) : 1;
+  cam.s += (s - cam.s) * as;
+  const [tx, ty] = target(cam.s);
+  cam.x += (tx - cam.x) * a; cam.y += (ty - cam.y) * a;
+}
+
+/* ---------- drawing ---------- */
+function tilePx() { const big = Math.max(W, H); return phase === 1 ? (big > 40 ? 40 : 48) : (big > 70 ? 24 : big > 55 ? 30 : 36); }
+function renderMaze() {
+  const T = tilePx(), pal = currentPalette();
+  off = document.createElement('canvas');
+  off.width = W * T; off.height = H * T;
+  const o = off.getContext('2d');
+  const isWall = (x, y) => !inb(x, y) || grid[idx(x, y)] !== 0;
+  const solid = (x, y) => inb(x, y) && grid[idx(x, y)] === 1;
+  // floor: translucent so the nebula glows through, with a faint arcade tile grid
+  o.fillStyle = 'rgba(9,6,24,.62)';
+  o.fillRect(0, 0, off.width, off.height);
+  o.strokeStyle = 'rgba(160,140,255,.07)'; o.lineWidth = 1;
+  o.beginPath();
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (grid[idx(x, y)] !== 1) o.rect(x * T + 0.5, y * T + 0.5, T - 1, T - 1);
+  o.stroke();
+  // wall blocks: dark glassy fill, lighter at the top
+  const wf = o.createLinearGradient(0, 0, 0, off.height);
+  wf.addColorStop(0, pal.fill); wf.addColorStop(1, '#0c0820');
+  o.fillStyle = wf;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (grid[idx(x, y)] === 1) o.fillRect(x * T, y * T, T, T);
+  const ins = T * 0.22;
+  const path = new Path2D();
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (!solid(x, y)) continue;
+    const X = x * T, Y = y * T;
+    if (inb(x, y - 1) && !isWall(x, y - 1)) {
+      const a = !isWall(x - 1, y) ? X + ins : (isWall(x - 1, y - 1) ? X - ins : X);
+      const b = !isWall(x + 1, y) ? X + T - ins : (isWall(x + 1, y - 1) ? X + T + ins : X + T);
+      path.moveTo(a, Y + ins); path.lineTo(b, Y + ins);
+    }
+    if (inb(x, y + 1) && !isWall(x, y + 1)) {
+      const a = !isWall(x - 1, y) ? X + ins : (isWall(x - 1, y + 1) ? X - ins : X);
+      const b = !isWall(x + 1, y) ? X + T - ins : (isWall(x + 1, y + 1) ? X + T + ins : X + T);
+      path.moveTo(a, Y + T - ins); path.lineTo(b, Y + T - ins);
+    }
+    if (inb(x - 1, y) && !isWall(x - 1, y)) {
+      const a = !isWall(x, y - 1) ? Y + ins : (isWall(x - 1, y - 1) ? Y - ins : Y);
+      const b = !isWall(x, y + 1) ? Y + T - ins : (isWall(x - 1, y + 1) ? Y + T + ins : Y + T);
+      path.moveTo(X + ins, a); path.lineTo(X + ins, b);
+    }
+    if (inb(x + 1, y) && !isWall(x + 1, y)) {
+      const a = !isWall(x, y - 1) ? Y + ins : (isWall(x + 1, y - 1) ? Y - ins : Y);
+      const b = !isWall(x, y + 1) ? Y + T - ins : (isWall(x + 1, y + 1) ? Y + T + ins : Y + T);
+      path.moveTo(X + T - ins, a); path.lineTo(X + T - ins, b);
+    }
+  }
+  // neon tube: wide soft halo, the coloured tube, then a hot white core
+  o.lineCap = 'round'; o.lineJoin = 'round';
+  o.shadowColor = pal.line;
+  o.globalAlpha = 0.35; o.strokeStyle = pal.line; o.lineWidth = T * 0.2; o.shadowBlur = T * 0.7; o.stroke(path);
+  o.globalAlpha = 1; o.lineWidth = T * 0.09; o.shadowBlur = T * 0.35; o.stroke(path);
+  o.shadowBlur = 0; o.strokeStyle = pal.core; o.lineWidth = T * 0.03; o.stroke(path);
+  // the same lines on their own (half size), for the light that runs along the walls in phase 1
+  lines = null; sweep = null;
+  if (phase === 1) {
+    lines = document.createElement('canvas');
+    lines.width = Math.ceil(off.width / 2); lines.height = Math.ceil(off.height / 2);
+    const l = lines.getContext('2d');
+    l.scale(0.5, 0.5);
+    l.lineCap = 'round'; l.lineJoin = 'round'; l.strokeStyle = '#fff'; l.lineWidth = T * 0.12; l.stroke(path);
+  }
+  mini = document.createElement('canvas');
+  mini.width = W * 3; mini.height = H * 3;
+  const m = mini.getContext('2d');
+  m.fillStyle = 'rgba(15,11,34,.85)'; m.fillRect(0, 0, mini.width, mini.height);
+  m.globalAlpha = 0.6; m.fillStyle = pal.line;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (grid[idx(x, y)] === 1) m.fillRect(x * 3, y * 3, 3, 3);
+  applyPaletteCss();
+}
+
+// Item icons, drawn in tile units around (0,0), about ±0.42 wide
+function drawItemIcon(c, type) {
+  c.save();
+  c.lineJoin = 'round'; c.lineCap = 'round';
+  if (type === 'boot') {
+    c.fillStyle = '#eafff0';
+    c.beginPath(); c.moveTo(-0.16, -0.24); c.quadraticCurveTo(-0.42, -0.32, -0.44, -0.1); c.quadraticCurveTo(-0.32, -0.15, -0.16, -0.08); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(-0.16, -0.08); c.quadraticCurveTo(-0.37, -0.07, -0.38, 0.08); c.quadraticCurveTo(-0.28, 0.01, -0.16, 0.05); c.closePath(); c.fill();
+    c.fillStyle = '#5be38a';
+    c.beginPath(); c.moveTo(-0.18, -0.34); c.lineTo(0.08, -0.34); c.lineTo(0.08, 0.06); c.quadraticCurveTo(0.36, 0.08, 0.38, 0.24); c.lineTo(0.38, 0.3); c.lineTo(-0.18, 0.3); c.closePath(); c.fill();
+    c.fillStyle = '#2f9e5a'; c.fillRect(-0.21, -0.38, 0.32, 0.1);
+    c.fillStyle = '#1f6b3c'; c.fillRect(-0.2, 0.27, 0.6, 0.08);
+  } else if (type === 'shield') {
+    const g = c.createLinearGradient(-0.3, -0.36, 0.3, 0.38);
+    g.addColorStop(0, '#eef7ff'); g.addColorStop(1, '#6fa8e8');
+    c.fillStyle = g;
+    c.beginPath(); c.moveTo(0, -0.37); c.lineTo(0.3, -0.26); c.lineTo(0.28, 0.04); c.quadraticCurveTo(0.22, 0.26, 0, 0.38); c.quadraticCurveTo(-0.22, 0.26, -0.28, 0.04); c.lineTo(-0.3, -0.26); c.closePath(); c.fill();
+    c.strokeStyle = '#2b4f86'; c.lineWidth = 0.045; c.stroke();
+    c.strokeStyle = 'rgba(43,79,134,.45)'; c.lineWidth = 0.03;
+    c.beginPath(); c.moveTo(0, -0.27); c.lineTo(0.2, -0.2); c.lineTo(0.19, 0.03); c.quadraticCurveTo(0.15, 0.18, 0, 0.27); c.quadraticCurveTo(-0.15, 0.18, -0.19, 0.03); c.lineTo(-0.2, -0.2); c.closePath(); c.stroke();
+    c.fillStyle = '#ffcf3a'; c.beginPath(); c.arc(0, -0.01, 0.09, 0, Math.PI * 2); c.fill();
+  } else if (type === 'heart') {
+    const g = c.createLinearGradient(0, -0.34, 0, 0.36);
+    g.addColorStop(0, '#ffb3c8'); g.addColorStop(1, '#e8264f');
+    c.fillStyle = g;
+    c.beginPath();
+    c.moveTo(0, 0.34);
+    c.bezierCurveTo(-0.46, 0.04, -0.4, -0.38, -0.12, -0.32);
+    c.quadraticCurveTo(-0.03, -0.3, 0, -0.18);
+    c.quadraticCurveTo(0.03, -0.3, 0.12, -0.32);
+    c.bezierCurveTo(0.4, -0.38, 0.46, 0.04, 0, 0.34);
+    c.closePath(); c.fill();
+    c.strokeStyle = '#7a0f28'; c.lineWidth = 0.04; c.stroke();
+    c.fillStyle = 'rgba(255,255,255,.75)';
+    c.beginPath(); c.ellipse(-0.17, -0.17, 0.08, 0.05, -0.6, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = '#ffffff'; c.lineWidth = 0.06;
+    c.beginPath(); c.moveTo(0, -0.06); c.lineTo(0, 0.14); c.moveTo(-0.1, 0.04); c.lineTo(0.1, 0.04); c.stroke();
+  } else {
+    const g = c.createLinearGradient(0, -0.38, 0, 0.36);
+    g.addColorStop(0, '#c9a6ff'); g.addColorStop(1, '#6b3fd6');
+    c.fillStyle = g;
+    c.beginPath(); c.moveTo(0, -0.38); c.quadraticCurveTo(0.2, -0.38, 0.2, -0.16); c.lineTo(0.34, 0.34); c.quadraticCurveTo(0.17, 0.26, 0, 0.36); c.quadraticCurveTo(-0.17, 0.26, -0.34, 0.34); c.lineTo(-0.2, -0.16); c.quadraticCurveTo(-0.2, -0.38, 0, -0.38); c.closePath(); c.fill();
+    c.fillStyle = '#160f30'; c.beginPath(); c.ellipse(0, -0.15, 0.11, 0.13, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#ffe9a8';
+    c.beginPath(); c.arc(-0.045, -0.15, 0.022, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.arc(0.045, -0.15, 0.022, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = 'rgba(22,15,48,.45)'; c.lineWidth = 0.03;
+    c.beginPath(); c.moveTo(-0.08, 0.03); c.lineTo(-0.15, 0.28); c.moveTo(0.08, 0.03); c.lineTo(0.15, 0.28); c.stroke();
+  }
+  c.restore();
+}
+
+function paintCrown(c, y, w) {
+  c.save();
+  const g = c.createLinearGradient(0, y - w * 0.6, 0, y + w * 0.25);
+  g.addColorStop(0, '#fff3a0'); g.addColorStop(1, '#e0a010');
+  c.fillStyle = g;
+  c.beginPath();
+  c.moveTo(-w, y + w * 0.25); c.lineTo(-w, y - w * 0.35); c.lineTo(-w * 0.5, y); c.lineTo(0, y - w * 0.6); c.lineTo(w * 0.5, y); c.lineTo(w, y - w * 0.35); c.lineTo(w, y + w * 0.25); c.closePath();
+  c.fill();
+  c.strokeStyle = '#7a4a00'; c.lineWidth = w * 0.08; c.lineJoin = 'round'; c.stroke();
+  c.fillStyle = '#ff3b6b'; c.beginPath(); c.arc(0, y - w * 0.02, w * 0.14, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#3ad7ff'; for (const sx of [-0.62, 0.62]) { c.beginPath(); c.arc(sx * w, y + w * 0.04, w * 0.1, 0, Math.PI * 2); c.fill(); }
+  c.restore();
+}
+
+// A five-pointed star with eyes, drawn in tile units around (0,0)
+function paintStar(c, col, i, dx, dy, t, o) {
+  o = o || {};
+  const r = o.scared ? 0.37 : 0.42, R = r * 1.25;
+  if (o.glow !== false) {
+    const gr = o.angry ? r * 3 : r * 2.2;
+    const g = c.createRadialGradient(0, 0, 0, 0, 0, gr);
+    g.addColorStop(0, col + (o.angry ? '88' : '55')); g.addColorStop(1, col + '00');
+    c.fillStyle = g; c.beginPath(); c.arc(0, 0, gr, 0, Math.PI * 2); c.fill();
+  }
+  const rock = Math.sin(t * 3 + i) * 0.18 - Math.PI / 2;
+  const wob = o.angry ? 0.12 : 0.05, wsp = o.angry ? 14 : 6;
+  c.beginPath();
+  for (let k = 0; k < 10; k++) {
+    const a = k / 10 * Math.PI * 2 + rock;
+    const rr = k % 2 ? R * 0.48 : R * (1 + wob * Math.sin(t * wsp + k + i * 2));
+    const x = Math.cos(a) * rr, y = Math.sin(a) * rr;
+    k ? c.lineTo(x, y) : c.moveTo(x, y);
+  }
+  c.closePath(); c.fillStyle = col; c.fill();
+  c.save(); c.clip();                                             // glassy shading: light from the top left, shadow below
+  const hl = c.createRadialGradient(-R * 0.35, -R * 0.45, 0, -R * 0.2, -R * 0.25, R * 1.1);
+  hl.addColorStop(0, 'rgba(255,255,255,.75)'); hl.addColorStop(0.45, 'rgba(255,255,255,.12)'); hl.addColorStop(1, 'rgba(255,255,255,0)');
+  c.fillStyle = hl; c.fillRect(-R * 1.5, -R * 1.5, R * 3, R * 3);
+  const sh = c.createLinearGradient(0, -R * 0.2, 0, R * 1.2);
+  sh.addColorStop(0, 'rgba(10,4,30,0)'); sh.addColorStop(1, 'rgba(10,4,30,.4)');
+  c.fillStyle = sh; c.fillRect(-R * 1.5, -R * 1.5, R * 3, R * 3);
+  c.restore();
+  c.lineJoin = 'round';
+  if (o.outline) { c.strokeStyle = o.outline; c.lineWidth = 0.06; } else { c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 0.035; }
+  c.stroke();
+  const lx = dx * 0.07, ly = dy * 0.07;
+  const blink = !o.scared && ((t * 0.55 + i * 0.37) % 3.2) < 0.09;
+  for (const ex of [-0.13, 0.13]) {
+    c.fillStyle = '#ffffff';
+    c.beginPath(); c.ellipse(ex + lx, -0.03 + ly, 0.095, blink ? 0.012 : (o.scared ? 0.12 : 0.075), o.scared ? 0 : (ex < 0 ? 0.35 : -0.35), 0, Math.PI * 2); c.fill();
+    if (!blink) {
+      c.fillStyle = o.pupil || '#120d26';
+      c.beginPath(); c.arc(ex + lx * 1.7, -0.03 + ly * 1.7, o.scared ? 0.035 : 0.045, 0, Math.PI * 2); c.fill();
+    }
+  }
+  if (o.angry) {
+    c.strokeStyle = o.outline ? '#ffffff' : '#120d26'; c.lineWidth = 0.05; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(-0.25 + lx, -0.19 + ly); c.lineTo(-0.05 + lx, -0.11 + ly); c.moveTo(0.25 + lx, -0.19 + ly); c.lineTo(0.05 + lx, -0.11 + ly); c.stroke();
+  }
+  if (o.scared) {
+    c.strokeStyle = '#120d26'; c.lineWidth = 0.035;
+    c.beginPath();
+    for (let k = 0; k <= 4; k++) { const x = -0.14 + k * 0.07, y = 0.15 + (k % 2 ? -0.03 : 0.03); k ? c.lineTo(x, y) : c.moveTo(x, y); }
+    c.stroke();
+  }
+  if (o.lost) labelText(c, '?', -23, 16, '#efeaff');
+}
+// Text drawn at 1/40 of a tile per unit, so font sizes stay sane under the maze transform
+function labelText(c, text, y, size, col) {
+  c.save(); c.scale(1 / 40, 1 / 40);
+  c.font = `700 ${size}px Rubik, system-ui, sans-serif`; c.textAlign = 'center';
+  c.lineWidth = 4; c.strokeStyle = 'rgba(15,11,34,.85)'; c.lineJoin = 'round';
+  c.strokeText(text, 0, y);
+  c.fillStyle = col; c.fillText(text, 0, y);
+  c.restore();
+}
+
+// The smiley in every skin. m runs from 1 (smile) to -1 (the smile flipped over, for the hunt).
+function paintSmiley(c, R, o) {
+  const id = (SKINS[o.skin] || SKINS[0]).id;
+  let base = o.base, light = o.light;
+  if (id === 'robot' && !o.down) { base = o.p2 ? '#5fc9a8' : '#93a9c9'; light = '#f2f6ff'; }
+  const ink = id === 'robot' ? '#34405a' : '#2a1a00';
+  const lx = (o.fx || 0) * R * 0.12, ly = (o.fy || 0) * R * 0.12;
+  const m = o.m === undefined ? 1 : o.m, hunt = !!o.hunt, t = o.t || 0, blink = !!o.blink;
+  c.save();
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  if (id === 'cat') for (const sx of [-1, 1]) {
+    c.fillStyle = base;
+    c.beginPath(); c.moveTo(sx * R * 0.92, -R * 0.3); c.lineTo(sx * R * 0.8, -R * 1.22); c.lineTo(sx * R * 0.16, -R * 0.88); c.closePath(); c.fill();
+    c.strokeStyle = '#3a2400'; c.lineWidth = R * 0.08; c.stroke();
+    c.fillStyle = 'rgba(255,130,165,.9)';
+    c.beginPath(); c.moveTo(sx * R * 0.76, -R * 0.55); c.lineTo(sx * R * 0.74, -R * 1.0); c.lineTo(sx * R * 0.38, -R * 0.8); c.closePath(); c.fill();
+  }
+  if (id === 'robot') {
+    c.strokeStyle = '#5b6b85'; c.lineWidth = R * 0.08;
+    c.beginPath(); c.moveTo(0, -R * 0.95); c.lineTo(0, -R * 1.35); c.stroke();
+    c.fillStyle = hunt ? '#ff3b3b' : (Math.floor(t * 2) % 2 ? '#2f7a4a' : '#5be38a');
+    c.beginPath(); c.arc(0, -R * 1.42, R * 0.14, 0, Math.PI * 2); c.fill();
+  }
+  const face = c.createRadialGradient(-R * 0.3, -R * 0.35, 0, 0, 0, R);
+  face.addColorStop(0, light); face.addColorStop(1, base);
+  c.fillStyle = face; c.beginPath(); c.arc(0, 0, R, 0, Math.PI * 2); c.fill();
+  c.save(); c.clip();
+  const rim = c.createRadialGradient(0, R * 0.2, R * 0.6, 0, 0, R * 1.05);
+  rim.addColorStop(0, 'rgba(120,40,0,0)'); rim.addColorStop(1, id === 'robot' ? 'rgba(20,30,60,.45)' : 'rgba(120,40,0,.35)');
+  c.fillStyle = rim; c.fillRect(-R, -R, R * 2, R * 2);
+  if (id === 'robot') {
+    c.strokeStyle = 'rgba(52,64,90,.45)'; c.lineWidth = R * 0.05;
+    c.beginPath(); c.moveTo(-R, R * 0.02); c.lineTo(-R * 0.78, R * 0.02); c.moveTo(R * 0.78, R * 0.02); c.lineTo(R, R * 0.02); c.stroke();
+  }
+  if (id === 'ninja') {
+    c.fillStyle = '#1d1733'; c.fillRect(-R, -R * 0.5, R * 2, R * 0.46);
+    c.fillStyle = '#e8364f'; c.fillRect(-R, -R * 0.64, R * 2, R * 0.14);
+  }
+  c.restore();
+  c.strokeStyle = id === 'robot' ? '#3d4a63' : '#3a2400'; c.lineWidth = R * 0.085;
+  c.beginPath(); c.arc(0, 0, R, 0, Math.PI * 2); c.stroke();
+  if (id === 'robot') {
+    c.fillStyle = '#5b6b85';
+    for (const sx of [-1, 1]) { c.beginPath(); c.arc(sx * R * 0.82, R * 0.02, R * 0.07, 0, Math.PI * 2); c.fill(); }
+  }
+  if (id === 'ninja') {
+    const w = Math.sin(t * 8) * R * 0.12;
+    c.fillStyle = '#e8364f';
+    c.beginPath(); c.moveTo(R * 0.9, -R * 0.62); c.quadraticCurveTo(R * 1.25, -R * 0.78 + w, R * 1.5, -R * 0.45 + w); c.lineTo(R * 1.34, -R * 0.33 + w); c.quadraticCurveTo(R * 1.15, -R * 0.5, R * 0.92, -R * 0.47); c.closePath(); c.fill();
+  }
+  c.fillStyle = 'rgba(255,255,255,.7)';                            // shine
+  c.beginPath(); c.ellipse(-R * 0.42, -R * 0.52, R * 0.2, R * 0.11, -0.6, 0, Math.PI * 2); c.fill();
+  if (id !== 'robot' && id !== 'ninja' && !o.down) {
+    c.fillStyle = hunt ? 'rgba(220,40,40,.35)' : 'rgba(255,110,120,.4)';   // cheeks
+    for (const ex of [-0.58, 0.58]) { c.beginPath(); c.ellipse(ex * R, R * 0.18, R * 0.15, R * 0.09, 0, 0, Math.PI * 2); c.fill(); }
+  }
+  if (o.down) {                                                    // knocked out: little crosses for eyes
+    c.strokeStyle = ink; c.lineWidth = R * 0.08;
+    for (const ex of [-0.34, 0.34]) { const x = ex * R, y = -R * 0.2, k = R * 0.1; c.beginPath(); c.moveTo(x - k, y - k); c.lineTo(x + k, y + k); c.moveTo(x + k, y - k); c.lineTo(x - k, y + k); c.stroke(); }
+  } else if (id === 'cool') {
+    c.fillStyle = '#120d1e';
+    for (const sx of [-1, 1]) { c.beginPath(); c.ellipse(sx * R * 0.36 + lx, -R * 0.2 + ly, R * 0.3, R * 0.2, 0, 0, Math.PI * 2); c.fill(); }
+    c.strokeStyle = '#120d1e'; c.lineWidth = R * 0.08;
+    c.beginPath(); c.moveTo(-R * 0.1 + lx, -R * 0.24 + ly); c.lineTo(R * 0.1 + lx, -R * 0.24 + ly);
+    c.moveTo(-R * 0.64 + lx, -R * 0.26 + ly); c.lineTo(-R * 0.96, -R * 0.36); c.moveTo(R * 0.64 + lx, -R * 0.26 + ly); c.lineTo(R * 0.96, -R * 0.36); c.stroke();
+    c.fillStyle = 'rgba(255,255,255,.6)';
+    for (const sx of [-1, 1]) { c.beginPath(); c.ellipse(sx * R * 0.36 - R * 0.1 + lx, -R * 0.27 + ly, R * 0.09, R * 0.05, -0.4, 0, Math.PI * 2); c.fill(); }
+  } else if (id === 'robot') {
+    const ec = hunt ? '#ff4d4d' : '#4dfcff';
+    for (const sx of [-1, 1]) {
+      c.fillStyle = '#1b2235'; c.fillRect(sx * R * 0.36 - R * 0.2 + lx, -R * 0.34 + ly, R * 0.4, R * 0.28);
+      c.fillStyle = ec; c.fillRect(sx * R * 0.36 - R * 0.14 + lx, -R * 0.28 + ly + (blink ? R * 0.07 : 0), R * 0.28, blink ? R * 0.03 : R * 0.16);
+    }
+  } else if (id === 'ninja') {
+    for (const sx of [-1, 1]) {
+      c.fillStyle = '#ffffff';
+      c.beginPath(); c.ellipse(sx * R * 0.34 + lx, -R * 0.27 + ly, R * 0.17, blink ? R * 0.02 : R * 0.09, sx * -0.15, 0, Math.PI * 2); c.fill();
+      if (!blink) { c.fillStyle = '#120d1e'; c.beginPath(); c.arc(sx * R * 0.34 + lx * 1.5, -R * 0.27 + ly * 1.5, R * 0.06, 0, Math.PI * 2); c.fill(); }
+    }
+  } else {
+    c.fillStyle = ink;
+    for (const ex of [-0.34, 0.34]) { c.beginPath(); c.ellipse(ex * R + lx, -0.22 * R + ly, R * 0.1, blink ? R * 0.02 : R * (hunt ? 0.13 : 0.16), 0, 0, Math.PI * 2); c.fill(); }
+    if (!blink) {
+      c.fillStyle = 'rgba(255,255,255,.85)';
+      for (const ex of [-0.34, 0.34]) { c.beginPath(); c.arc(ex * R + lx + R * 0.03, -0.28 * R + ly, R * 0.035, 0, Math.PI * 2); c.fill(); }
+    }
+  }
+  if (hunt && !o.down) {                                           // angry brows for the hunt
+    c.strokeStyle = ink; c.lineWidth = R * 0.12;
+    c.beginPath(); c.moveTo(-0.5 * R + lx, -0.5 * R + ly); c.lineTo(-0.18 * R + lx, -0.38 * R + ly);
+    c.moveTo(0.5 * R + lx, -0.5 * R + ly); c.lineTo(0.18 * R + lx, -0.38 * R + ly); c.stroke();
+  }
+  const ey = R * (0.27 - 0.15 * m), cy2 = ey + R * 0.5 * m;
+  c.strokeStyle = id === 'robot' ? (hunt ? '#ff4d4d' : '#34405a') : ink; c.lineWidth = R * 0.13;
+  c.beginPath(); c.moveTo(-R * 0.42 + lx * 0.6, ey + ly * 0.6); c.quadraticCurveTo(lx * 0.6, cy2 + ly * 0.6, R * 0.42 + lx * 0.6, ey + ly * 0.6); c.stroke();
+  if (id === 'cat') {
+    c.fillStyle = '#ff7aa0';
+    c.beginPath(); c.moveTo(-R * 0.08 + lx, R * 0.02 + ly); c.lineTo(R * 0.08 + lx, R * 0.02 + ly); c.lineTo(lx, R * 0.12 + ly); c.closePath(); c.fill();
+    c.strokeStyle = 'rgba(58,36,0,.7)'; c.lineWidth = R * 0.04;
+    for (const sx of [-1, 1]) for (const k of [-1, 1]) { c.beginPath(); c.moveTo(sx * R * 0.45, R * 0.08 + k * R * 0.05); c.lineTo(sx * R * 0.98, R * 0.02 + k * R * 0.15); c.stroke(); }
+  }
+  if (id === 'king') paintCrown(c, -R * 0.98, R * 0.55);
+  c.restore();
+}
+function smileyLook(k, sk, hunt) {
+  const pc = P_COLORS[k] || P_COLORS[0];
+  return { base: hunt ? pc.hunt : pc.calm, light: hunt ? pc.huntLight : pc.light, m: hunt ? -1 : 1, hunt, fx: 0, fy: 0, skin: sk, t: 0, p2: k === 1 };
+}
+
+function drawShade(s) {
+  if (s.caught) return;
+  if (s.boss) { drawBoss(s); return; }
+  const [cx, cy] = center(s);
+  const scared = phase === 2;
+  const blink = scared && timeLeft < 20 && Math.floor(now * 6) % 2;
+  const col = scared ? (blink ? '#e8e4ff' : '#6f7fd6') : s.color;
+  const bob = s.inHouse ? Math.sin(now * 4 + s.i * 1.3) * 0.16 : 0;
+  const shiver = scared ? Math.sin(now * 40 + s.i) * 0.025 : 0;
+  const angry = phase === 1 && s.key === 'blinky' && elroyLevel() > 0;
+  const free = !s.inHouse && !s.exiting;
+  const lost = phase === 1 && free && !s.human && (!visiblePlayers().length || (showTargets && net.mode !== 'guest' && !targetFor(s)));
+  const mine = net.mode === 'guest' && net.myStar >= 0 && s.key === KEYS[net.myStar];
+  ctx.save();
+  ctx.translate(cx + shiver, cy + bob);
+  if (mine) {
+    ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 0.05;
+    ctx.setLineDash([0.16, 0.1]); ctx.lineDashOffset = -now * 0.6;
+    ctx.beginPath(); ctx.arc(0, 0, 0.68, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  paintStar(ctx, col, s.i, s.dx, s.dy, now, { scared, angry, lost });
+  if (mine) labelText(ctx, 'ТЫ', -26, 12, '#ffffff');
+  else if (s.human && net.names[s.key]) labelText(ctx, net.names[s.key], -26, 11, s.color);
+  ctx.restore();
+}
+
+function drawBoss(s) {
+  const d = STAR_TYPES[s.type] || STAR_TYPES[6];
+  const [cx, cy] = center(s);
+  const size = d.size || 1.5, rage = s.hp <= s.maxHp / 2;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const gr = size * (1.5 + 0.12 * Math.sin(now * 4));
+  ctx.globalAlpha = 0.75;
+  ctx.drawImage(glow(d.color), -gr, -gr, gr * 2, gr * 2);
+  if (d.mega) {                                                    // the black star drags the light around it
+    ctx.globalAlpha = 0.5; ctx.strokeStyle = d.color; ctx.lineWidth = 0.08;
+    for (let arm = 0; arm < 3; arm++) {
+      ctx.beginPath();
+      for (let k = 0; k <= 24; k++) {
+        const rr = 0.45 * size + k / 24 * 1.25 * size, a = now * 1.6 + arm * 2.094 + k * 0.16;
+        const x = Math.cos(a) * rr, y = Math.sin(a) * rr;
+        k ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      }
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+  ctx.save();                                                      // a crown of spikes spinning around it
+  ctx.rotate(now * (rage ? 2.6 : 1.2));
+  ctx.fillStyle = d.color + 'bb';
+  for (let k = 0; k < 12; k++) {
+    ctx.rotate(Math.PI / 6);
+    ctx.beginPath(); ctx.moveTo(-0.06 * size, -0.62 * size); ctx.lineTo(0, -0.84 * size); ctx.lineTo(0.06 * size, -0.62 * size); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+  if (s.inv > 0 && Math.floor(now * 14) % 2) ctx.globalAlpha = 0.35;
+  ctx.scale(size, size);
+  paintStar(ctx, d.mega ? '#24123a' : d.color, s.i + 3, s.dx, s.dy, now, { glow: false, angry: true, outline: d.mega ? d.color : null, pupil: d.mega ? d.color : null });
+  if (d.key === 'king') paintCrown(ctx, -0.58, 0.24);
+  ctx.restore();
+}
+
+function drawSmiley(p) {
+  const [cx, cy] = center(p);
+  const hunt = phase === 2;
+  let r = hunt ? 0.44 : 0.34;
+  if (state === 'dying' && p.down) r *= Math.max(0, 1 - stateT / 0.5);
+  if (r <= 0.01) return;
+  const pc = P_COLORS[p.id] || P_COLORS[0];
+  const col = p.down ? '#8b84b0' : (hunt ? pc.hunt : pc.calm);
+  const R = r * 1.05;
+  const iWatchAsStar = net.mode === 'guest' && net.myStar >= 0;
+  let alpha = 1;
+  if (p.cloak > 0) alpha = iWatchAsStar ? 0.07 : 0.28 + 0.1 * Math.sin(now * 18);
+  if (p.invuln > 0 && Math.floor(now * 12) % 2) alpha *= 0.5;
+  if (p.down) alpha = 0.6;
+  // the flip of the smile: animates whenever the smiley changes mood
+  const want = p.down ? -0.5 : (hunt ? -1 : 1);
+  p.m = (p.m === undefined ? want : p.m) + (want - (p.m === undefined ? want : p.m)) * Math.min(1, frameDt * 4.5);
+  // afterimage trail
+  if (!p.trail) p.trail = [];
+  const last = p.trail[p.trail.length - 1];
+  if (last && Math.hypot(last.x - cx, last.y - cy) > 1.5) p.trail = [];
+  if (!last || Math.hypot(last.x - cx, last.y - cy) > 0.04) { p.trail.push({ x: cx, y: cy }); if (p.trail.length > 10) p.trail.shift(); }
+  if (!reduceMotion && !p.down && p.cloak <= 0) {
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    p.trail.forEach((q, k) => {
+      const f = (k + 1) / p.trail.length, rr = R * (0.45 + 0.55 * f) * 2.2;
+      ctx.globalAlpha = 0.22 * f * alpha;
+      ctx.drawImage(glow(col), q.x - rr, q.y - rr, rr * 2, rr * 2);
+    });
+    ctx.restore();
+  }
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.globalAlpha = alpha;
+  if (!p.down) {
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const gr = r * (3 + 0.25 * Math.sin(now * 5));
+    ctx.globalAlpha = alpha * 0.7;
+    ctx.drawImage(glow(col), -gr, -gr, gr * 2, gr * 2);
+    ctx.restore();
+  }
+  ctx.save();
+  if ((p.dx || p.dy) && !reduceMotion && !p.down) {               // squash and stretch while running
+    const k = 0.06 * Math.sin(now * 18);
+    if (p.dx) ctx.scale(1 + k, 1 - k); else ctx.scale(1 - k, 1 + k);
+  }
+  paintSmiley(ctx, R, {
+    base: col, light: p.down ? '#c9c4e0' : (hunt ? pc.huntLight : pc.light), m: p.m, hunt: hunt && !p.down, down: p.down,
+    fx: p.fx, fy: p.fy, blink: (now + p.id * 1.7) % 3.4 < 0.12, skin: p.skin, t: now, p2: p.id === 1
+  });
+  ctx.restore();
+  if (p.cloak > 0) {
+    ctx.strokeStyle = 'rgba(180,140,255,.85)'; ctx.lineWidth = 0.045;
+    ctx.setLineDash([0.12, 0.1]); ctx.lineDashOffset = -now;
+    ctx.beginPath(); ctx.arc(0, 0, R * 1.25, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.globalAlpha = 1;
+  if (p.shield) {
+    ctx.fillStyle = 'rgba(159,208,255,.12)';
+    ctx.beginPath(); ctx.arc(0, 0, R * 1.45, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(159,208,255,.85)'; ctx.lineWidth = 0.05; ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 0.04;
+    const a0 = Math.PI * 1.08 + Math.sin(now * 1.5) * 0.25;
+    ctx.beginPath(); ctx.arc(0, 0, R * 1.26, a0, a0 + 0.55); ctx.stroke();
+  }
+  if (p.halo > 0) {
+    ctx.globalAlpha = Math.min(1, p.halo / 0.5);
+    ctx.strokeStyle = '#ffe27a'; ctx.lineWidth = 0.075;
+    ctx.beginPath(); ctx.ellipse(0, -R * 1.5 + Math.sin(now * 4) * 0.04, R * 0.62, R * 0.2, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+  if (p.down && state !== 'dying') {                               // calling for help
+    for (let k = 0; k < 2; k++) {
+      const f = (now * 0.9 + k * 0.5) % 1;
+      ctx.globalAlpha = (1 - f) * 0.8;
+      ctx.strokeStyle = HEART; ctx.lineWidth = 0.05;
+      ctx.beginPath(); ctx.arc(0, 0, R * (1.2 + f * 1.6), 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    labelText(ctx, 'SOS', -36, 13, '#ff9fbd');
+  } else if (players.length > 1) {
+    labelText(ctx, localCoop ? 'P' + (p.id + 1) : (isMyPlayer(p) ? 'ТЫ' : playerName(p)), -36, 11, pc.calm);
+  }
+  ctx.restore();
+}
+function isMyPlayer(p) { return net.mode === 'guest' ? (net.isP2 && p.id === 1) : p.id === 0; }
+function myPlayer() { return net.mode === 'guest' && net.isP2 ? players[1] : players[0]; }
+
+function drawItems() {
+  for (const it of items) {
+    const col = ITEMS[it.type].color;
+    const age = it.born < 0 ? 1 : Math.min(1, (now - it.born) / 0.35);
+    const k = Math.max(0.01, 1 - Math.pow(1 - age, 3));
+    const bob = Math.sin(now * 3 + it.x * 0.7 + it.y) * 0.06;
+    const heart = it.type === 'heart';
+    ctx.save();
+    ctx.translate(it.x + 0.5, it.y + 0.5 + bob);
+    ctx.scale(k, k);
+    if (heart) { const b = 1 + 0.12 * Math.max(0, Math.sin(now * 7)); ctx.scale(b, b); }
+    ctx.save();                                                   // slow rotating rays
+    ctx.rotate(now * 0.8 + it.x);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = col + (heart ? '55' : '30');
+    for (let r = 0; r < 6; r++) {
+      ctx.rotate(Math.PI / 3);
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-0.09, heart ? -1.1 : -0.85); ctx.lineTo(0.09, heart ? -1.1 : -0.85); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 0.62);
+    g.addColorStop(0, col + '55'); g.addColorStop(1, col + '00');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 0.62, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = col; ctx.globalAlpha = 0.55; ctx.lineWidth = 0.04;
+    ctx.beginPath(); ctx.arc(0, 0, 0.45 + 0.03 * Math.sin(now * 5 + it.x), 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.scale(0.82, 0.82);
+    drawItemIcon(ctx, it.type);
+    ctx.restore();
+  }
+}
+function drawShards() {
+  if (!shards.length) return;
+  ctx.save();
+  for (const z of shards) {
+    const [x, y] = center(z);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = Math.min(1, z.life === undefined ? 1 : z.life / 0.6);
+    ctx.drawImage(glow(SHARD), -0.6, -0.6, 1.2, 1.2);
+    ctx.rotate(now * 9 + x);
+    ctx.fillStyle = '#ffd2a0';
+    ctx.beginPath();
+    for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, rr = k % 2 ? 0.08 : 0.24; const px = Math.cos(a) * rr, py = Math.sin(a) * rr; k ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawTargets() {
+  if (!showTargets || phase !== 1 || net.mode === 'guest' || state === 'menu' || state === 'over') return;
+  ctx.save();
+  ctx.lineWidth = 0.06; ctx.lineCap = 'round';
+  for (const s of shades) {
+    const tg = targetFor(s);
+    if (!tg) continue;
+    const [sx, sy] = center(s), tx = tg[0] + 0.5, ty = tg[1] + 0.5;
+    ctx.strokeStyle = s.color;
+    ctx.globalAlpha = 0.5; ctx.setLineDash([0.2, 0.15]);
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(tx, ty); ctx.stroke();
+    ctx.globalAlpha = 0.95; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(tx - 0.28, ty - 0.28); ctx.lineTo(tx + 0.28, ty + 0.28); ctx.moveTo(tx + 0.28, ty - 0.28); ctx.lineTo(tx - 0.28, ty + 0.28); ctx.stroke();
+    if (s.key === 'inky') {
+      const p = preyOf(s);
+      if (p) {
+        const [px, py] = ahead(p, 2);
+        ctx.globalAlpha = 0.8;
+        ctx.beginPath(); ctx.arc(px + 0.5, py + 0.5, 0.17, 0, Math.PI * 2); ctx.stroke();
+      }
+    }
+  }
+  ctx.restore();
+}
+
+function drawBuffBar(p, row) {
+  if (!p) return;
+  const slots = [];
+  if (p.boot > 0) slots.push(['boot', p.boot / BOOT_TIME, Math.ceil(p.boot)]);
+  if (p.cloak > 0) slots.push(['cloak', p.cloak / CLOAK_TIME, Math.ceil(p.cloak)]);
+  if (p.shield) slots.push(['shield', 1, null]);
+  const R = 17;
+  slots.forEach(([type, frac, secs], k) => {
+    const cx = 12 + R + k * (2 * R + 10), cy = ch - 12 - R - 14 - row * 64;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = 'rgba(26,20,56,.9)';
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,.12)';
+    ctx.beginPath(); ctx.arc(cx, cy, R - 1.5, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = ITEMS[type].color;
+    ctx.beginPath(); ctx.arc(cx, cy, R - 1.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, frac)); ctx.stroke();
+    ctx.setTransform(dpr * 24, 0, 0, dpr * 24, dpr * cx, dpr * cy);
+    drawItemIcon(ctx, type);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.font = '700 11px Rubik, system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#efeaff';
+    ctx.fillText(secs === null ? 'щит' : secs + ' с', cx, cy + R + 12);
+  });
+  if (localCoop && slots.length) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.font = '700 11px Rubik, system-ui, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillStyle = (P_COLORS[p.id] || P_COLORS[0]).calm;
+    ctx.fillText('P' + (p.id + 1), 12, ch - 12 - 2 * R - 22 - row * 64);
+  }
+}
+function drawBossBar() {
+  const bosses = shades.filter(s => s.boss);
+  if (!bosses.length || phase !== 2) return;
+  if (!(state === 'play2' || state === 'paused' || state === 'dying' || state === 'ready' || (state === 'grow' && stateT > 1.6))) return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const w = Math.min(380, cw * 0.56), x0 = (cw - w) / 2;
+  let y = ch - 26 - (bosses.length - 1) * 34;
+  for (const s of bosses) {
+    const d = STAR_TYPES[s.type];
+    ctx.font = '400 13px "Russo One", Rubik, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = s.caught ? 'rgba(239,234,255,.4)' : '#ffffff';
+    ctx.fillText(d.name + (s.caught ? ' · повержена' : ''), cw / 2, y - 10);
+    const n = Math.max(1, s.maxHp), gap = 4, segW = (w - gap * (n - 1)) / n;
+    for (let k = 0; k < n; k++) {
+      const x = x0 + k * (segW + gap);
+      ctx.fillStyle = 'rgba(26,20,56,.9)'; ctx.fillRect(x, y, segW, 9);
+      if (k < s.hp) {
+        ctx.fillStyle = d.color; ctx.fillRect(x, y, segW, 9);
+        ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(x, y, segW, 3);
+      }
+    }
+    y += 34;
+  }
+}
+
+// Soft round glow sprite per colour, drawn with 'lighter' for bloom without per-frame shadowBlur
+function glow(col) {
+  let c = glowCache[col];
+  if (c) return c;
+  c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, col + 'ff'); gr.addColorStop(0.22, col + 'aa'); gr.addColorStop(0.5, col + '33'); gr.addColorStop(1, col + '00');
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  return (glowCache[col] = c);
+}
+let dotSprite = null;
+function getDotSprite() {
+  if (dotSprite) return dotSprite;
+  dotSprite = document.createElement('canvas'); dotSprite.width = dotSprite.height = 48;
+  const g = dotSprite.getContext('2d'), gr = g.createRadialGradient(24, 24, 0, 24, 24, 24);
+  gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.16, '#fff3c4'); gr.addColorStop(0.3, 'rgba(255,214,110,.55)'); gr.addColorStop(0.6, 'rgba(255,170,60,.12)'); gr.addColorStop(1, 'rgba(255,170,60,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 48, 48);
+  return dotSprite;
+}
+// Deep-space backdrop: nebula clouds baked once per size, twinkling stars and the odd meteor drawn live
+const skyStars = Array.from({ length: 170 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() < 0.15 ? 1.6 : 0.5 + Math.random() * 0.8, p: Math.random() * 6.28, sp: 0.6 + Math.random() * 2.2, d: 0.02 + Math.random() * 0.06 }));
+function makeSky() {
+  sky = document.createElement('canvas');
+  sky.width = Math.max(1, Math.round(cw * dpr)); sky.height = Math.max(1, Math.round(ch * dpr));
+  const g = sky.getContext('2d');
+  g.scale(dpr, dpr);
+  const base = g.createLinearGradient(0, 0, 0, ch);
+  base.addColorStop(0, '#120b2e'); base.addColorStop(1, '#07051a');
+  g.fillStyle = base; g.fillRect(0, 0, cw, ch);
+  const blobs = [[0.18, 0.2, 0.55, '123,92,255', 0.32], [0.85, 0.15, 0.4, '58,215,255', 0.14], [0.78, 0.85, 0.6, '255,79,163', 0.2], [0.3, 0.9, 0.45, '255,159,67', 0.1], [0.55, 0.5, 0.5, '90,50,200', 0.15]];
+  for (const [bx, by, br, rgb, a] of blobs) {
+    const R = br * Math.max(cw, ch);
+    const gr = g.createRadialGradient(bx * cw, by * ch, 0, bx * cw, by * ch, R);
+    gr.addColorStop(0, `rgba(${rgb},${a})`); gr.addColorStop(1, `rgba(${rgb},0)`);
+    g.fillStyle = gr; g.fillRect(0, 0, cw, ch);
+  }
+  vig = document.createElement('canvas');
+  vig.width = sky.width; vig.height = sky.height;
+  const v = vig.getContext('2d');
+  v.scale(dpr, dpr);
+  const vg = v.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.35, cw / 2, ch / 2, Math.hypot(cw, ch) * 0.6);
+  vg.addColorStop(0, 'rgba(4,2,12,0)'); vg.addColorStop(1, 'rgba(4,2,12,.6)');
+  v.fillStyle = vg; v.fillRect(0, 0, cw, ch);
+}
+function drawSky() {
+  if (!sky) makeSky();
+  ctx.drawImage(sky, 0, 0, cw, ch);
+  ctx.fillStyle = '#ffffff';
+  for (const st of skyStars) {
+    const a = reduceMotion ? 0.6 : 0.35 + 0.65 * Math.abs(Math.sin(now * st.sp + st.p));
+    const x = ((st.x * cw - cam.x * cam.s * st.d) % cw + cw) % cw, y = ((st.y * ch - cam.y * cam.s * st.d) % ch + ch) % ch;
+    ctx.globalAlpha = a * 0.8;
+    ctx.fillRect(x, y, st.r, st.r);
+  }
+  ctx.lineCap = 'round';
+  for (const m of meteors) {
+    const k = m.life / m.max;
+    const g = ctx.createLinearGradient(m.x, m.y, m.x - m.vx * 0.12, m.y - m.vy * 0.12);
+    g.addColorStop(0, 'rgba(255,255,255,.9)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.globalAlpha = Math.min(1, k * 2);
+    ctx.strokeStyle = g; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x - m.vx * 0.12, m.y - m.vy * 0.12); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+function drawWallSweep() {
+  if (reduceMotion || !lines) return;
+  if (!sweep) { sweep = document.createElement('canvas'); sweep.width = lines.width; sweep.height = lines.height; }
+  const g = sweep.getContext('2d'), w = sweep.width, h = sweep.height;
+  g.globalCompositeOperation = 'source-over';
+  g.clearRect(0, 0, w, h);
+  g.drawImage(lines, 0, 0);
+  g.globalCompositeOperation = 'source-in';
+  const span = w + h, p = ((now * 0.22) % 1.4 - 0.2) * span;   // a diagonal band of light every ~6 s
+  const gr = g.createLinearGradient(p - h, 0, p, h);
+  gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.45, 'rgba(200,180,255,0)'); gr.addColorStop(0.5, 'rgba(255,255,255,.95)'); gr.addColorStop(0.55, 'rgba(200,180,255,0)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  ctx.drawImage(sweep, 0, 0, W, H);
+  ctx.restore();
+}
+
+function draw() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = BG; ctx.fillRect(0, 0, cw, ch);
+  if (!off) return;
+  drawSky();
+  const s = cam.s;
+  const sx = shake > 0 ? (Math.random() - 0.5) * 2 * shake * s : 0, sy = shake > 0 ? (Math.random() - 0.5) * 2 * shake * s : 0;
+  ctx.setTransform(dpr * s, 0, 0, dpr * s, dpr * (cw / 2 - cam.x * s + sx), dpr * (ch / 2 - cam.y * s + sy));
+  ctx.drawImage(off, 0, 0, W, H);
+  if (phase === 1) drawWallSweep();
+  if (state !== 'menu') {                                          // the smileys light up the floor around them
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (const p of players) {
+      if (p.down) continue;
+      const [x, y] = center(p), pc = P_COLORS[p.id] || P_COLORS[0];
+      ctx.globalAlpha = 0.16;
+      ctx.drawImage(glow(phase === 2 ? pc.hunt : pc.calm), x - 3.2, y - 3.2, 6.4, 6.4);
+    }
+    ctx.restore();
+  }
+  if (phase === 1) {
+    if (state === 'cleared') {
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.35 + 0.35 * Math.sin(stateT * 18);
+      ctx.drawImage(off, 0, 0, W, H);
+      ctx.restore();
+    }
+    const ds = getDotSprite();
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (dots[idx(x, y)]) {
+      const tw = 0.3 + 0.07 * Math.sin(now * 4 + x * 1.7 + y * 2.3);
+      ctx.drawImage(ds, x + 0.5 - tw, y + 0.5 - tw, tw * 2, tw * 2);
+    }
+    ctx.restore();
+    if (starts.gate) {
+      const [gx, gy] = starts.gate;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.55 + 0.3 * Math.sin(now * 3);
+      ctx.drawImage(glow('#ff6bd6'), gx - 0.4, gy - 0.1, 1.8, 1.2);
+      ctx.restore();
+      ctx.strokeStyle = '#ffd1f3'; ctx.lineWidth = 0.08; ctx.setLineDash([0.18, 0.12]); ctx.lineDashOffset = -now * 0.4;
+      ctx.beginPath(); ctx.moveTo(gx - 0.05, gy + 0.5); ctx.lineTo(gx + 1.05, gy + 0.5); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+  drawItems();
+  drawTargets();
+
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const p of particles) {
+    const a = Math.max(0, p.life / p.max), rr = p.r * 4.5;
+    ctx.globalAlpha = a;
+    ctx.drawImage(glow(p.col), p.x - rr, p.y - rr, rr * 2, rr * 2);
+  }
+  for (const g of rings) {
+    const k = 1 - g.life / g.max;
+    ctx.globalAlpha = g.life / g.max;
+    ctx.strokeStyle = g.col; ctx.lineWidth = 0.12 * (1 - k) + 0.02;
+    ctx.beginPath(); ctx.arc(g.x, g.y, g.r + k * 1.6, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+
+  if (state !== 'menu') {
+    drawShards();
+    for (const sh of shades) drawShade(sh);
+    for (const p of players) drawSmiley(p);
+  }
+  for (const f of floaters) {
+    ctx.save();
+    ctx.translate(f.x, f.y);
+    const k = 1 - f.life / f.max;
+    ctx.globalAlpha = Math.min(1, f.life / 0.4);
+    const sc = 1 + 0.4 * Math.min(1, k * 6) - 0.2 * k;
+    ctx.scale(sc, sc);
+    labelText(ctx, f.text, 0, 20, f.col);
+    ctx.restore();
+  }
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (vig) ctx.drawImage(vig, 0, 0, cw, ch);
+  if (state === 'dying' && stateT < 0.4 && !reduceMotion) {
+    ctx.fillStyle = `rgba(255,60,90,${0.28 * (1 - stateT / 0.4)})`;
+    ctx.fillRect(0, 0, cw, ch);
+  }
+  drawBossBar();
+  if (state !== 'menu') {
+    if (localCoop) players.forEach((p, k) => drawBuffBar(p, k));
+    else drawBuffBar(myPlayer(), 0);
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (phase === 2 && mini && players.length && state !== 'menu' && !(state === 'grow' && stateT <= 1.8)) {
+    const mw = Math.min(150, cw * 0.28), mh = mw * H / W, mx = cw - mw - 10, my = ch - mh - 10;
+    ctx.globalAlpha = 0.9;
+    ctx.drawImage(mini, mx, my, mw, mh);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = 'rgba(165,156,210,.5)'; ctx.lineWidth = 1; ctx.strokeRect(mx + 0.5, my + 0.5, mw - 1, mh - 1);
+    const k = mw / W;
+    for (const it of items) {
+      ctx.fillStyle = ITEMS[it.type].color;
+      ctx.fillRect(mx + (it.x + 0.5) * k - 1.5, my + (it.y + 0.5) * k - 1.5, 3, 3);
+    }
+    for (const z of shards) { const [x, y] = center(z); ctx.fillStyle = SHARD; ctx.fillRect(mx + x * k - 1, my + y * k - 1, 2, 2); }
+    for (const sh of shades) if (!sh.caught) {
+      const [x, y] = center(sh); ctx.fillStyle = sh.color;
+      const mine = net.mode === 'guest' && net.myStar >= 0 && sh.key === KEYS[net.myStar];
+      ctx.beginPath(); ctx.arc(mx + x * k, my + y * k, sh.boss ? 4.4 : mine ? 3.6 : 2.6, 0, Math.PI * 2); ctx.fill();
+    }
+    const hideSmiley = net.mode === 'guest' && net.myStar >= 0;
+    for (const p of players) {
+      if (hideSmiley && p.cloak > 0) continue;
+      const [x, y] = center(p); ctx.fillStyle = p.down ? '#8b84b0' : (P_COLORS[p.id] || P_COLORS[0]).calm;
+      ctx.beginPath(); ctx.arc(mx + x * k, my + y * k, 3.2, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  if (state === 'grow' && stateT < 0.5 && !reduceMotion) {
+    ctx.fillStyle = `rgba(255,240,200,${0.5 * (1 - stateT / 0.5)})`;
+    ctx.fillRect(0, 0, cw, ch);
+  }
+}
+
+/* ---------- HUD ---------- */
+const textCache = {};
+function setText(id, v) { if (textCache[id] !== v) { textCache[id] = v; $(id).textContent = v; } }
+const fmtTime = t => `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+function updateHud() {
+  setText('score', String(score));
+  setText('lives', lives > 0 ? '✦'.repeat(Math.min(lives, 9)) : '—');
+  setText('level', level + '/' + MAX_LEVEL);
+  const chip = $('phaseChip');
+  const role = net.mode === 'guest' && net.stage === 'play' ? (net.isP2 ? ' · смайлик 2' : net.myStar >= 0 ? ' · ты ' + STAR_TYPES[net.myStar].name : ' · зритель') : '';
+  chip.classList.toggle('boss', phase === 2 && isBossLevel());
+  if (phase === 1) {
+    setText('infoLabel', 'Огоньков');
+    setText('info', String(dotsLeft));
+    const mode = state === 'menu' || role ? '' : (MODES[modeIdx][0] === 'scatter' ? ' · передышка' : ' · погоня');
+    setText('phaseChip', 'Фаза 1' + mode + role);
+    chip.classList.remove('hunt');
+  } else if (isBossLevel()) {
+    setText('infoLabel', 'Время');
+    setText('info', fmtTime(Math.max(0, Math.ceil(timeLeft))));
+    setText('phaseChip', 'Босс' + role);
+    chip.classList.remove('hunt');
+  } else {
+    const left = shades.filter(s => !s.caught).length;
+    setText('infoLabel', 'Время · звёзды');
+    setText('info', `${fmtTime(Math.max(0, Math.ceil(timeLeft)))} · ${left}`);
+    setText('phaseChip', (role ? 'Фаза 2' : 'Фаза 2 · охота') + role);
+    chip.classList.add('hunt');
+  }
+}
+
+/* ---------- audio ---------- */
+let ac = null, muted = false;
+function ensureAudio() {
+  if (ac) return;
+  try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; }
+}
+function tone(f, d, type, vol, slide) {
+  if (!ac || muted) return;
+  try {
+    const t0 = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || 'square'; o.frequency.setValueAtTime(f, t0);
+    if (slide) o.frequency.exponentialRampToValueAtTime(slide, t0 + d);
+    g.gain.setValueAtTime(vol || 0.04, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
+    o.connect(g).connect(ac.destination); o.start(t0); o.stop(t0 + d + 0.02);
+  } catch (e) {}
+}
+const later = (ms, fn) => setTimeout(fn, ms);
+const sfx = {
+  pick(type) {
+    if (type === 'boot') { tone(523, 0.07, 'square', 0.04); later(60, () => tone(784, 0.07, 'square', 0.04)); later(120, () => tone(1046, 0.1, 'square', 0.04)); }
+    else if (type === 'shield') { tone(880, 0.12, 'triangle', 0.06); later(90, () => tone(1320, 0.2, 'triangle', 0.05)); }
+    else if (type === 'heart') { [659, 784, 988, 1318].forEach((f, k) => later(k * 90, () => tone(f, 0.16, 'triangle', 0.05))); }
+    else tone(900, 0.4, 'sine', 0.06, 250);
+  },
+  pop() { tone(1400, 0.25, 'sawtooth', 0.05, 120); later(120, () => tone(1568, 0.5, 'sine', 0.05)); },
+  die() { tone(440, 0.6, 'sawtooth', 0.05, 80); },
+  caught() { tone(880, 0.08, 'square', 0.05); later(80, () => tone(1320, 0.14, 'square', 0.05)); },
+  elroy() { tone(90, 0.5, 'sawtooth', 0.05, 60); },
+  cleared() { tone(523, 0.12, 'square', 0.04); later(120, () => tone(784, 0.18, 'square', 0.04)); },
+  grow() { tone(110, 1.4, 'sawtooth', 0.05, 440); },
+  win() { [523, 659, 784, 1046].forEach((f, k) => later(k * 130, () => tone(f, 0.18, 'square', 0.04))); },
+  shard() { tone(1200, 0.12, 'sawtooth', 0.025, 300); },
+  bossHit() { tone(160, 0.35, 'sawtooth', 0.06, 50); later(60, () => tone(1200, 0.2, 'square', 0.04, 600)); },
+  bossDown() { tone(80, 1.2, 'sawtooth', 0.07, 30); [392, 523, 659, 784, 1046].forEach((f, k) => later(300 + k * 120, () => tone(f, 0.2, 'square', 0.045))); },
+  revive() { [523, 659, 784, 1046, 1318].forEach((f, k) => later(k * 70, () => tone(f, 0.14, 'triangle', 0.05))); },
+  levelup() { [523, 659, 784, 659, 784, 1046].forEach((f, k) => later(k * 110, () => tone(f, 0.15, 'square', 0.04))); },
+  intro() { tone(220, 0.3, 'triangle', 0.04, 440); later(220, () => tone(440, 0.4, 'triangle', 0.04, 880)); }
+};
+
+/* ======================================================================
+   Multiplayer: the host's page runs the game; friends drive stars or
+   the second smiley. Everything travels in room presence: the host
+   publishes lobby and game snapshots, friends publish their pick,
+   readiness, skin and direction.
+   ====================================================================== */
+function cleanName(v) {
+  return (typeof v === 'string' ? v : '').replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁯﻿]/g, '').trim().slice(0, 16);
+}
+function parseCode(v) {
+  const c = String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return c.length >= 4 && c.length <= 8 ? c : '';
+}
+function genCode() {
+  const A = 'abcdefghjkmnpqrstuvwxyz23456789';
+  let s = '';
+  for (let i = 0; i < 5; i++) s += A[rnd(A.length)];
+  return s;
+}
+const clampSkin = v => { const k = v | 0; return k >= 0 && k < SKINS.length ? k : 0; };
+const slotKeys = rm => (rm || net.rm) === 'coop' ? ['p2'] : KEYS;
+function netEvent(type, a, b, c) {
+  if (net.mode !== 'host') return;
+  net.events.push([++net.evId, type, a || 0, b || 0, c || 0]);
+  if (net.events.length > 10) net.events.shift();
+}
+function lobbyPeers() {
+  if (!net.room) return [];
+  return net.room.peers().filter(p => p.presence && p.presence.zc === net.code);
+}
+function guestHost() {
+  const hs = lobbyPeers().filter(p => !p.sameTab && p.presence.zr === 'host' && p.presence.zl && typeof p.presence.zl === 'object');
+  if (!hs.length) return null;
+  hs.sort((a, b) => (+a.presence.zl.hs || 0) - (+b.presence.zl.hs || 0));
+  return hs[0];
+}
+
+async function mpEnter(code, asHost, n, rm) {
+  if (!net.api || net.mode !== 'off' || !code) return;
+  ensureAudio();
+  const name = cleanName($('nick').value) || (asHost ? 'Смайлик' : 'Друг');
+  try { localStorage.setItem('smiley-stars-name', name); } catch (e) {}
+  net.mode = asHost ? 'host' : 'guest'; net.code = code; net.name = name; net.joinedAt = performance.now();
+  if (asHost) { net.n = Math.min(4, Math.max(1, n | 0)); net.hs = Date.now(); net.rm = rm === 'coop' ? 'coop' : 'stars'; }
+  syncModeButtons();
+  showOverlay('lobbyOv'); renderLobby();
+  let r;
+  const fallback = false;
+  try { r = await net.api.join('zs-' + code); }
+  catch (e) {
+    if (net.mode !== 'off' && net.code === code) mpLeave('Не удалось подключиться к серверу. Проверь интернет и попробуй ещё раз.');
+    return;
+  }
+  if (net.mode === 'off' || net.code !== code) { r.leave().catch(() => {}); return; }
+  net.room = r; net.lobbyFallback = fallback;
+  net.unsubs.push(r.onPeers(onPeersChange, onRoomError));
+  if (asHost) publishLobby(); else guestPublish();
+  renderLobby();
+}
+function onPeersChange(change) {
+  if (!net.myPeer) { const me = change.peers.find(p => p.isMe && p.sameTab); if (me) net.myPeer = me.peer; }
+  if (net.mode === 'host') hostReconcile(); else renderLobby();
+}
+function onRoomError() { mpLeave('Связь с комнатой прервалась. Попробуй зайти снова.'); }
+
+function backToMenuMaze() {
+  state = 'menu'; stateMsg = null; toastT = 0;
+  gameMode = 'solo'; localCoop = false; level = 1; seed1 = 0; players = [];
+  syncPads();
+  refreshBanner(); refreshCard();
+  loadPhase1(); updateCamera(0);
+}
+function mpLeave(msg) {
+  const r = net.room, fallback = net.lobbyFallback;
+  for (const u of net.unsubs) { try { u(); } catch (e) {} }
+  if (r) {
+    if (fallback) r.presence({ zc: null, zr: null, zn: null, zl: null, zd: null, zg: null }).catch(() => {});
+    else r.leave().catch(() => {});
+  }
+  const keep = { api: net.api, apiState: net.apiState };
+  Object.assign(net, freshNet(), keep);
+  humans = emptySlots();
+  backToMenuMaze();
+  syncModeButtons();
+  showOverlay('menu');
+  const m = $('menuMsg');
+  if (msg) { m.textContent = msg; m.hidden = false; } else m.hidden = true;
+}
+
+/* ---- host side ---- */
+function publishLobby() {
+  if (net.mode !== 'host' || !net.room) return;
+  net.room.presence({ zc: net.code, zr: 'host', zn: net.name, zl: { hs: net.hs, n: net.n, rm: net.rm, sl: Object.assign({}, net.slots), hr: net.hostReady, st: net.stage, cd: net.cdShown } }).catch(() => {});
+}
+function dropHuman(k) {
+  if (k === 'p2') { if (players[1]) { players[1].wx = 0; players[1].wy = 0; } return; }
+  humans[k] = null;
+  const s = shades.find(z => z.key === k);
+  if (s) { s.human = null; s.wx = 0; s.wy = 0; }
+}
+function hostReconcile() {
+  if (net.mode !== 'host' || !net.room) return;
+  const SK = slotKeys();
+  const guests = lobbyPeers().filter(p => !p.sameTab && p.presence.zr === 'guest');
+  const byPeer = new Map(guests.map(p => [p.peer, p]));
+  const zl = p => (p && p.presence.zl && typeof p.presence.zl === 'object') ? p.presence.zl : {};
+  let changed = false;
+  for (const k of Object.keys(net.slots)) if (net.slots[k] && (!SK.includes(k) || !byPeer.has(net.slots[k]))) {
+    net.slots[k] = null; changed = true;
+    if (net.stage === 'play') dropHuman(k);
+  }
+  if (net.stage !== 'play') {
+    const n = net.rm === 'coop' ? 1 : net.n;
+    for (const k of SK) { const pid = net.slots[k]; if (pid && zl(byPeer.get(pid)).want !== k) { net.slots[k] = null; changed = true; } }
+    let used = SK.filter(k => net.slots[k]).length;
+    for (let i = SK.length - 1; i >= 0 && used > n; i--) if (net.slots[SK[i]]) { net.slots[SK[i]] = null; used--; changed = true; }
+    const reqs = guests.filter(p => { const w = zl(p).want; return SK.includes(w) && net.slots[w] !== p.peer; })
+      .sort((a, b) => (+zl(a).wt || 0) - (+zl(b).wt || 0));
+    for (const p of reqs) {
+      const w = zl(p).want;
+      if (!net.slots[w] && used < n && !SK.some(k => net.slots[k] === p.peer)) { net.slots[w] = p.peer; used++; changed = true; }
+    }
+    const assigned = SK.filter(k => net.slots[k]);
+    const allReady = net.hostReady && assigned.length === n && assigned.every(k => zl(byPeer.get(net.slots[k])).ready === true);
+    if (allReady && net.stage === 'lobby') { net.stage = 'countdown'; net.cdEnd = Date.now() + 3000; net.cdShown = 3; changed = true; sfx.cleared(); }
+    if (!allReady && net.stage === 'countdown') { net.stage = 'lobby'; net.cdShown = 0; changed = true; }
+  }
+  if (changed) publishLobby();
+  renderLobby();
+}
+function hostStartGame() {
+  net.stage = 'play'; net.cdShown = 0; net.events = []; net.evId = 0; net.result = null;
+  const coop = net.rm === 'coop';
+  humans = emptySlots();
+  if (coop) {
+    const p = lobbyPeers().find(q => q.peer === net.slots.p2);
+    p2Skin = clampSkin(p && p.presence.zl && p.presence.zl.skin);
+  } else for (const k of KEYS) humans[k] = net.slots[k];
+  publishLobby();
+  startGame(coop ? 'coop' : 'solo', false);
+  updateNames();
+}
+function hostApplyInputs() {
+  if (!net.room) return;
+  const ps = net.room.peers();
+  const dirOf = pid => {
+    const p = pid && ps.find(q => q.peer === pid);
+    const c = p && p.presence ? p.presence.zd : 0;
+    return (c === 1 || c === 2 || c === 3 || c === 4) ? DIR_CODES[c] : null;
+  };
+  if (net.rm === 'coop') {
+    const d = dirOf(net.slots.p2), p = players[1];
+    if (d && p && !p.down) { p.wx = d[0]; p.wy = d[1]; }
+    return;
+  }
+  for (const s of shades) {
+    if (!s.human) continue;
+    const d = dirOf(s.human);
+    if (d) { s.wx = d[0]; s.wy = d[1]; }
+  }
+}
+function packDots() {
+  const n = W * H, bytes = new Uint8Array((n + 7) >> 3);
+  for (let i = 0; i < n; i++) if (dots[i]) bytes[i >> 3] |= 1 << (i & 7);
+  let s = '';
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s);
+}
+function entSnap(e) { const [x, y] = pos(e); return [r2(x), r2(y), dirCode(e.dx, e.dy)]; }
+function makeSnapshot() {
+  return {
+    k: ++net.seq, ht: Math.round(performance.now()), st: state, sT: r2(stateT), ph: phase, lvl: level, gm: gameMode === 'coop' ? 1 : 0, s1: seed1,
+    sc: score, lv: lives, tl: r1(timeLeft), tm: timeMax, md: modeIdx, el: elroyLevel(), dl: dotsLeft, sd: phase === 2 ? mazeSeed : 0, ln: state === 'levelup' ? levelNote : '',
+    p: players.map(p => entSnap(p).concat(dirCode(p.fx, p.fy), (p.down ? 1 : 0) | (p.shield ? 2 : 0) | (p.invuln > 0 ? 4 : 0), p.skin | 0, r1(p.boot), r1(p.cloak), r1(p.halo))),
+    s: shades.map(s => entSnap(s).concat((s.inHouse ? 1 : 0) | (s.exiting ? 2 : 0) | (s.caught ? 4 : 0) | (s.human ? 8 : 0) | (s.inv > 0 ? 16 : 0), s.type, s.hp | 0, s.maxHp | 0)),
+    z: shards.map(z => { const [x, y] = pos(z); return [r2(x), r2(y)]; }),
+    d: phase === 1 ? packDots() : '',
+    it: items.map(o => [o.x, o.y, ITEM_CODES.indexOf(o.type)]),
+    ev: net.events.slice(),
+    rs: net.result
+  };
+}
+function mpBackToLobby() {
+  net.stage = 'lobby'; net.hostReady = false; net.result = null; net.events = []; net.evId = 0; net.cdShown = 0;
+  humans = emptySlots();
+  backToMenuMaze();
+  if (net.room) net.room.presence({ zg: null }).catch(() => {});
+  publishLobby();
+  showOverlay('lobbyOv'); renderLobby();
+}
+
+/* ---- guest side ---- */
+function guestPublish() {
+  if (net.mode !== 'guest' || !net.room) return;
+  net.room.presence({ zc: net.code, zr: 'guest', zn: net.name, zl: { want: net.want, wt: net.wantT, ready: net.ready, skin }, zd: net.dir }).catch(() => {});
+}
+function guestTick(tnow) {
+  const h = guestHost();
+  if (h) { net.hostPeer = h.peer; net.hostSeenAt = tnow; }
+  else if (net.hostPeer && tnow - net.hostSeenAt > 3000) { mpLeave('Хозяин комнаты вышел из игры.'); return; }
+  else if (!net.hostPeer && !net.warnedNoHost && tnow - net.joinedAt > 8000) { net.warnedNoHost = true; }
+  const zl = h ? h.presence.zl : null;
+  const st = zl && (zl.st === 'countdown' || zl.st === 'play') ? zl.st : 'lobby';
+  if (st !== net.stage) guestStageChange(net.stage, st);
+  const sl = zl && zl.sl && typeof zl.sl === 'object' ? zl.sl : {};
+  net.myStar = net.myPeer ? KEYS.findIndex(k => sl[k] === net.myPeer) : -1;
+  net.isP2 = !!net.myPeer && sl.p2 === net.myPeer;
+  if (net.stage !== 'play') {
+    let dirty = false;
+    if (net.myStar < 0 && !net.isP2 && net.ready) { net.ready = false; dirty = true; }
+    if (net.myPeer && net.want && typeof sl[net.want] === 'string' && sl[net.want] !== net.myPeer) { net.want = null; dirty = true; }
+    if (dirty) guestPublish();
+  }
+  if (net.stage === 'play' && h && h.presence.zg && typeof h.presence.zg === 'object') {
+    const g = h.presence.zg;
+    if (typeof g.k === 'number' && g.k > net.lastK && Array.isArray(g.s) && Array.isArray(g.p)) {
+      if (net.lastK < 0 && g.st !== 'ready' && g.st !== 'intro' && Array.isArray(g.ev)) for (const ev of g.ev) net.lastEv = Math.max(net.lastEv, +ev[0] || 0);
+      net.lastK = g.k; net.lastSnapAt = tnow;
+      net.snaps.push({ lt: tnow, g });
+      if (net.snaps.length > 40) net.snaps.shift();
+    }
+  }
+}
+function guestStageChange(prev, st) {
+  net.stage = st;
+  if (st === 'play') {
+    net.snaps = []; net.lastK = -1; net.lastEv = 0; net.lastSnapAt = performance.now(); net.stall = false;
+    const v = net.view; v.grid = 0; v.seed = -1; v.s1 = -1; v.lvl = -1; v.dots = null; v.dl = -1; v.born.clear(); v.players = null; v.shades = null;
+    particles = []; rings = []; floaters = []; shards = [];
+    showOverlay(null);
+  } else if (prev === 'play') {
+    net.ready = false; guestPublish();
+    net.stall = false;
+    backToMenuMaze();
+    showOverlay('lobbyOv');
+  }
+  renderLobby();
+}
+function viewEnt(o, a, b, al) {
+  let x = +b[0] || 0, y = +b[1] || 0;
+  const ax = +a[0] || 0, ay = +a[1] || 0;
+  if (Math.abs(x - ax) + Math.abs(y - ay) <= 2) { x = ax + (x - ax) * al; y = ay + (y - ay) * al; }
+  const d = DIR_CODES[b[2]] || DIR_CODES[0];
+  o.x = x; o.y = y; o.dx = d[0]; o.dy = d[1]; o.t = 0;
+  return o;
+}
+function unpackDots(str) {
+  let s;
+  try { s = atob(str); } catch (e) { return; }
+  for (let i = 0; i < W * H; i++) dots[i] = ((s.charCodeAt(i >> 3) || 0) >> (i & 7)) & 1;
+}
+function setViewState(st) {
+  const prev = state;
+  state = st; stateT = 0; stateMsg = stateMessage(st); refreshBanner(); refreshCard(); applyPaletteCss();
+  if (st === 'grow') { growFrom = { s: Math.min(cw / W, ch / H) * 0.96, x: W / 2, y: H / 2 }; cam.s = growFrom.s; cam.x = growFrom.x; cam.y = growFrom.y; }
+  if (st === 'intro') updateCamera(0);
+  if (st === 'over') guestShowEnd();
+  else if (prev === 'over') showOverlay(null);
+}
+function applyView(A, B, al) {
+  const g = B, v = net.view;
+  const lvl = Math.min(MAX_LEVEL, Math.max(1, g.lvl | 0)), gm = g.gm === 1 ? 'coop' : 'solo', s1 = g.s1 | 0, sd = g.sd | 0;
+  gameMode = gm; localCoop = false; level = lvl;
+  if (g.ph === 2) {
+    if (v.grid !== 2 || v.seed !== sd || v.lvl !== lvl) { buildPhase2Grid(sd); renderMaze(); v.grid = 2; v.seed = sd; v.lvl = lvl; }
+  } else if (v.grid !== 1 || v.s1 !== s1 || v.lvl !== lvl) {
+    seed1 = s1; items = []; buildPhase1Grid(); renderMaze(); v.grid = 1; v.s1 = s1; v.lvl = lvl; v.dots = null; v.dl = -1;
+  }
+  phase = g.ph === 2 ? 2 : 1;
+  if (lvl > progress) saveProgress(lvl);
+  levelNote = typeof g.ln === 'string' ? g.ln.slice(0, 80) : '';
+  if (typeof g.st === 'string' && g.st !== state) setViewState(g.st);
+  stateT = A.st === B.st ? (+A.sT || 0) + ((+B.sT || 0) - (+A.sT || 0)) * al : (+B.sT || 0);
+  score = g.sc | 0; lives = g.lv | 0; timeLeft = +g.tl || 0; timeMax = +g.tm || 0;
+  modeIdx = Math.min(MODES.length - 1, Math.max(0, g.md | 0)); v.el = g.el | 0;
+  const dl = g.dl | 0;
+  if (phase === 1 && v.dl >= 0 && dl < v.dl) { dotToggle = !dotToggle; tone(dotToggle ? 660 : 520, 0.05, 'triangle', 0.02); }
+  v.dl = dl; dotsLeft = dl;
+  if (phase === 1 && typeof g.d === 'string' && g.d !== v.dots) { unpackDots(g.d); v.dots = g.d; }
+  const seen = new Set();
+  items = (Array.isArray(g.it) ? g.it : []).slice(0, 30).map(o => {
+    const x = o[0] | 0, y = o[1] | 0, type = ITEM_CODES[o[2]] || 'boot', key = x + ',' + y + ',' + type;
+    seen.add(key);
+    if (!v.born.has(key)) v.born.set(key, now);
+    return { x, y, type, born: v.born.get(key) };
+  });
+  for (const key of [...v.born.keys()]) if (!seen.has(key)) v.born.delete(key);
+  const np = Math.min(2, B.p.length);
+  if (!v.players || v.players.length !== np) v.players = Array.from({ length: np }, (_, k) => ({ view: true, isPlayer: true, id: k, x: 0, y: 0, dx: 0, dy: 0, t: 0, fx: -1, fy: 0, speed: 0, wx: 0, wy: 0, hist: [], trail: [], m: 1, down: false, cloak: 0, boot: 0, shield: false, invuln: 0, halo: 0, skin: 0 }));
+  for (let k = 0; k < np; k++) {
+    const b = B.p[k], a = (Array.isArray(A.p) && Array.isArray(A.p[k])) ? A.p[k] : b;
+    if (!Array.isArray(b)) continue;
+    const o = viewEnt(v.players[k], a, b, al);
+    const fc = DIR_CODES[b[3]];
+    if (fc && (fc[0] || fc[1])) { o.fx = fc[0]; o.fy = fc[1]; }
+    const fl = b[4] | 0;
+    o.down = !!(fl & 1); o.shield = !!(fl & 2); o.invuln = (fl & 4) ? 1 : 0;
+    o.skin = clampSkin(b[5]); o.boot = +b[6] || 0; o.cloak = +b[7] || 0; o.halo = +b[8] || 0;
+  }
+  players = v.players;
+  const ns = Math.min(8, B.s.length);
+  if (!v.shades || v.shades.length !== ns) v.shades = Array.from({ length: ns }, (_, i) => ({ view: true, isShade: true, i, type: -1, key: '', color: '#ffffff', x: 0, y: 0, dx: 0, dy: 0, t: 0, hp: 0, maxHp: 0, inv: 0 }));
+  for (let i = 0; i < ns; i++) {
+    const b = B.s[i];
+    if (!Array.isArray(b)) continue;
+    const tp = Math.min(STAR_TYPES.length - 1, Math.max(0, b[4] | 0));
+    const a0 = Array.isArray(A.s) ? A.s[i] : null;
+    const a = (Array.isArray(a0) && (a0[4] | 0) === tp) ? a0 : b;
+    const s = viewEnt(v.shades[i], a, b, al);
+    if (s.type !== tp) { const d = STAR_TYPES[tp]; s.type = tp; s.key = d.key; s.color = d.color; s.boss = !!d.boss; }
+    const fl = b[3] | 0;
+    s.inHouse = !!(fl & 1); s.exiting = !!(fl & 2); s.caught = !!(fl & 4); s.human = (fl & 8) ? 'friend' : null; s.inv = (fl & 16) ? 1 : 0;
+    s.hp = b[5] | 0; s.maxHp = b[6] | 0;
+  }
+  shades = v.shades;
+  const zb = Array.isArray(B.z) ? B.z.slice(0, 40) : [], za = Array.isArray(A.z) && A.z.length === zb.length ? A.z : zb;
+  shards = zb.map((q, k) => {
+    let x = +q[0] || 0, y = +q[1] || 0;
+    const ax = +(za[k] && za[k][0]) || x, ay = +(za[k] && za[k][1]) || y;
+    if (Math.abs(x - ax) + Math.abs(y - ay) <= 2) { x = ax + (x - ax) * al; y = ay + (y - ay) * al; }
+    return { x, y, dx: 0, dy: 0, t: 0 };
+  });
+  if (Array.isArray(g.ev)) for (const ev of g.ev) if (Array.isArray(ev) && ev[0] > net.lastEv) { net.lastEv = ev[0]; playEvent(ev); }
+}
+function playEvent(ev) {
+  const type = ev[1], a = ev[2] | 0, x = +ev[3] || 0, y = +ev[4] || 0;
+  if (type === 1) {
+    const t = ITEM_CODES[a] || 'boot';
+    burst(x + 0.5, y + 0.5, ITEMS[t].color, 18, 3.5); sfx.pick(t);
+    rings.push({ x: x + 0.5, y: y + 0.5, r: 0.3, life: 0.45, max: 0.45, col: ITEMS[t].color });
+    if (t !== 'heart') toast(ITEMS[t].seen, 1.6);
+  } else if (type === 2) { shieldBurst(x, y); sfx.pop(); toast('Щит спас смайлик!', 1.4); }
+  else if (type === 3) { deathFx(x, y); sfx.die(); if (gameMode === 'coop') toast(net.isP2 && a === 1 ? 'Тебя поймали! Жди, пока друг подберёт сердце' : 'Смайлик ' + (a + 1) + ' пойман!', 2.2); }
+  else if (type === 4) {
+    const s = STAR_TYPES[a] || STAR_TYPES[0];
+    catchFx(x, y, s.color); sfx.caught();
+    toast(net.myStar >= 0 && s.key === KEYS[net.myStar] ? 'Тебя поймали!' : 'Поймана звезда «' + s.name + '»', 1.6);
+  }
+  else if (type === 5) { toast('Гончая в ярости!', 1.8); sfx.elroy(); }
+  else if (type === 6) sfx.cleared();
+  else if (type === 7) sfx.grow();
+  else if (type === 9) { const d = STAR_TYPES[a] || STAR_TYPES[6]; burst(x, y, d.color, 34, 6); rings.push({ x, y, r: 0.6, life: 0.6, max: 0.6, col: d.color }); addShake(0.32); sfx.bossHit(); }
+  else if (type === 10) { const d = STAR_TYPES[a] || STAR_TYPES[6]; megaFx(x, y, d.color); sfx.bossDown(); }
+  else if (type === 11) sfx.levelup();
+  else if (type === 12) { reviveFx(x, y); sfx.revive(); toast(net.isP2 && a === 1 ? 'Друг тебя спас!' : 'Смайлик ' + (a + 1) + ' снова в игре!', 1.8); }
+}
+function guestUpdate(dt) {
+  now += dt;
+  stepParticles(dt);
+  if (toastT > 0) { toastT -= dt; if (toastT <= 0) refreshBanner(); }
+  const tnow = performance.now();
+  const stalled = net.lastSnapAt > 0 && tnow - net.lastSnapAt > 1500 && state !== 'over';
+  if (stalled !== net.stall) { net.stall = stalled; refreshBanner(); }
+  const snaps = net.snaps;
+  if (!snaps.length) return;
+  let offs = Infinity;
+  for (const s of snaps) offs = Math.min(offs, s.lt - s.g.ht);
+  const rt = tnow - offs - INTERP_MS;
+  let ai = 0;
+  while (ai + 1 < snaps.length && snaps[ai + 1].g.ht <= rt) ai++;
+  const A = snaps[ai].g, B = (snaps[ai + 1] || snaps[ai]).g;
+  const span = B.ht - A.ht;
+  const al = span > 0 ? Math.min(1, Math.max(0, (rt - A.ht) / span)) : 1;
+  try { applyView(A, B, al); } catch (e) { /* a malformed snapshot is skipped */ }
+  if (state === 'play1' || state === 'play2') trails();
+  if (state === 'levelup') { fireworkT -= dt; if (fireworkT <= 0 && stateT < 2.6) { fireworkT = 0.32; firework(); } }
+  updateCamera(dt);
+}
+function guestShowEnd() {
+  const last = net.snaps.length ? net.snaps[net.snaps.length - 1].g : null;
+  const rs = (last && last.rs && typeof last.rs === 'object') ? last.rs : {};
+  const smileyWon = rs.w === 1;
+  let title, text;
+  if (net.isP2) {
+    title = smileyWon ? 'Победа!' : 'Игра окончена';
+    text = smileyWon ? 'Вы вместе прошли все 9 уровней!' : 'Вы дошли до уровня ' + (rs.lvl | 0 || level) + '.';
+  } else if (net.myStar >= 0) {
+    title = smileyWon ? 'Смайлик победил' : 'Победа звёзд!';
+    text = smileyWon ? 'Смайлик прошёл все уровни.' : 'Вы остановили смайлик на уровне ' + (rs.lvl | 0 || level) + '.';
+  } else {
+    title = smileyWon ? 'Смайлик победил' : 'Звёзды победили';
+    text = '';
+  }
+  showEnd(title, (text + ' Новую игру начинает хозяин комнаты.').trim(), false);
+  if ((net.myStar >= 0 && !smileyWon) || (net.isP2 && smileyWon)) sfx.win();
+}
+
+/* ---- shared tick ---- */
+function updateNames() {
+  const names = {};
+  if (net.room) {
+    const ps = net.room.peers();
+    const h = net.mode === 'guest' ? guestHost() : null;
+    const hz = h && h.presence.zl;
+    const sl = net.mode === 'host' ? net.slots : (hz && hz.sl) || {};
+    const nameOf = pid => { const p = ps.find(q => q.peer === pid); return (p && p.presence && cleanName(p.presence.zn)) || 'Игрок'; };
+    for (const k of KEYS.concat('p2')) if (typeof sl[k] === 'string') names[k] = nameOf(sl[k]);
+    names.p1 = net.mode === 'host' ? net.name : (h ? cleanName(h.presence.zn) || 'Хозяин' : 'Хозяин');
+  }
+  net.names = names;
+}
+function netTick() {
+  if (net.mode === 'off') return;
+  const tnow = performance.now();
+  if (net.confirmLeave && tnow > net.confirmLeave) { net.confirmLeave = 0; setText('pauseBtn', 'Выйти'); }
+  if (!net.room) return;
+  if (!net.myPeer) { const me = net.room.peers().find(p => p.isMe && p.sameTab); if (me) net.myPeer = me.peer; }
+  const slow = tnow - net.lastSlow > 250;
+  if (slow) net.lastSlow = tnow;
+  if (net.mode === 'host') {
+    if (slow) { hostReconcile(); updateNames(); }
+    if (net.stage === 'countdown') {
+      const left = Math.max(0, Math.ceil((net.cdEnd - Date.now()) / 1000));
+      if (left !== net.cdShown) { net.cdShown = left; publishLobby(); renderLobby(); }
+      if (left <= 0) hostStartGame();
+    }
+    if (net.stage === 'play' && (state !== net.lastPubState || tnow - net.lastPub >= (state === 'over' ? 1000 : SNAP_MS))) {
+      net.lastPub = tnow; net.lastPubState = state;
+      net.room.presence({ zg: makeSnapshot() }).catch(() => {});
+    }
+  } else {
+    guestTick(tnow);
+    if (slow) { updateNames(); renderLobby(); }
+  }
+}
+
+/* ---- lobby screen ---- */
+function setChip(id, text, ok) { setText(id, text); $(id).classList.toggle('ok', !!ok); }
+function segPress(segId, n) {
+  $(segId).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.n === n)));
+}
+function renderLobby() {
+  if (net.mode === 'off') return;
+  const isHost = net.mode === 'host';
+  const h = isHost ? null : guestHost();
+  const zl = isHost ? { n: net.n, rm: net.rm, sl: net.slots, hr: net.hostReady, st: net.stage, cd: net.cdShown } : (h ? h.presence.zl : null);
+  const rm = zl && zl.rm === 'coop' ? 'coop' : 'stars';
+  const SK = slotKeys(rm);
+  setText('lobbyCode', net.code.toUpperCase());
+  setText('lobbyLink', ART_URL + '#' + net.code);
+  setText('lobbyKind', rm === 'coop' ? 'Комната · кооп' : 'Комната · друзья-звёзды');
+  setText('slot-smiley-name', rm === 'coop' ? 'Смайлик 1' : 'Смайлик');
+  $('countRow').hidden = !isHost || rm === 'coop';
+  $('hostNote').hidden = !isHost;
+  for (const k of KEYS) $('slot-' + k).hidden = rm === 'coop';
+  $('slot-p2').hidden = rm !== 'coop';
+  if (isHost) segPress('lobbySeg', net.n);
+  const byPeer = new Map(lobbyPeers().map(p => [p.peer, p]));
+  const n = rm === 'coop' ? 1 : (zl ? Math.min(4, Math.max(1, zl.n | 0)) : 1);
+  const sl = zl && zl.sl && typeof zl.sl === 'object' ? zl.sl : {};
+  const myKey = SK.find(k => typeof sl[k] === 'string' && sl[k] === net.myPeer) || null;
+  const used = SK.filter(k => typeof sl[k] === 'string').length;
+  const hostName = isHost ? net.name : (h ? cleanName(h.presence.zn) : '');
+  setText('slot-smiley-who', zl ? (hostName || 'Хозяин комнаты') + (isHost ? ' · ты' : '') : '—');
+  setChip('slot-smiley-state', zl ? (zl.hr ? 'готов' : 'не готов') : '', zl && zl.hr);
+  $('slot-smiley').classList.toggle('mine', isHost);
+  for (const k of SK) {
+    const pid = typeof sl[k] === 'string' ? sl[k] : null;
+    const p = pid ? byPeer.get(pid) : null;
+    const mine = !!pid && pid === net.myPeer;
+    setText('slot-' + k + '-who', pid ? ((p && cleanName(p.presence.zn)) || 'Игрок') + (mine ? ' · ты' : '') : (zl ? (k === 'p2' ? 'свободно' : 'компьютер') : '—'));
+    const rdy = !!(p && p.presence.zl && p.presence.zl.ready === true);
+    setChip('slot-' + k + '-state', pid ? (rdy ? 'готов' : 'не готов') : '', rdy);
+    $('slot-' + k).classList.toggle('mine', mine);
+    const btn = $('slot-' + k + '-btn');
+    if (isHost || !zl || zl.st === 'play') { btn.hidden = true; continue; }
+    const pickLabel = k === 'p2' ? 'Занять' : 'Выбрать';
+    if (mine) { btn.hidden = false; btn.disabled = false; setText(btn.id, 'Отказаться'); }
+    else if (!pid && net.want === k) { btn.hidden = false; btn.disabled = true; setText(btn.id, 'Жду…'); }
+    else if (!pid && used < n && !myKey) { btn.hidden = false; btn.disabled = false; setText(btn.id, pickLabel); }
+    else btn.hidden = true;
+  }
+  let status;
+  if (!net.room) status = 'Подключаюсь к серверу… Если он спал, это займёт до минуты.';
+  else if (!zl) status = net.warnedNoHost ? 'Комната не найдена. Проверь код: у хозяина игра должна быть открыта.' : 'Ищу комнату ' + net.code.toUpperCase() + '…';
+  else if (zl.st === 'countdown') status = 'Все готовы! Старт через ' + Math.max(1, zl.cd | 0) + '…';
+  else if (zl.st === 'play') status = 'Игра уже идёт, можно смотреть.';
+  else if (used < n) status = rm === 'coop' ? 'Ждём второго смайлика.' : 'Ждём игроков: ' + used + ' из ' + n + '.';
+  else status = 'Все на месте. Ждём, пока все нажмут «Готов».';
+  setText('lobbyStatus', status);
+  const rb = $('readyBtn');
+  const myReady = isHost ? net.hostReady : net.ready;
+  if (!isHost && !myKey) { rb.disabled = true; rb.classList.remove('on'); setText('readyBtn', rm === 'coop' ? 'Сначала займи место смайлика 2' : 'Сначала выбери звезду'); }
+  else { rb.disabled = !zl || zl.st === 'play'; rb.classList.toggle('on', myReady); setText('readyBtn', myReady ? 'Я готов ✓' : 'Готов'); }
+}
+
+/* ---------- screens ---------- */
+function showOverlay(id) {
+  for (const o of OVERLAYS) $(o).hidden = o !== id;
+  if (id === 'menu') renderSkins();
+}
+function syncModeButtons() {
+  const mp = net.mode !== 'off';
+  setText('pauseBtn', mp ? 'Выйти' : '❚❚');
+  $('pauseBtn').setAttribute('aria-label', mp ? 'Выйти из комнаты' : 'Пауза');
+  $('targetsBtn').hidden = net.mode === 'guest';
+}
+function refreshMpAvailability() {
+  const ok = !!net.api;
+  $('createBtn').disabled = !ok; $('joinBtn').disabled = !ok;
+  const m = $('mpState');
+  if (!ok) { m.hidden = false; m.textContent = 'Этот браузер не поддерживает игру по сети. Одиночная игра и кооп за одним компьютером доступны всегда.'; }
+  else m.hidden = true;
+}
+let lastSolo = { mode: 'solo', local: false };
+const UI = {
+  single() { $('menuMsg').hidden = true; humans = emptySlots(); lastSolo = { mode: 'solo', local: false }; startGame('solo', false); },
+  coop() { $('menuMsg').hidden = true; showOverlay('coopOv'); },
+  coopLocal() { humans = emptySlots(); lastSolo = { mode: 'coop', local: true }; startGame('coop', true); },
+  coopNet() { createMode = 'coop'; syncCreateMode(); UI.openMp(); },
+  openMp() { $('menuMsg').hidden = true; showOverlay('mpOv'); refreshMpAvailability(); },
+  back() { showOverlay('menu'); },
+  create(n, rm) { mpEnter(genCode(), true, n, rm); },
+  join(code) {
+    const c = parseCode(code);
+    if (!c) { const m = $('mpState'); m.hidden = false; m.textContent = 'Код комнаты: от 4 до 8 букв и цифр.'; return; }
+    mpEnter(c, false);
+  },
+  pick(k) {
+    if (net.mode !== 'guest' || !(KEYS.includes(k) || k === 'p2')) return;
+    const h = guestHost(), sl = (h && h.presence.zl && h.presence.zl.sl) || {};
+    if (sl[k] === net.myPeer && net.myPeer) net.want = null;
+    else { net.want = k; net.wantT = Date.now(); }
+    net.ready = false;
+    guestPublish(); renderLobby();
+  },
+  toggleReady() {
+    if (net.mode === 'host') { net.hostReady = !net.hostReady; publishLobby(); hostReconcile(); }
+    else if (net.mode === 'guest' && (net.myStar >= 0 || net.isP2)) { net.ready = !net.ready; guestPublish(); renderLobby(); }
+  },
+  setCount(n) {
+    if (net.mode !== 'host' || net.stage === 'play') return;
+    net.n = Math.min(4, Math.max(1, n | 0)); publishLobby(); hostReconcile();
+  },
+  leave() { mpLeave(); },
+  again() {
+    if (net.mode === 'host') mpBackToLobby();
+    else if (net.mode === 'off') { if (lastSolo.mode === 'coop') UI.coopLocal(); else UI.single(); }
+  },
+  endMenu() {
+    if (net.mode !== 'off') { mpLeave(); return; }
+    backToMenuMaze(); showOverlay('menu');
+  }
+};
+
+/* ---------- skins ---------- */
+function renderSkins() {
+  const box = $('skins');
+  if (!box) return;
+  box.textContent = '';
+  SKINS.forEach((s, k) => {
+    const open = s.need <= progress;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'skin'; b.id = 'skin-' + s.id;
+    b.disabled = !open;
+    b.setAttribute('aria-pressed', String(k === skin));
+    const cv = document.createElement('canvas'); cv.width = cv.height = 112;
+    const nm = document.createElement('span'); nm.textContent = s.name;
+    b.append(cv, nm);
+    if (!open) { const h = document.createElement('small'); h.textContent = 'Закрыто: ' + s.hint.toLowerCase(); b.append(h); }
+    b.onclick = () => {
+      skin = k;
+      try { localStorage.setItem('smiley-stars-skin', k); } catch (e) {}
+      if (net.mode === 'guest') guestPublish();
+      renderSkins(); paintIcons(document);
+    };
+    box.append(b);
+    const c = cv.getContext('2d');
+    c.setTransform(112 * 0.62, 0, 0, 112 * 0.62, 56, 62);
+    paintSmiley(c, 0.42, smileyLook(0, k, false));
+  });
+}
+
+/* ---------- input ---------- */
+function want(dx, dy, who) {
+  if (net.mode === 'guest') {
+    const c = dirCode(dx, dy);
+    if (c !== net.dir) { net.dir = c; guestPublish(); }
+    return;
+  }
+  const p = players[who || 0];
+  if (p && !p.down) { p.wx = dx; p.wy = dy; }
+}
+const KEYS_WASD = { KeyW: [0, -1], KeyS: [0, 1], KeyA: [-1, 0], KeyD: [1, 0] };
+const KEYS_ARROWS = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
+addEventListener('keydown', e => {
+  const tag = e.target && e.target.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') {
+    if (e.key === 'Enter' && e.target.id === 'codeIn') UI.join(e.target.value);
+    return;
+  }
+  const w = KEYS_WASD[e.code], ar = KEYS_ARROWS[e.code];
+  if (w || ar) {
+    e.preventDefault();
+    const k = w || ar;
+    want(k[0], k[1], localCoop && ar ? 1 : 0);
+    return;
+  }
+  if (e.code === 'KeyP' || e.code === 'Escape') { if (net.mode === 'off') { e.preventDefault(); togglePause(); } }
+  if (e.code === 'KeyT' && net.mode !== 'guest') toggleTargets();
+  if ((e.code === 'Enter' || e.code === 'Space') && net.mode === 'off' && (state === 'menu' || state === 'over') && !$('menu').hidden && !(e.target && e.target.closest && e.target.closest('button'))) { e.preventDefault(); UI.single(); }
+});
+// Swipes: each finger is tracked on its own. In local co-op the left half of the screen steers
+// player 1 and the right half steers player 2, so both can swipe at once.
+const touches = new Map();
+function syncPads() {
+  $('pad').classList.toggle('two', localCoop);
+  $('pad2').hidden = !localCoop;
+}
+stage.addEventListener('touchstart', e => {
+  const r = stage.getBoundingClientRect();
+  for (const t of e.changedTouches) touches.set(t.identifier, { x: t.clientX, y: t.clientY, who: localCoop && t.clientX > r.left + r.width / 2 ? 1 : 0 });
+}, { passive: true });
+stage.addEventListener('touchmove', e => {
+  for (const t of e.changedTouches) {
+    const s = touches.get(t.identifier);
+    if (!s) continue;
+    const dx = t.clientX - s.x, dy = t.clientY - s.y;
+    if (Math.hypot(dx, dy) > 22) {
+      if (Math.abs(dx) > Math.abs(dy)) want(Math.sign(dx), 0, s.who); else want(0, Math.sign(dy), s.who);
+      s.x = t.clientX; s.y = t.clientY;
+    }
+  }
+  const playing = state !== 'menu' && state !== 'over' && state !== 'paused' && OVERLAYS.every(o => $(o).hidden);
+  if (playing) e.preventDefault();
+}, { passive: false });
+const dropTouches = e => { for (const t of e.changedTouches) touches.delete(t.identifier); };
+stage.addEventListener('touchend', dropTouches, { passive: true });
+stage.addEventListener('touchcancel', dropTouches, { passive: true });
+document.querySelectorAll('.pad button').forEach(b => {
+  const who = +b.closest('.pad-grid').dataset.who || 0;
+  b.addEventListener('pointerdown', e => { e.preventDefault(); const [dx, dy] = b.dataset.d.split(',').map(Number); want(dx, dy, localCoop ? who : 0); });
+});
+
+function togglePause() {
+  if (net.mode !== 'off') return;
+  if (state === 'paused') { state = pausedFrom; $('pauseOv').hidden = true; }
+  else if (state !== 'menu' && state !== 'over') { pausedFrom = state; state = 'paused'; $('pauseOv').hidden = false; }
+}
+function toggleTargets() {
+  showTargets = !showTargets;
+  $('targetsBtn').setAttribute('aria-pressed', String(showTargets));
+}
+let createCount = 1, createMode = 'stars';
+function syncCreateMode() {
+  $('roomModeSeg').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.m === createMode)));
+  $('countSeg').hidden = createMode === 'coop';
+  $('roomModeText').textContent = createMode === 'coop'
+    ? 'Ты будешь первым смайликом, друг вторым. Против вас шесть звёзд на карте вдвое больше.'
+    : 'Ты будешь смайликом. Сколько друзей будут звёздами? Остальными звёздами управляет компьютер.';
+}
+$('startBtn').onclick = () => UI.single();
+$('coopBtn').onclick = () => UI.coop();
+$('coopLocalBtn').onclick = () => UI.coopLocal();
+$('coopNetBtn').onclick = () => UI.coopNet();
+$('coopBack').onclick = () => UI.back();
+if (touchDevice) $('coopLocalHint').textContent = 'Внизу появятся два пульта: игрок 1 жмёт кнопки слева, игрок 2 справа. Свайпы тоже делятся: левая половина экрана для игрока 1, правая для игрока 2. Удобнее всего на планшете.';
+$('mpBtn').onclick = () => UI.openMp();
+$('mpBack').onclick = () => UI.back();
+$('createBtn').onclick = () => UI.create(createCount, createMode);
+$('joinBtn').onclick = () => UI.join($('codeIn').value);
+$('roomModeSeg').querySelectorAll('button').forEach(b => { b.onclick = () => { createMode = b.dataset.m === 'coop' ? 'coop' : 'stars'; syncCreateMode(); }; });
+$('countSeg').querySelectorAll('button').forEach(b => { b.onclick = () => { createCount = +b.dataset.n; segPress('countSeg', createCount); }; });
+$('lobbySeg').querySelectorAll('button').forEach(b => { b.onclick = () => UI.setCount(+b.dataset.n); });
+for (const k of KEYS.concat('p2')) $('slot-' + k + '-btn').onclick = () => UI.pick(k);
+$('readyBtn').onclick = () => UI.toggleReady();
+$('leaveBtn').onclick = () => UI.leave();
+$('againBtn').onclick = () => UI.again();
+$('endMenuBtn').onclick = () => UI.endMenu();
+$('resumeBtn').onclick = togglePause;
+$('copyBtn').onclick = () => {
+  const text = ART_URL + '#' + net.code;
+  const fail = () => { selectText($('lobbyLink')); $('copyMsg').textContent = 'Не получилось скопировать: ссылка выделена, скопируй её вручную.'; };
+  try {
+    navigator.clipboard.writeText(text).then(() => { $('copyMsg').textContent = 'Ссылка скопирована. Отправь её другу.'; }, fail);
+  } catch (e) { fail(); }
+};
+function selectText(el) {
+  try { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
+}
+$('pauseBtn').onclick = () => {
+  if (net.mode === 'off') togglePause();
+  else if (performance.now() < net.confirmLeave) mpLeave();
+  else { net.confirmLeave = performance.now() + 3000; setText('pauseBtn', 'Точно выйти?'); }
+  $('pauseBtn').blur();
+};
+$('targetsBtn').onclick = () => { toggleTargets(); $('targetsBtn').blur(); };
+$('muteBtn').onclick = () => {
+  muted = !muted;
+  $('muteBtn').setAttribute('aria-pressed', String(!muted));
+  $('muteBtn').classList.toggle('off', muted);
+  $('muteBtn').blur();
+};
+addEventListener('blur', () => { if (net.mode === 'off' && state !== 'paused' && state !== 'menu' && state !== 'over') togglePause(); });
+if (best) { $('bestLine').textContent = `Твой рекорд: ${best} · лучший уровень: ${Math.min(progress, MAX_LEVEL)}`; $('bestLine').hidden = false; }
+
+/* ---------- legend icons ---------- */
+function paintIcons(root) {
+  root.querySelectorAll('canvas.ico').forEach(cv => {
+    const c = cv.getContext('2d'), n = cv.width;
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, n, n);
+    if (cv.dataset.hero) {
+      const k = +cv.dataset.hero - 1;
+      c.setTransform(n * 0.66, 0, 0, n * 0.66, n / 2, n * 0.55);
+      paintSmiley(c, 0.42, smileyLook(k, skin, false));
+    } else if (cv.dataset.star !== undefined) {
+      const i = +cv.dataset.star, d = STAR_TYPES[i];
+      c.setTransform(n * (d.boss ? 0.7 : 0.78), 0, 0, n * (d.boss ? 0.7 : 0.78), n / 2, n * (d.key === 'king' ? 0.56 : 0.5));
+      paintStar(c, d.mega ? '#24123a' : d.color, i, 0, 0, 0.4, { glow: false, angry: !!d.boss, outline: d.mega ? d.color : null, pupil: d.mega ? d.color : null });
+      if (d.key === 'king') paintCrown(c, -0.58, 0.24);
+    } else drawItemIcon(c, cv.dataset.item);
+  });
+}
+const legendCopy = $('legend').cloneNode(true);
+legendCopy.removeAttribute('id');
+$('pauseLegend').appendChild(legendCopy);
+paintIcons(document);
+renderSkins();
+syncCreateMode();
+
+/* ---------- connecting to the room server ----------
+   The server keeps rooms of players. Each player has a small presence object the server
+   shares with the rest of the room; the game only needs join, presence, peers and leave. */
+function makeServerApi(url) {
+  return {
+    join(roomName) {
+      return new Promise((resolve, reject) => {
+        let ws;
+        try { ws = new WebSocket(url); } catch (e) { reject(e); return; }
+        const peers = new Map();                                     // peer id -> presence
+        const subs = new Set();
+        let me = null, settled = false, closedByMe = false;
+        const list = () => [...peers].map(([peer, presence]) => ({ peer, presence, isMe: peer === me, sameTab: peer === me }));
+        const emit = () => { const change = { peers: list() }; for (const s of subs) { try { s.cb(change); } catch (e) {} } };
+        const fail = err => { if (settled) return; settled = true; clearTimeout(timer); try { ws.close(); } catch (e) {} reject(err); };
+        const timer = setTimeout(() => fail(new Error('timeout')), 90000);
+        const room = {
+          peers: list,
+          presence(patch) {
+            if (me && peers.has(me)) Object.assign(peers.get(me), patch);
+            if (ws.readyState === 1) ws.send(JSON.stringify({ t: 'presence', patch }));
+            return Promise.resolve();
+          },
+          onPeers(cb, onError) {
+            const s = { cb, onError };
+            subs.add(s);
+            setTimeout(() => { if (subs.has(s)) cb({ peers: list() }); }, 0);
+            return () => subs.delete(s);
+          },
+          leave() {
+            closedByMe = true;
+            try { if (ws.readyState === 1) ws.send(JSON.stringify({ t: 'leave' })); ws.close(); } catch (e) {}
+            return Promise.resolve();
+          }
+        };
+        ws.onopen = () => ws.send(JSON.stringify({ t: 'join', room: roomName }));
+        ws.onmessage = ev => {
+          let m;
+          try { m = JSON.parse(ev.data); } catch (e) { return; }
+          if (m.t === 'joined') {
+            me = m.peer; peers.clear();
+            for (const p of m.peers || []) peers.set(p.peer, p.presence || {});
+            if (!peers.has(me)) peers.set(me, {});
+            if (!settled) { settled = true; clearTimeout(timer); resolve(room); }
+            emit();
+          } else if (m.t === 'peer') { peers.set(m.peer, m.presence || {}); emit(); }
+          else if (m.t === 'presence') { const p = peers.get(m.peer) || {}; Object.assign(p, m.patch || {}); peers.set(m.peer, p); emit(); }
+          else if (m.t === 'leave') { peers.delete(m.peer); emit(); }
+          else if (m.t === 'error') fail(new Error(m.msg || 'error'));
+        };
+        ws.onerror = () => {};
+        ws.onclose = () => {
+          if (!settled) { fail(new Error('closed')); return; }
+          if (!closedByMe) for (const s of subs) if (s.onError) s.onError();
+        };
+      });
+    }
+  };
+}
+try { const saved = localStorage.getItem('smiley-stars-name'); if (saved) $('nick').value = cleanName(saved); } catch (e) {}
+if ('WebSocket' in window) { net.api = makeServerApi(SERVER_URL); net.apiState = 'ready'; }
+else net.apiState = 'none';
+// wake the free server up while the player is still in the menu
+try { fetch(SERVER_URL.replace(/^ws/, 'http'), { mode: 'no-cors' }).catch(() => {}); } catch (e) {}
+const inviteCode = parseCode((location.hash || '').slice(1));
+if (inviteCode) {
+  $('codeIn').value = inviteCode.toUpperCase();
+  const m = $('mpInvite');
+  m.textContent = 'Тебя позвали в комнату ' + inviteCode.toUpperCase() + '. Впиши имя и нажми «Войти».';
+  m.hidden = false;
+  showOverlay('mpOv');
+}
+refreshMpAvailability();
+
+/* ---------- sizing & loop ---------- */
+function resize() {
+  const r = stage.getBoundingClientRect();
+  cw = Math.max(1, r.width); ch = Math.max(1, r.height);
+  dpr = Math.min(2, window.devicePixelRatio || 1);
+  cvs.width = Math.round(cw * dpr); cvs.height = Math.round(ch * dpr);
+  cvs.style.width = cw + 'px'; cvs.style.height = ch + 'px';
+  sky = null;
+  if (phase === 2 && state === 'grow' && growFrom) growFrom.s = Math.min(cw / W, ch / H) * 0.96;
+  updateCamera(0);
+}
+new ResizeObserver(resize).observe(stage);
+loadPhase1();       // menu backdrop: the opening maze
+resize();
+
+// local preview helpers (only on a localhost dev server, never in Claude)
+if (location.hostname === 'localhost') window.__ss = {
+  go(lv, ph, mode) {
+    startGame(mode || 'solo', mode === 'coop');
+    level = lv; seed1 = (lv === 1 && gameMode === 'solo') ? 0 : 1 + rnd(1e9);
+    loadPhase1(); updateCamera(0); setState('ready');
+    if (ph === 2) startGrow();
+  },
+  clearDots() { for (let i = 0; i < W * H; i++) dots[i] = 0; dotsLeft = 1; },
+  toBoss() { const b = shades.find(s => s.boss && !s.caught); if (b && players[0]) { players[0].x = b.x; players[0].y = b.y; players[0].t = 0; players[0].dx = players[0].dy = 0; updateCamera(0); } },
+  info: () => ({ state, phase, level, W, H, dotsLeft, players: players.map(p => [p.x, p.y, p.down]), shades: shades.map(s => [s.key, s.x, s.y, s.hp]), shards: shards.length, lives, score }),
+  mazeCheck(n) {
+    const bad = [];
+    for (let lv = 1; lv <= 9; lv++) for (const mode of ['solo', 'coop']) {
+      const dims = (mode === 'coop' ? COOP_DIMS : SOLO_DIMS)[lv - 1];
+      if (!dims) continue;
+      for (let k = 0; k < (n || 20); k++) {
+        const m = genLevelMaze(dims[0], dims[1], 1 + k * 7919);
+        const seen = new Uint8Array(m.W * m.H), st = [[m.X(m.ci), m.Y(m.jr + 2)]];
+        let open = 0, reach = 0;
+        for (let i = 0; i < m.W * m.H; i++) if (m.g[i] === 0) open++;
+        seen[st[0][1] * m.W + st[0][0]] = 1;
+        while (st.length) {
+          const [x, y] = st.pop(); reach++;
+          for (const d of DIRS) { const nx = x + d[0], ny = y + d[1], i = ny * m.W + nx; if (nx >= 0 && ny >= 0 && nx < m.W && ny < m.H && !seen[i] && m.g[i] === 0) { seen[i] = 1; st.push([nx, ny]); } }
+        }
+        const houseOpen = (m.box[2] - m.box[0] - 1) * (m.box[3] - m.box[1] - 1);
+        if (reach + houseOpen !== open) bad.push([mode, lv, k, open, reach, houseOpen]);
+      }
+    }
+    return bad;
+  }
+};
+
+let last = performance.now();
+function frame(t) {
+  const dt = Math.min(0.033, Math.max(0, (t - last) / 1000)); last = t;
+  frameDt = dt;
+  if (net.mode === 'guest' && net.stage === 'play') guestUpdate(dt);
+  else {
+    if (net.mode === 'host' && net.stage === 'play') hostApplyInputs();
+    update(dt);
+    if (state === 'menu') updateCamera(dt);
+  }
+  netTick();
+  draw();
+  updateHud();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
