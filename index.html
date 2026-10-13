@@ -2962,7 +2962,10 @@ const UI = {
   },
   toggleReady() {
     if (net.mode === 'host') { net.hostReady = !net.hostReady; publishLobby(); hostReconcile(); }
-    else if (net.mode === 'guest' && (net.myStar >= 0 || net.isP2)) { net.ready = !net.ready; guestPublish(); renderLobby(); }
+    else if (net.mode === 'guest') {
+      const h = guestHost(), sl = (h && h.presence.zl && h.presence.zl.sl) || {};
+      if (net.myPeer && KEYS.concat('p2').some(k => sl[k] === net.myPeer)) { net.ready = !net.ready; guestPublish(); renderLobby(); }
+    }
   },
   setCount(n) {
     if (net.mode !== 'host' || net.stage === 'play') return;
