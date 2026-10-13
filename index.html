@@ -132,6 +132,12 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
 .who-list b i{font-style:normal;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#45e8a8;margin-left:6px}
 .who-list b i.bs{color:var(--danger)}
 .who-list b i.hn{color:var(--hunter)}
+.saves{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.saves li{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:rgba(26,20,56,.6)}
+.save-text{flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:2px}
+.save-text b{font-weight:500;font-size:14px;overflow-wrap:anywhere}
+.save-text small{color:var(--muted);font-size:12.5px}
+.save-side{display:flex;gap:6px;align-items:center}
 .who-list span{display:block;color:var(--muted);font-size:13.5px;line-height:1.45}
 .ico{width:36px;height:36px;display:block}
 .card p.note{font-size:13px;line-height:1.45}
@@ -166,6 +172,7 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
     <div class="stat"><small id="infoLabel">Огоньков</small><span id="info">—</span></div>
     <div class="stat"><small>Жизни</small><span id="lives">✦✦✦</span></div>
     <div class="btns">
+      <button class="iconbtn" id="saveBtn" hidden title="Сохранить игру и продолжить её позже">Сохранить</button>
       <button class="iconbtn" id="pauseBtn" aria-label="Пауза">❚❚</button>
       <button class="iconbtn" id="targetsBtn" aria-pressed="false" title="Показать, куда метит каждая звезда">Цели</button>
       <button class="iconbtn" id="muteBtn" aria-pressed="true">Звук</button>
@@ -194,6 +201,11 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
         </div>
         <p class="note warn" id="menuMsg" hidden></p>
         <p class="keys" id="bestLine" hidden></p>
+
+        <section class="skin-block" id="savesBlock" hidden>
+          <h3>Сохранённые игры</h3>
+          <ul class="saves" id="saves"></ul>
+        </section>
 
         <section class="skin-block">
           <h3>Скин смайлика</h3>
@@ -287,6 +299,7 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
         </div>
         <p class="linkline" id="lobbyLink"></p>
         <p class="keys" id="copyMsg"></p>
+        <p class="invite" id="resumeNote" hidden></p>
         <div class="row" id="countRow"><span class="keys">Друзей-звёзд:</span>
           <div class="seg" id="lobbySeg" role="group" aria-label="Сколько друзей">
             <button type="button" data-n="1" aria-pressed="true">1</button>
@@ -1174,23 +1187,27 @@ function recordHist(dt) {
 }
 
 /* ---------- state changes ---------- */
-function startGame(mode, local) {
+function startGame(mode, local, resume) {
   ensureAudio();
   gameMode = mode === 'coop' ? 'coop' : 'solo'; localCoop = !!local && gameMode === 'coop';
-  score = 0; lives = 3; level = 1;
+  level = resume ? Math.min(MAX_LEVEL, Math.max(1, resume.level | 0)) : 1;
+  score = resume ? Math.max(0, resume.score | 0) : 0;
+  lives = 3; levelStartScore = score; saveSlot = resume ? resume.id : null;
   particles = []; rings = []; floaters = []; shards = []; toastT = 0; players = [];
-  seed1 = gameMode === 'solo' ? 0 : 1 + rnd(2147483646);
+  seed1 = gameMode === 'solo' && level === 1 ? 0 : 1 + rnd(2147483646);
   syncPads();
   loadPhase1();
   updateCamera(0);
   setState('intro');
   sfx.intro();
   showOverlay(null);
-  saveProgress(1);
+  saveProgress(level);
 }
 function nextLevel() {
   level++;
   lives = 3;                                                      // every level starts with three lives
+  levelStartScore = score;
+  if (saveSlot) setTimeout(() => saveGame(true), 0);              // a saved game keeps its slot up to date
   seed1 = 1 + rnd(2147483646);
   loadPhase1();
   updateCamera(0);
@@ -1423,6 +1440,65 @@ function showEnd(title, text, countScore) {
   $('againBtn').textContent = net.mode === 'host' ? 'Ещё раз с теми же' : 'Ещё раз';
   $('endMenuBtn').textContent = net.mode === 'off' ? 'В меню' : 'Выйти из комнаты';
   showOverlay('endOv');
+}
+/* ---------- saved games ----------
+   A save is a checkpoint at the start of the current level: mode, level, score at that point,
+   and for a room its code and who played. Loading restarts that level. Kept in this browser. */
+let saveSlot = null, levelStartScore = 0, resumeInfo = null;
+const SAVE_KINDS = { 'solo': 'Одиночная игра', 'local-coop': 'Кооп за одним компьютером', 'net-coop': 'Кооп по сети', 'net-stars': 'По сети: друзья — звёзды' };
+function loadSaves() {
+  try { const a = JSON.parse(localStorage.getItem('smiley-stars-saves') || '[]'); return Array.isArray(a) ? a.filter(s => s && typeof s === 'object' && SAVE_KINDS[s.kind]) : []; } catch (e) { return []; }
+}
+function storeSaves(a) {
+  try { localStorage.setItem('smiley-stars-saves', JSON.stringify(a.slice(0, 8))); return true; } catch (e) { return false; }
+}
+function saveGame(silent) {
+  if (net.mode === 'guest' || state === 'menu' || state === 'over') return;
+  const online = net.mode === 'host';
+  const d = {
+    id: saveSlot || ('s' + Date.now().toString(36) + rnd(1e4)), t: Date.now(),
+    kind: online ? (net.rm === 'coop' ? 'net-coop' : 'net-stars') : (gameMode === 'coop' ? 'local-coop' : 'solo'),
+    code: online ? net.code : '', n: net.n, level, score: levelStartScore,
+    friends: online ? Object.entries(net.names).filter(([k]) => k !== 'p1').map(([, v]) => cleanName(v)).slice(0, 4) : []
+  };
+  saveSlot = d.id;
+  const ok = storeSaves([d].concat(loadSaves().filter(s => s.id !== d.id)));
+  if (!silent) {
+    toast(ok ? 'Сохранено: уровень ' + level + '. Потом продолжите с начала этого уровня' : 'Не получилось сохранить: браузер не даёт доступ к хранилищу', 2.6);
+    netEvent(13);
+  }
+  renderSaves();
+}
+function renderSaves() {
+  const box = $('saves');
+  if (!box) return;
+  const all = loadSaves();
+  $('savesBlock').hidden = !all.length;
+  box.textContent = '';
+  for (const s of all) {
+    const li = document.createElement('li');
+    const text = document.createElement('div'); text.className = 'save-text';
+    const b = document.createElement('b');
+    b.textContent = SAVE_KINDS[s.kind] + (s.friends && s.friends.length ? ' · с ' + s.friends.join(', ') : '');
+    const sm = document.createElement('small');
+    let when = '';
+    try { when = new Date(s.t).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch (e) {}
+    sm.textContent = 'Уровень ' + (s.level | 0) + ' из ' + MAX_LEVEL + ' · ' + (s.score | 0) + ' очков' + (s.code ? ' · комната ' + String(s.code).toUpperCase() : '') + (when ? ' · ' + when : '');
+    text.append(b, sm);
+    const side = document.createElement('div'); side.className = 'save-side';
+    const go = document.createElement('button'); go.type = 'button'; go.className = 'btn2 small'; go.textContent = 'Продолжить';
+    go.onclick = () => UI.resume(s.id);
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'linkbtn'; del.textContent = 'Удалить';
+    let armed = 0;
+    del.onclick = () => {
+      if (Date.now() < armed) { UI.removeSave(s.id); return; }
+      armed = Date.now() + 3000; del.textContent = 'Точно удалить?';
+      setTimeout(() => { if (del.isConnected) del.textContent = 'Удалить'; }, 3000);
+    };
+    side.append(go, del);
+    li.append(text, side);
+    box.append(li);
+  }
 }
 function saveProgress(n) {
   if (n <= progress) return;
@@ -2512,6 +2588,8 @@ const textCache = {};
 function setText(id, v) { if (textCache[id] !== v) { textCache[id] = v; $(id).textContent = v; } }
 const fmtTime = t => `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
 function updateHud() {
+  const canSave = net.mode !== 'guest' && state !== 'menu' && state !== 'over';
+  if ($('saveBtn').hidden === canSave) $('saveBtn').hidden = !canSave;
   setText('score', String(score));
   setText('lives', lives > 0 ? '✦'.repeat(Math.min(lives, 9)) : '—');
   setText('level', level + '/' + MAX_LEVEL);
@@ -2658,7 +2736,7 @@ function mpLeave(msg) {
   }
   const keep = { api: net.api, apiState: net.apiState };
   Object.assign(net, freshNet(), keep);
-  humans = emptySlots();
+  humans = emptySlots(); resumeInfo = null;
   backToMenuMaze();
   syncModeButtons();
   showOverlay('menu');
@@ -2669,7 +2747,7 @@ function mpLeave(msg) {
 /* ---- host side ---- */
 function publishLobby() {
   if (net.mode !== 'host' || !net.room) return;
-  net.room.presence({ zc: net.code, zr: 'host', zn: net.name, zl: { hs: net.hs, n: net.n, rm: net.rm, sl: Object.assign({}, net.slots), hr: net.hostReady, st: net.stage, cd: net.cdShown } }).catch(() => {});
+  net.room.presence({ zc: net.code, zr: 'host', zn: net.name, zl: { hs: net.hs, n: net.n, rm: net.rm, rv: resumeInfo ? resumeInfo.level : 0, sl: Object.assign({}, net.slots), hr: net.hostReady, st: net.stage, cd: net.cdShown } }).catch(() => {});
 }
 function dropHuman(k) {
   if (k === 'p2') { if (players[1]) { players[1].wx = 0; players[1].wy = 0; } return; }
@@ -2716,7 +2794,8 @@ function hostStartGame() {
     p2Skin = clampSkin(p && p.presence.zl && p.presence.zl.skin);
   } else for (const k of KEYS) humans[k] = net.slots[k];
   publishLobby();
-  startGame(coop ? 'coop' : 'solo', false);
+  startGame(coop ? 'coop' : 'solo', false, resumeInfo);
+  resumeInfo = null;
   updateNames();
 }
 function hostApplyInputs() {
@@ -2921,6 +3000,7 @@ function playEvent(ev) {
   else if (type === 9) { const d = STAR_TYPES[a] || STAR_TYPES[6]; burst(x, y, d.color, 34, 6); rings.push({ x, y, r: 0.6, life: 0.6, max: 0.6, col: d.color }); addShake(0.32); sfx.bossHit(); }
   else if (type === 10) { const d = STAR_TYPES[a] || STAR_TYPES[6]; megaFx(x, y, d.color); sfx.bossDown(); }
   else if (type === 11) sfx.levelup();
+  else if (type === 13) toast('Хозяин сохранил игру: потом можно продолжить с этого уровня', 2.4);
   else if (type === 12) { reviveFx(x, y); sfx.revive(); toast(net.isP2 && a === 1 ? 'Друг тебя спас!' : 'Смайлик ' + (a + 1) + ' снова в игре!', 1.8); }
 }
 function guestUpdate(dt) {
@@ -3012,7 +3092,10 @@ function renderLobby() {
   if (net.mode === 'off') return;
   const isHost = net.mode === 'host';
   const h = isHost ? null : guestHost();
-  const zl = isHost ? { n: net.n, rm: net.rm, sl: net.slots, hr: net.hostReady, st: net.stage, cd: net.cdShown } : (h ? h.presence.zl : null);
+  const zl = isHost ? { n: net.n, rm: net.rm, rv: resumeInfo ? resumeInfo.level : 0, sl: net.slots, hr: net.hostReady, st: net.stage, cd: net.cdShown } : (h ? h.presence.zl : null);
+  const rv = zl ? Math.min(MAX_LEVEL, Math.max(0, zl.rv | 0)) : 0;
+  $('resumeNote').hidden = !rv || (zl && zl.st === 'play');
+  if (rv) setText('resumeNote', isHost ? 'Продолжаете сохранённую игру с уровня ' + rv + '. Старая ссылка и код комнаты снова работают.' : 'Хозяин продолжает сохранённую игру с уровня ' + rv + '.');
   const rm = zl && zl.rm === 'coop' ? 'coop' : 'stars';
   const SK = slotKeys(rm);
   setText('lobbyCode', net.code.toUpperCase());
@@ -3066,7 +3149,7 @@ function renderLobby() {
 /* ---------- screens ---------- */
 function showOverlay(id) {
   for (const o of OVERLAYS) $(o).hidden = o !== id;
-  if (id === 'menu') renderSkins();
+  if (id === 'menu') { renderSkins(); renderSaves(); }
 }
 function syncModeButtons() {
   const mp = net.mode !== 'off';
@@ -3115,6 +3198,17 @@ const UI = {
     net.n = Math.min(4, Math.max(1, n | 0)); publishLobby(); hostReconcile();
   },
   leave() { mpLeave(); },
+  resume(id) {
+    const s = loadSaves().find(z => z.id === id);
+    if (!s) return;
+    $('menuMsg').hidden = true; humans = emptySlots();
+    const res = { id: s.id, level: Math.min(MAX_LEVEL, Math.max(1, s.level | 0)), score: Math.max(0, s.score | 0) };
+    if (s.kind === 'solo') { lastSolo = { mode: 'solo', local: false }; startGame('solo', false, res); }
+    else if (s.kind === 'local-coop') { lastSolo = { mode: 'coop', local: true }; startGame('coop', true, res); }
+    else if (!net.api) UI.openMp();
+    else { resumeInfo = res; mpEnter(parseCode(s.code) || genCode(), true, s.n, s.kind === 'net-coop' ? 'coop' : 'stars'); }
+  },
+  removeSave(id) { storeSaves(loadSaves().filter(z => z.id !== id)); renderSaves(); },
   again() {
     if (net.mode === 'host') mpBackToLobby();
     else if (net.mode === 'off') { if (lastSolo.mode === 'coop') UI.coopLocal(); else UI.single(); }
@@ -3233,6 +3327,7 @@ function syncCreateMode() {
 }
 $('startBtn').onclick = () => UI.single();
 $('coopBtn').onclick = () => UI.coop();
+$('saveBtn').onclick = () => { saveGame(false); $('saveBtn').blur(); };
 $('coopLocalBtn').onclick = () => UI.coopLocal();
 $('coopNetBtn').onclick = () => UI.coopNet();
 $('coopBack').onclick = () => UI.back();
@@ -3298,6 +3393,7 @@ legendCopy.removeAttribute('id');
 $('pauseLegend').appendChild(legendCopy);
 paintIcons(document);
 renderSkins();
+renderSaves();
 syncCreateMode();
 
 /* ---------- connecting to the room server ----------
