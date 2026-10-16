@@ -81,6 +81,9 @@ kbd{font:500 12px var(--body);background:var(--panel);border:1px solid var(--lin
 .btn2:hover{border-color:var(--spark);box-shadow:0 0 18px rgba(255,207,58,.2)}
 .btn2.coop{border-color:rgba(69,232,168,.5)}
 .btn2.coop:hover{border-color:#45e8a8;box-shadow:0 0 18px rgba(69,232,168,.3)}
+a.btn2{display:inline-block;text-decoration:none}
+.btn2.balls{border-color:rgba(255,77,109,.5)}
+.btn2.balls:hover{border-color:#ff4d6d;box-shadow:0 0 18px rgba(255,77,109,.3)}
 .btn2.small{font-size:13px;padding:7px 12px}
 .btn:disabled,.btn2:disabled{opacity:.45;cursor:not-allowed;filter:none}
 .linkbtn{background:none;border:0;color:var(--muted);font:500 14px var(--body);cursor:pointer;padding:8px 2px}
@@ -204,6 +207,7 @@ input[type=text]:focus-visible{outline:2px solid var(--spark);outline-offset:1px
           <button class="btn" id="startBtn">Одиночная игра</button>
           <button class="btn2 coop" id="coopBtn">Кооп вдвоём</button>
           <button class="btn2" id="mpBtn">Играть по сети</button>
+          <a class="btn2 balls" href="arena.html">Битва шариков</a>
         </div>
         <p class="note warn" id="menuMsg" hidden></p>
         <p class="keys" id="bestLine" hidden></p>
