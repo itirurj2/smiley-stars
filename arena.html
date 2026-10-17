@@ -297,11 +297,22 @@ function each(b, h, x, y, z) { for (const a of b.abil) { const f = a.def[h]; if 
 function fold(b, h, v, x, y, z) { for (const a of b.abil) { const f = a.def[h]; if (f) v = f(b, a.st, v, x, y, z); } return v; }
 // a repeating countdown kept in the ability's state: true once every period
 function timer(st, k, period, dt, first) {
+  if (k === 't') st._p = period;
   if (st[k] === undefined) st[k] = first === undefined ? period : first;
   if ((st[k] -= dt) > 0) return false;
   st[k] += period;
   return true;
 }
+
+// [seconds left, full cooldown] of an ability slot, or null for abilities that just work all the time
+function coolOf(b, a) {
+  const st = a.st.inner || a.st, d = a.def === chaos ? a.st.cur : a.def;
+  if (!d) return null;
+  if (d.cool) return d.cool(b, st);
+  if (!(st._p >= 1.2)) return null;
+  return [Math.max(0, st._abs ? (st.cd || 0) - T : st.t), st._p];
+}
+const isReady = b => b.abil.some(a => { const c = coolOf(b, a); return c && c[0] <= 0.4; });
 
 /* ---------- helpers ---------- */
 const foe = b => balls[1 - b.team];
@@ -994,6 +1005,7 @@ function cloneTouch(m, f) {
 
 def({ id: 'golem', cat: 'summon', icon: '🗿', name: 'Голем', col: '#a89f91',
   desc: 'Призывает каменного голема: 32 здоровья, ходит медленно, но бьёт кулаком на 5 и отбрасывает. Разбили голема, и через 5 секунд встанет новый.',
+  cool: (b, st) => mobsOf(b, 'golem') ? null : [st.t === undefined ? 0.5 : st.t, 5],
   tick(b, st, dt) { if (mobsOf(b, 'golem') < 1 && timer(st, 't', 5, dt, 0.5)) { spawnMob(b, { kind: 'golem', r: 6.5, hp: 32, solid: true, spd: 16, punch: 0, face: angOf(b), tick: golemTick, touch: golemTouch }); if (!headless) sfx('build'); } } });
 function golemTick(m, dt) {
   m.punch = Math.max(0, m.punch - dt);
@@ -1027,6 +1039,7 @@ def({ id: 'shield', cat: 'def', icon: '🛡️', name: 'Щит', col: '#9fd0ff',
     if (!headless) { burst(b.x, b.y, '#cfe8ff', 18, 20, 0.4); floatText(b.x, b.y - b.r - 3, 'Блок!', '#cfe8ff', 4); sfx('block'); }
     return 0;
   },
+  cool: (b, st) => st.up ? [0, 3] : [st.t === undefined ? 3 : st.t, 3],
   draw(b, st) { if (st.up) bubble(b, '#9fd0ff'); } });
 
 def({ id: 'regen', cat: 'def', icon: '💚', name: 'Регенерация', col: '#5be38a',
@@ -1064,12 +1077,13 @@ def({ id: 'phoenix', cat: 'def', icon: '🐦‍🔥', name: 'Феникс', col:
     if (!headless) { phoenixFx(b); say(TEAMS[b.team].name + ' возродился из пепла!'); }
     return true;
   },
+  cool: (b, st) => st.used ? null : [0, 1],
   under(b, st) { if (!st.used) ember(b); } });
 
 def({ id: 'dodge', cat: 'def', icon: '🥷', name: 'Уклонение', col: '#c9c4ff',
-  desc: 'С шансом 30% уворачивается от любого удара или снаряда. После уворота следующий удар +6.',
+  desc: 'С шансом 24% уворачивается от удара или снаряда. После уворота следующий удар +6.',
   guard(b, st, d, src, o) {
-    if (o.kind === 'dot' || o.kind === 'heat' || !chance(0.3)) return d;
+    if (o.kind === 'dot' || o.kind === 'heat' || !chance(0.24)) return d;
     st.ready = true;
     if (!headless && !(st.shown > T - 0.5)) { st.shown = T; floatText(b.x, b.y - b.r - 3, 'Мимо!', '#e6e2ff', 4); afterimage(b); }
     return 0;
@@ -1230,6 +1244,7 @@ function ahead(b, t, reach, cone) {
   return d <= reach + t.r && (dx * b.dx + dy * b.dy) / d > Math.cos(cone + Math.asin(Math.min(1, t.r / d)));
 }
 function ready(b, st, period, reach, cone) {      // cooldown over and the enemy in front
+  st._p = period; st._abs = true;
   if (T < (st.cd || 0)) return null;
   const f = foe(b);
   if (!f || !canTouch(f) || !ahead(b, f, reach, cone)) return null;
@@ -1239,6 +1254,7 @@ function ready(b, st, period, reach, cone) {      // cooldown over and the enemy
 def({ id: 'rasengan', cat: 'anime', from: 'Наруто', icon: '🔵', name: 'Расенган', col: '#7fc8ff',
   desc: 'Каждые 4 секунды закручивает в руке шар чакры. Следующий удар с ним наносит +9 и далеко отшвыривает врага.',
   tick(b, st, dt) { if (!st.ready && timer(st, 't', 4, dt, 1.5)) st.ready = true; },
+  cool: (b, st) => st.ready ? [0, 4] : [st.t === undefined ? 1.5 : st.t, 4],
   melee(b, st, d) { st.boom = !!st.ready; if (!st.ready) return d; st.ready = false; return d + 9; },
   hit(b, st, t) {
     if (!st.boom) return;
@@ -1366,14 +1382,14 @@ def({ id: 'saitama', cat: 'anime', from: 'Ванпанчмен', icon: '👊', n
   } });
 
 def({ id: 'domain', cat: 'anime', from: 'Магическая битва', icon: '🏯', name: 'Расширение территории', col: '#b35cff',
-  desc: 'Раз в 12 секунд на 3,5 секунды вся арена становится его территорией: враг замедлен на 40% и теряет 6 здоровья в секунду.',
+  desc: 'Раз в 12 секунд на 3,5 секунды вся арена становится его территорией: враг замедлен на 40% и теряет 5,5 здоровья в секунду.',
   tick(b, st, dt) {
     if (st.on > 0) {
       st.on -= dt;
       const f = foe(b);
       if (!f || !canTouch(f)) return;
       slow(f, 0.2, 0.4);
-      st.acc = (st.acc || 0) + 6 * dt;
+      st.acc = (st.acc || 0) + 5.5 * dt;
       if (st.acc >= 2) { damage(f, st.acc, b, { kind: 'magic', col: '#d9a8ff' }); st.acc = 0; }
     } else if (timer(st, 't', 12, dt, 3)) { st.on = 3.5; if (!headless) { say('Расширение территории!'); sfx('hole'); } }
   },
@@ -1388,6 +1404,7 @@ def({ id: 'domain', cat: 'anime', from: 'Магическая битва', icon:
 def({ id: 'susanoo', cat: 'anime', from: 'Наруто', icon: '👺', name: 'Сусаноо', col: '#a070ff',
   desc: 'Призрачный воин-доспех принимает на себя до 20 урона. Когда его разбили, через 8,5 секунды он вырастает снова.',
   init(b, st) { st.hp = 20; },
+  cool: (b, st) => st.hp > 0 ? [0, 8.5] : [st.t === undefined ? 8.5 : st.t, 8.5],
   tick(b, st, dt) { if (st.hp <= 0 && timer(st, 't', 8.5, dt)) { st.hp = 20; if (!headless) sfx('shieldUp'); } },
   guard(b, st, d, src, o) {
     if (!(st.hp > 0) || o.kind === 'dot' || o.kind === 'heat') return d;
@@ -1450,8 +1467,9 @@ def({ id: 'rot', cat: 'dota', from: 'Dota 2: Пудж', icon: '🤢', name: 'Г�
   } });
 
 def({ id: 'chrono', cat: 'dota', from: 'Dota 2: Войд', icon: '⌛', name: 'Хроносфера', col: '#b9a7ff',
-  desc: 'Когда враг рядом, накрывает всё вокруг сферой на 2,6 секунды, не чаще раза в 9 секунд. Внутри для врага время стоит: он, его снаряды и слуги замирают. Сам шарик двигается свободно и бьёт застывшего врага на 4 сильнее.',
+  desc: 'Когда враг рядом, накрывает всё вокруг сферой на 2,6 секунды, не чаще раза в 9 секунд. Внутри для врага время стоит: он, его снаряды и слуги замирают. Сам шарик внутри сферы летает в полтора раза быстрее и бьёт застывшего врага на 4 сильнее.',
   tick(b, st, dt) {
+    st._p = 9; st._abs = true;
     if (T < (st.cd || 0)) return;
     const f = foe(b);
     if (!f || !canTouch(f) || dist(b, f) > 26) return;
@@ -1459,6 +1477,7 @@ def({ id: 'chrono', cat: 'dota', from: 'Dota 2: Войд', icon: '⌛', name: '�
     addZone(b, { kind: 'chrono', r: 28, life: 2.6, tick: chronoTick });
     if (!headless) sfx('hole');
   },
+  speed: (b, st, k) => zones.some(z => z.kind === 'chrono' && z.src === b && !z.dead && touching(z, b, 0)) ? k * 1.5 : k,
   melee: (b, st, d, t) => t.stun > 0 && t.stunKind === 'time' ? d + 4 : d });
 function chronoTick(z) {
   for (const t of foesOf(z.team)) {
@@ -1917,6 +1936,7 @@ function drawBall(b, now) {
   ctx.save();
   if (b.ghost > 0) ctx.globalAlpha = 0.35 + 0.1 * Math.sin(now * 25);
   else if (b.inv > 0) ctx.globalAlpha = 0.6 + 0.4 * Math.sin(now * 40);
+  if (state !== 'over' && isReady(b)) glowAt(b.x, b.y, r * 2.4, tm.col, 0.55 + 0.2 * Math.sin(now * 5));
   ctx.fillStyle = tm.col; disc(b.x, b.y, r); ctx.fill();
   ctx.lineWidth = 0.6; ctx.strokeStyle = tm.dark; ctx.stroke();
   if (b.flash > 0) { const a0 = ctx.globalAlpha; ctx.globalAlpha = a0 * Math.min(1, b.flash / 0.14) * 0.6; ctx.fillStyle = '#ffffff'; disc(b.x, b.y, r); ctx.fill(); ctx.globalAlpha = a0; }
@@ -2366,6 +2386,20 @@ function drawFloaters(ox, oy, k) {
   }
   ctx.globalAlpha = 1;
 }
+// seconds until each ability that is still recharging, written on its ball in screen pixels
+function drawCooldowns(ox, oy, k) {
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  for (const b of balls) {
+    if (b.dead || state === 'over' || b.ghost > 0) continue;
+    const nums = [];
+    for (const a of b.abil) { const c = coolOf(b, a); if (c && c[0] > 0.4) nums.push(Math.ceil(c[0])); }
+    if (!nums.length) continue;
+    const txt = nums.join(' '), px = b.r * k * (nums.length > 1 ? 0.6 : 0.85), x = ox + b.x * k, y = oy + b.y * k;
+    ctx.font = `700 ${px.toFixed(1)}px ${FONT}`;
+    ctx.lineWidth = Math.max(2, px * 0.14); ctx.strokeStyle = 'rgba(0,0,0,.3)'; ctx.strokeText(txt, x, y);
+    ctx.fillStyle = 'rgba(255,255,255,.95)'; ctx.fillText(txt, x, y);
+  }
+}
 function draw(now) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = '#17181c'; ctx.fillRect(0, 0, cw, ch);
@@ -2390,6 +2424,7 @@ function draw(now) {
   ctx.restore();
   drawBorder(now);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawCooldowns(ox, oy, k);
   drawFloaters(ox, oy, k);
 }
 
