@@ -4,141 +4,136 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Битва шариков: два шарика сами дерутся на маленькой арене. Выбери им способности из полусотни и смотри, кто победит.">
-<meta name="theme-color" content="#0f0b22">
+<meta name="theme-color" content="#17181c">
 <title>Битва шариков</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='3' y='3' width='58' height='58' rx='10' fill='%230f0b22' stroke='%237b5cff' stroke-width='3'/%3E%3Ccircle cx='23' cy='40' r='12' fill='%23ff4d6d'/%3E%3Ccircle cx='42' cy='23' r='12' fill='%233ad7ff'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='3' y='3' width='58' height='58' rx='10' fill='%2317181c' stroke='%2334353d' stroke-width='3'/%3E%3Ccircle cx='23' cy='40' r='12' fill='%23e5484d'/%3E%3Ccircle cx='42' cy='23' r='12' fill='%233b82f6'/%3E%3C/svg%3E">
 <style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}*,*::before,*::after{box-sizing:inherit}body{margin:0}[hidden]{display:none!important}</style>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&family=Rubik:wght@400;500;700&display=swap">
 <style>
-/* Layout: top bar, the two fighters' health bars, then the square arena canvas; menus are overlays on the arena */
+/* Layout: top bar, the two fighters' health bars, then the square arena canvas; menus are overlays on the arena. Flat and quiet on purpose */
 :root{
-  --bg:#0f0b22;
-  --panel:#1a1438;
-  --line:#2c2358;
-  --wall:#7b5cff;
-  --spark:#ffcf3a;
-  --ok:#5be38a;
-  --danger:#ff4d5e;
-  --ink:#efeaff;
-  --muted:#a59cd2;
-  --red:#ff4d6d;
-  --blue:#3ad7ff;
-  --display:'Russo One','Arial Black',system-ui,sans-serif;
-  --body:'Rubik',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --bg:#17181c;
+  --panel:#222329;
+  --panel2:#2a2b32;
+  --line:#34353d;
+  --accent:#f2c14e;
+  --ink:#ececf0;
+  --muted:#9a9ba6;
+  --red:#e5484d;
+  --blue:#3b82f6;
+  --font:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
   color-scheme:dark;
 }
 html,body{height:100%}
-body{background:radial-gradient(ellipse 80% 60% at 15% 0%,rgba(255,77,109,.16),transparent 60%),radial-gradient(ellipse 70% 55% at 90% 100%,rgba(58,215,255,.14),transparent 60%),var(--bg);color:var(--ink);font-family:var(--body);overflow:hidden}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);overflow:hidden}
 .app{height:100%;max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:8px;display:flex;flex-direction:column;gap:8px}
 .topbar{display:flex;align-items:center;gap:8px 14px}
-.brand{font-family:var(--display);font-size:21px;letter-spacing:.02em;margin-right:auto;white-space:nowrap;text-shadow:0 0 14px rgba(123,92,255,.9),0 0 2px rgba(255,255,255,.6)}
-.brand b{color:var(--spark);font-weight:400;text-shadow:0 0 14px rgba(255,207,58,.8)}
+.brand{font-size:19px;font-weight:700;margin-right:auto;white-space:nowrap}
 .btns{display:flex;gap:6px}
-.iconbtn{background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:8px;height:34px;min-width:34px;padding:0 10px;font:500 13px var(--body);cursor:pointer}
-.iconbtn[aria-pressed="true"]{border-color:var(--spark);color:var(--spark)}
+.iconbtn{background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:8px;height:34px;min-width:34px;padding:0 10px;font:600 13px var(--font);cursor:pointer}
+.iconbtn:hover{background:var(--panel2)}
+.iconbtn[aria-pressed="true"]{color:var(--ink)}
 .iconbtn.off{color:var(--muted);text-decoration:line-through}
-.iconbtn:focus-visible,.btn:focus-visible,.btn2:focus-visible,.linkbtn:focus-visible,.seg button:focus-visible,.cats button:focus-visible,.ab:focus-visible,.side:focus-visible{outline:2px solid var(--spark);outline-offset:2px}
+.iconbtn:focus-visible,.btn:focus-visible,.btn2:focus-visible,.linkbtn:focus-visible,.seg button:focus-visible,.cats button:focus-visible,.ab:focus-visible,.side:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .fighters{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:14px;align-items:end}
 .fighter{display:flex;flex-direction:column;gap:5px;min-width:0}
 .fighter.f1{align-items:flex-end}
 .f-head{display:flex;align-items:baseline;gap:8px;min-width:0;max-width:100%}
 .f1 .f-head{flex-direction:row-reverse}
-.f-name{font-family:var(--display);font-weight:400;font-size:16px;white-space:nowrap}
-.f0 .f-name{color:var(--red);text-shadow:0 0 12px rgba(255,77,109,.6)}
-.f1 .f-name{color:var(--blue);text-shadow:0 0 12px rgba(58,215,255,.6)}
+.f-name{font-weight:700;font-size:15px;white-space:nowrap}
+.f0 .f-name{color:var(--red)}
+.f1 .f-name{color:var(--blue)}
 .f-abil{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.hp{position:relative;height:16px;width:100%;border-radius:999px;background:rgba(10,7,26,.85);border:1px solid var(--line);overflow:hidden}
+.hp{position:relative;height:14px;width:100%;border-radius:4px;background:#101114;border:1px solid var(--line);overflow:hidden}
 .hp i,.hp b{position:absolute;inset:0;transform-origin:left center}
 .f1 .hp i,.f1 .hp b{transform-origin:right center}
-.hp b{background:rgba(255,255,255,.55)}
-.f0 .hp i{background:linear-gradient(90deg,#c41e45,var(--red));box-shadow:0 0 14px rgba(255,77,109,.7)}
-.f1 .hp i{background:linear-gradient(270deg,#0a86c9,var(--blue));box-shadow:0 0 14px rgba(58,215,255,.7)}
-.hp span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:400 11px var(--display);color:#fff;text-shadow:0 0 3px #000,0 0 6px #000;font-variant-numeric:tabular-nums}
-.score{font-family:var(--display);font-size:22px;letter-spacing:.06em;white-space:nowrap;align-self:center;text-shadow:0 0 12px rgba(239,234,255,.35)}
+.hp b{background:rgba(255,255,255,.28)}
+.f0 .hp i{background:var(--red)}
+.f1 .hp i{background:var(--blue)}
+.hp span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 11px var(--font);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7);font-variant-numeric:tabular-nums}
+.score{font-size:20px;font-weight:700;white-space:nowrap;align-self:center;font-variant-numeric:tabular-nums}
 .score .s0{color:var(--red)}.score .s1{color:var(--blue)}
-.stage{flex:1;min-height:260px;position:relative;border-radius:16px;overflow:hidden;background:var(--bg);border:1px solid color-mix(in srgb,var(--wall) 45%,transparent);box-shadow:0 0 0 1px rgba(255,255,255,.03) inset,0 20px 60px rgba(0,0,0,.5);touch-action:manipulation}
+.stage{flex:1;min-height:260px;position:relative;border-radius:12px;overflow:hidden;background:var(--bg);touch-action:manipulation}
 #game{position:absolute;inset:0;display:block}
-.banner{position:absolute;left:50%;top:14px;transform:translateX(-50%);font-family:var(--display);font-size:clamp(15px,3vw,24px);text-align:center;color:#fff;text-shadow:0 0 6px rgba(255,255,255,.6),0 0 22px var(--wall),0 0 44px var(--wall);pointer-events:none;width:max-content;max-width:calc(100% - 32px);text-wrap:balance;z-index:1}
-.count{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--display);font-size:clamp(54px,13vw,120px);line-height:1;color:#fff;text-shadow:0 0 6px #fff,0 0 30px var(--wall),0 0 70px var(--wall);pointer-events:none;z-index:1;white-space:nowrap}
-@media (prefers-reduced-motion:no-preference){.count:not([hidden]){animation:pop .5s cubic-bezier(.2,1.5,.4,1)}}
-@keyframes pop{from{opacity:0;transform:translate(-50%,-50%) scale(.5)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-.overlay{position:absolute;inset:0;display:flex;overflow-y:auto;padding:16px;background:radial-gradient(ellipse at 50% 40%,rgba(26,18,64,.8),rgba(8,5,20,.92));backdrop-filter:blur(4px);z-index:2}
-.overlay.soft{background:radial-gradient(ellipse at 50% 50%,rgba(8,5,20,.55),rgba(8,5,20,.8));backdrop-filter:none}
+.banner{position:absolute;left:50%;top:14px;transform:translateX(-50%);font-size:clamp(15px,2.6vw,20px);font-weight:700;text-align:center;color:#fff;background:rgba(23,24,28,.85);border:1px solid var(--line);border-radius:999px;padding:6px 16px;pointer-events:none;width:max-content;max-width:calc(100% - 32px);text-wrap:balance;z-index:1}
+.count{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:clamp(54px,12vw,110px);font-weight:800;line-height:1;color:#fff;pointer-events:none;z-index:1;white-space:nowrap;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+@media (prefers-reduced-motion:no-preference){.count:not([hidden]){animation:pop .45s ease-out}}
+@keyframes pop{from{opacity:0;transform:translate(-50%,-50%) scale(.6)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+.overlay{position:absolute;inset:0;display:flex;overflow-y:auto;padding:16px;background:rgba(17,18,21,.94);z-index:2}
+.overlay.soft{background:rgba(17,18,21,.7)}
 .card{margin:auto;max-width:460px;width:100%;display:flex;flex-direction:column;gap:14px}
 .card.wide{max-width:980px}
-.card h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,7.5vw,60px);line-height:1;margin:0;text-wrap:balance;color:#fff;text-shadow:0 0 4px rgba(255,255,255,.7),0 0 20px rgba(123,92,255,.95),0 0 50px rgba(123,92,255,.6)}
-.card h1 b{color:var(--spark);font-weight:400;text-shadow:0 0 4px rgba(255,255,255,.6),0 0 20px rgba(255,207,58,.9),0 0 46px rgba(255,122,47,.6)}
-.card h2{font-family:var(--display);font-weight:400;font-size:30px;margin:0;text-wrap:balance}
-.card h2.w0{color:var(--red);text-shadow:0 0 20px rgba(255,77,109,.7)}
-.card h2.w1{color:var(--blue);text-shadow:0 0 20px rgba(58,215,255,.7)}
+.overlay.soft .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card h1{font-size:clamp(30px,6vw,44px);font-weight:800;line-height:1.05;margin:0;text-wrap:balance}
+.card h2{font-size:26px;font-weight:800;margin:0;text-wrap:balance}
+.card h2.w0{color:var(--red)}
+.card h2.w1{color:var(--blue)}
 .card p{margin:0;line-height:1.5;color:var(--muted)}
 .card p.note{font-size:13px;line-height:1.45}
 .keys{font-size:13px;color:var(--muted)}
 .keys a{color:var(--muted)}
 .keys a:hover{color:var(--ink)}
-kbd{font:500 12px var(--body);background:var(--panel);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--ink)}
-.btn{font-family:var(--display);font-size:18px;color:#1b1200;background:linear-gradient(180deg,#ffe27a,var(--spark) 55%,#f2a91f);border:0;border-radius:10px;padding:12px 24px;cursor:pointer;box-shadow:0 0 24px rgba(255,207,58,.45),0 2px 0 rgba(255,255,255,.5) inset;transition:transform .12s,box-shadow .12s}
-.btn:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 0 36px rgba(255,207,58,.65),0 2px 0 rgba(255,255,255,.5) inset}
-.btn2{font-family:var(--display);font-size:16px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 18px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
-.btn2:hover{border-color:var(--spark);box-shadow:0 0 18px rgba(255,207,58,.2)}
+kbd{font:600 12px var(--font);background:var(--panel);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--ink)}
+.btn{font:700 17px var(--font);color:#1d1606;background:var(--accent);border:0;border-radius:10px;padding:12px 24px;cursor:pointer}
+.btn:hover{filter:brightness(1.07)}
+.btn2{font:600 15px var(--font);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 18px;cursor:pointer}
+.btn2:hover{background:var(--panel2)}
 .btn2.small{font-size:13px;padding:8px 12px}
-.linkbtn{background:none;border:0;color:var(--muted);font:500 14px var(--body);cursor:pointer;padding:8px 2px}
+.linkbtn{background:none;border:0;color:var(--muted);font:500 14px var(--font);cursor:pointer;padding:8px 2px}
 .linkbtn:hover{color:var(--ink)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.label{font-size:12px;font-weight:600;color:var(--muted)}
 .seg{display:inline-flex;gap:6px;flex-wrap:wrap}
-.seg button{width:44px;height:38px;font-family:var(--display);font-size:16px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;cursor:pointer}
-.seg button[aria-pressed="true"]{border-color:var(--spark);color:#1b1200;background:var(--spark)}
+.seg button{width:42px;height:36px;font:700 15px var(--font);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.seg button[aria-pressed="true"]{border-color:var(--accent);color:#1d1606;background:var(--accent)}
 .matchup{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:stretch}
-.side{display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(26,20,56,.7);color:var(--ink);cursor:pointer;font:400 14px var(--body);min-width:0;transition:border-color .15s,box-shadow .15s}
-.side-tag{font-family:var(--display);font-size:15px}
+.side{display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;font:400 14px var(--font);min-width:0}
+.side-tag{font-weight:700;font-size:14px}
 .s0 .side-tag{color:var(--red)}.s1 .side-tag{color:var(--blue)}
-.side-abil{line-height:1.35;overflow-wrap:anywhere;font-weight:500}
+.side-abil{line-height:1.35;overflow-wrap:anywhere;font-weight:600}
 .side small{color:var(--muted);font-size:12px}
-.side.s0[aria-pressed="true"]{border-color:var(--red);box-shadow:0 0 20px rgba(255,77,109,.35)}
-.side.s1[aria-pressed="true"]{border-color:var(--blue);box-shadow:0 0 20px rgba(58,215,255,.35)}
+.side.s0[aria-pressed="true"]{border-color:var(--red)}
+.side.s1[aria-pressed="true"]{border-color:var(--blue)}
 .side[aria-pressed="true"] small{color:var(--ink)}
-.vs{align-self:center;font-family:var(--display);font-size:22px;color:var(--spark);text-shadow:0 0 16px rgba(255,207,58,.7)}
+.vs{align-self:center;font-size:18px;font-weight:800;color:var(--muted)}
 .opts{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--line)}
 .cats{display:flex;flex-wrap:wrap;gap:6px}
-.cats button{font:500 13px var(--body);color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
+.cats button{font:600 13px var(--font);color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
 .cats button:hover{color:var(--ink)}
-.cats button[aria-pressed="true"]{color:#1b1200;background:var(--spark);border-color:var(--spark)}
+.cats button[aria-pressed="true"]{color:#1d1606;background:var(--accent);border-color:var(--accent)}
 .abil-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,232px),1fr));gap:8px}
-.ab{position:relative;display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:start;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(26,20,56,.6);color:var(--ink);cursor:pointer;font:400 13px var(--body);transition:border-color .15s,box-shadow .15s,transform .15s}
-.ab:hover{border-color:var(--muted);transform:translateY(-1px)}
-.ab-ico{font-size:25px;line-height:34px;text-align:center}
-.ab b{display:block;font-family:var(--display);font-weight:400;font-size:15px;margin:0 30px 3px 0}
+.ab{position:relative;display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px;align-items:start;text-align:left;padding:10px 12px;border-radius:10px;border:2px solid transparent;background:var(--panel);color:var(--ink);cursor:pointer;font:400 13px var(--font)}
+.ab:hover{background:var(--panel2)}
+.ab-ico{font-size:23px;line-height:32px;text-align:center;white-space:nowrap;overflow:hidden}
+.ab b{display:block;font-weight:700;font-size:14.5px;margin:0 30px 3px 0}
 .ab small{display:block;color:var(--muted);line-height:1.4;font-size:12.5px}
-.ab.on0{border-color:var(--red);box-shadow:0 0 16px rgba(255,77,109,.28) inset}
-.ab.on1{border-color:var(--blue);box-shadow:0 0 16px rgba(58,215,255,.28) inset}
-.ab.on0.on1{border-color:var(--spark);box-shadow:0 0 16px rgba(255,207,58,.28) inset}
-.ab-who{position:absolute;top:9px;right:10px;display:flex;gap:4px}
+.ab .from{display:block;font-size:11px;font-weight:600;color:var(--accent);margin:-1px 0 3px}
+.ab.on0{border-color:var(--red)}
+.ab.on1{border-color:var(--blue)}
+.ab.on0.on1{border-color:var(--accent)}
+.ab-who{position:absolute;top:10px;right:10px;display:flex;gap:4px}
 .ab-who i{width:10px;height:10px;border-radius:50%;display:none}
-.ab.on0 .ab-who .p0{display:block;background:var(--red);box-shadow:0 0 8px var(--red)}
-.ab.on1 .ab-who .p1{display:block;background:var(--blue);box-shadow:0 0 8px var(--blue)}
+.ab.on0 .ab-who .p0{display:block;background:var(--red)}
+.ab.on1 .ab-who .p1{display:block;background:var(--blue)}
 .pause-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:18px 28px;padding-top:16px;border-top:1px solid var(--line)}
-.legend h3{font-family:var(--display);font-weight:400;font-size:13px;letter-spacing:.12em;text-transform:uppercase;margin:0 0 10px}
+.legend h3{font-size:14px;font-weight:700;margin:0 0 10px}
 .legend h3.t0{color:var(--red)}.legend h3.t1{color:var(--blue)}
 .who-list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
 .who-list li{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;align-items:start}
-.who-list .ab-ico{font-size:22px;line-height:30px}
-.who-list b{display:block;font-weight:500;color:var(--ink);margin-bottom:2px}
+.who-list .ab-ico{font-size:21px;line-height:30px}
+.who-list b{display:block;font-weight:600;color:var(--ink);margin-bottom:2px}
 .who-list span{display:block;color:var(--muted);font-size:13.5px;line-height:1.45}
-.stats{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px 16px;align-items:baseline;font-size:14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:rgba(26,20,56,.6)}
+.stats{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px 16px;align-items:baseline;font-size:14px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
 .stats span{color:var(--muted)}
-.stats b{font-family:var(--display);font-weight:400;font-variant-numeric:tabular-nums;text-align:right}
+.stats b{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
 .stats .c0{color:var(--red)}.stats .c1{color:var(--blue)}
 @media (max-width:560px){
-  .brand{font-size:18px}
+  .brand{font-size:17px}
   .fighters{gap:8px}
   .f-head{flex-direction:column;align-items:flex-start;gap:0}
   .f1 .f-head{flex-direction:column;align-items:flex-end}
   .f-abil{font-size:12px;max-width:100%}
-  .score{font-size:18px}
+  .score{font-size:17px}
   .matchup{grid-template-columns:minmax(0,1fr)}
   .vs{justify-self:center}
 }
@@ -148,7 +143,7 @@ kbd{font:500 12px var(--body);background:var(--panel);border:1px solid var(--lin
 
 <div class="app">
   <div class="topbar">
-    <div class="brand">Битва <b>шариков</b></div>
+    <div class="brand">Битва шариков</div>
     <div class="btns">
       <button class="iconbtn" id="speedBtn" title="Скорость боя" aria-label="Скорость боя: обычная">×1</button>
       <button class="iconbtn" id="pauseBtn" aria-label="Пауза">❚❚</button>
@@ -175,7 +170,7 @@ kbd{font:500 12px var(--body);background:var(--panel);border:1px solid var(--lin
 
     <div class="overlay" id="menu">
       <div class="card wide">
-        <h1>Битва <b>шариков</b></h1>
+        <h1>Битва шариков</h1>
         <p>Два шарика сами летают по маленькой арене и сами пускают в ход способности. Никто ими не управляет: стреляют они прямо туда, куда летят. Выбери, что умеет каждый, и смотри, кто победит.</p>
         <div class="matchup">
           <button type="button" class="side s0" data-side="0" aria-pressed="true"><span class="side-tag">Красный шарик</span><span class="side-abil" id="pick0"></span><small id="sideHint0">Сейчас выбираешь для него</small></button>
@@ -240,8 +235,8 @@ const SUDDEN = 50;                               // seconds until the walls star
 const POISON_DPS = 0.35;                          // per drop of poison
 const BLEED_DPS = 2;                             // per open wound
 const TEAMS = [
-  { name: 'Красный', gen: 'красного', dat: 'красному', col: '#ff4d6d', light: '#ffd0d8', dark: '#7a0f28', text: '#ff9fb2' },
-  { name: 'Синий',   gen: 'синего',   dat: 'синему',   col: '#3ad7ff', light: '#d6f7ff', dark: '#064a68', text: '#9fecff' }
+  { name: 'Красный', gen: 'красного', dat: 'красному', col: '#e5484d', dark: '#a8262b', text: '#ff9b9e' },
+  { name: 'Синий',   gen: 'синего',   dat: 'синему',   col: '#3b82f6', dark: '#1d4fb0', text: '#9cc3ff' }
 ];
 const CATS = [
   { id: 'all',    name: 'Все' },
@@ -251,7 +246,9 @@ const CATS = [
   { id: 'elem',   name: 'Стихии' },
   { id: 'summon', name: 'Призыв' },
   { id: 'def',    name: 'Защита' },
-  { id: 'trick',  name: 'Хитрости' }
+  { id: 'trick',  name: 'Хитрости' },
+  { id: 'anime',  name: 'Аниме' },
+  { id: 'dota',   name: 'Дота' }
 ];
 const IDEAS = ['spikes', 'skeleton', 'stun'];    // the three abilities from the original idea lead the list
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -276,6 +273,7 @@ const fxr = (a, b) => a + (b - a) * Math.random();   // randomness for effects o
 let balls = [], shots = [], zones = [], mobs = [];
 let parts = [], rings = [], floaters = [], bolts = [];
 let foeList = [[], []];
+let frozen = [0, 0];                             // until when each team's projectiles and minions stand still (time stop)
 let T = 0, state = 'demo', winner = -1, heatOn = false, shake = 0, uid = 1;
 let headless = false;                            // benchmark fights: no effects, no sound
 let dmgLog = null;                               // benchmark: every hit on a ball, when someone asks for it
@@ -356,6 +354,11 @@ function stun(t, sec, kind) {
   if (!headless) { floatText(t.x, t.y - t.r - 3, kind === 'ice' ? 'Во льду!' : 'Оглушён!', kind === 'ice' ? '#bff4ff' : '#ffe14d', 4); sfx(kind === 'ice' ? 'freeze' : 'stun'); }
   return true;
 }
+function freezeTime(t, sec) {
+  if (!t.isBall || t.dead || t.ghost > 0 || t.inv > 0) return;
+  t.stun = Math.max(t.stun, sec); t.stunKind = 'time'; t.stunImm = Math.max(t.stunImm, t.stun + 0.6);
+}
+function cleanse(b) { b.burnT = 0; b.pois = 0; b.bleeds = []; b.slow = 0; b.root = 0; }
 function slow(t, sec, k) { if (!t.isBall) return; if (t.slow <= 0) t.slowK = 0; t.slow = Math.max(t.slow, sec); t.slowK = Math.max(t.slowK, k); }
 function root(t, sec) {
   if (!t.isBall || t.ghost > 0 || t.rootImm > 0) return false;
@@ -374,7 +377,7 @@ function heal(b, v) {
 }
 function tickStatus(b, dt) {
   b.stun = Math.max(0, b.stun - dt); b.stunImm = Math.max(0, b.stunImm - dt);
-  b.root = Math.max(0, b.root - dt); b.rootImm = Math.max(0, b.rootImm - dt);
+  b.root = Math.max(0, b.root - dt); b.rootImm = Math.max(0, b.rootImm - dt); b.silence = Math.max(0, b.silence - dt);
   b.slow = Math.max(0, b.slow - dt);
   b.ghost = Math.max(0, b.ghost - dt); b.inv = Math.max(0, b.inv - dt);
   b.pull = Math.max(0, b.pull - dt); b.kick = Math.max(0, b.kick - dt);
@@ -441,7 +444,7 @@ function shoot(from, ang, o) {                    // from: a ball or a minion
 }
 function stepShots(dt) {
   for (const s of shots) {
-    if (s.dead) continue;
+    if (s.dead || s.hold > T || frozen[s.team] > T) continue;
     s.age += dt;
     if (s.tick) s.tick(s, dt);
     if (s.dead) continue;
@@ -505,7 +508,7 @@ function spawnMob(b, o) {
 function stepMobs(dt) {
   const damp = Math.pow(0.03, dt);
   for (const m of mobs) {
-    if (m.dead) continue;
+    if (m.dead || m.hold > T || frozen[m.team] > T) continue;
     m.age += dt; m.hitCd -= dt; m.flash -= dt;
     if (m.life && m.age >= m.life) { m.dead = true; if (!headless) burst(m.x, m.y, '#cfc8ff', 8, 10, 0.4); continue; }
     if (m.tick) m.tick(m, dt);
@@ -685,9 +688,9 @@ def({ id: 'ricochet', cat: 'gun', icon: '🎱', name: 'Рикошет', col: '#f
 
 const rocketBoom = s => { s.dead = true; boom(s.x, s.y, 22, s.dmg, s.src, '#ff6b3d'); };
 def({ id: 'rocket', cat: 'gun', icon: '🚀', name: 'Ракеты', col: '#ff6b3d',
-  desc: 'Раз в 1,6 секунды пускает ракету. Она разгоняется и взрывается у стены или пролетая рядом с врагом: до 14 урона всем вокруг.',
+  desc: 'Раз в 1,5 секунды пускает ракету. Она разгоняется и взрывается у стены или пролетая рядом с врагом: до 14 урона всем вокруг.',
   tick(b, st, dt) {
-    if (timer(st, 't', 1.6, dt, 1)) shoot(b, angOf(b), { spd: 60, dmg: 14, r: 2.2, life: 4, col: '#ff6b3d', kind: 'rocket', onHit: rocketBoom, onWall: rocketBoom,
+    if (timer(st, 't', 1.5, dt, 1)) shoot(b, angOf(b), { spd: 60, dmg: 14, r: 2.2, life: 4, col: '#ff6b3d', kind: 'rocket', onHit: rocketBoom, onWall: rocketBoom,
       tick(s, dt) {
         if (s.age > 0.15 && foesOf(s.team).some(t => canTouch(t) && Math.hypot(t.x - s.x, t.y - s.y) < t.r + 10)) { rocketBoom(s); return; }
         const v = Math.hypot(s.vx, s.vy), k = Math.min(170, v + 200 * dt) / v;
@@ -704,11 +707,12 @@ def({ id: 'laser', cat: 'gun', icon: '🔴', name: 'Лазер', col: '#ff2d55',
     else if (timer(st, 't', 2.8, dt, 1.5)) st.charge = 0.5;
   },
   draw(b, st) { if (st.charge > 0 || st.fire > 0) drawBeam(b, st); } });
-function beam(b, st, dt, dps) {
-  const e = rayEnd(b.x, b.y, b.dx, b.dy);
+function beam(b, st, dt, dps) { beamAlong(b, st, b.dx, b.dy, 2.2, dps, dt); }
+function beamAlong(b, st, dx, dy, width, dps, dt) {
+  const e = rayEnd(b.x, b.y, dx, dy);
   st.acc = st.acc || {};
   for (const t of foesOf(b.team)) {
-    if (!canTouch(t) || segDist(t.x, t.y, b.x, b.y, e[0], e[1]) > t.r + 2.2) continue;
+    if (!canTouch(t) || segDist(t.x, t.y, b.x, b.y, e[0], e[1]) > t.r + width) continue;
     const a = (st.acc[t.id] || 0) + dps * dt;
     if (a >= 2) { damage(t, a, b, { kind: 'beam' }); st.acc[t.id] = 0; } else st.acc[t.id] = a;
     if (!headless && Math.random() < 0.4) burst(t.x, t.y, '#ff2d55', 2, 10, 0.3);
@@ -859,7 +863,7 @@ function chill(st, t) {
   if (st.n >= 3 && stun(t, 1.3, 'ice')) st.n = 0;
 }
 
-def({ id: 'storm', cat: 'elem', icon: '⚡', name: 'Гроза', col: '#fff36b',
+def({ id: 'storm', cat: 'elem', icon: '⛈️', name: 'Гроза', col: '#fff36b',
   desc: 'Над ареной гроза: каждые 1,3 секунды в случайные места бьют две молнии, по 8 урона. Куда ударит, видно заранее. Сам шарик молний не боится.',
   tick(b, st, dt) { if (timer(st, 't', 1.3, dt, 0.8)) for (let k = 0; k < 2; k++) addZone(b, { kind: 'mark', x: rand(10, 90), y: rand(10, 90), r: 11, life: 0.75, end: strike }); } });
 function strike(z) {
@@ -1031,9 +1035,9 @@ def({ id: 'regen', cat: 'def', icon: '💚', name: 'Регенерация', col
   under(b) { if (b.hp < b.maxHp) glowAt(b.x, b.y, b.r * 2.4, '#5be38a', 0.2 + 0.1 * Math.sin(T * 5)); } });
 
 def({ id: 'thorns', cat: 'def', icon: '🌵', name: 'Колючки', col: '#7bdc5a',
-  desc: 'Весь в колючках: удары по врагу +2, а 30% любого урона от врага колючки возвращают обратно.',
+  desc: 'Весь в колючках: удары по врагу +2, а 35% любого урона от врага колючки возвращают обратно.',
   melee: (b, st, d) => d + 2,
-  hurt(b, st, d, src, o) { if (src && src !== b && !src.dead && o.kind !== 'dot' && o.kind !== 'reflect' && o.kind !== 'heat') damage(src, d * 0.3, b, { kind: 'reflect', col: '#9be87a' }); },
+  hurt(b, st, d, src, o) { if (src && src !== b && !src.dead && o.kind !== 'dot' && o.kind !== 'reflect' && o.kind !== 'heat') damage(src, d * 0.35, b, { kind: 'reflect', col: '#9be87a' }); },
   under(b) { thornRing(b); } });
 
 def({ id: 'armor', cat: 'def', icon: '🪨', name: 'Броня', col: '#b8b0a2',
@@ -1107,7 +1111,7 @@ function blinkTo(b, f) {
   if (!headless) { afterimage(b); burst(b.x, b.y, '#c77dff', 14, 16, 0.4); sfx('blink'); }
   b.x = x; b.y = y;
   setDir(b, x - f.x, y - f.y);
-  damage(f, 4, b, { kind: 'magic', col: '#e2b8ff' });
+  damage(f, b.omni ? 3.5 : 4, b, { kind: 'magic', col: '#e2b8ff' });
   if (!headless) { burst(x, y, '#e2b8ff', 14, 16, 0.4); rings.push({ x, y, r: b.r * 2.4, grow: -b.r * 6, life: 0.3, max: 0.3, col: '#c77dff', w: 0.8 }); }
 }
 
@@ -1116,7 +1120,7 @@ def({ id: 'magnet', cat: 'trick', icon: '🧲', name: 'Магнит', col: '#ff6
   melee: (b, st, d) => d + 5,
   tick(b, st, dt) {
     const f = foe(b);
-    if (f && canTouch(f)) steerTo(f, b.x, b.y, 0.9 * dt);
+    if (f && canTouch(f)) steerTo(f, b.x, b.y, 0.7 * dt);
     for (const s of shots) {
       if (s.team === b.team || s.dead) continue;
       const dx = s.x - b.x, dy = s.y - b.y, d = Math.hypot(dx, dy);
@@ -1188,37 +1192,442 @@ def({ id: 'builder', cat: 'trick', icon: '🧱', name: 'Стены', col: '#ff9f
     addZone(b, { kind: 'wall', x: cx, y: cy, x1: cx - px * L, y1: cy - py * L, x2: cx + px * L, y2: cy + py * L, r: 1.6, life: 6.5, cd: {}, tick: wallTick });
     if (!headless) sfx('build');
   } });
-function wallTick(z) {
-  const vx = z.x2 - z.x1, vy = z.y2 - z.y1, l2 = vx * vx + vy * vy, l = Math.sqrt(l2);
-  for (const t of foesOf(z.team)) {
-    if (!canTouch(t)) continue;
-    const u = clamp(((t.x - z.x1) * vx + (t.y - z.y1) * vy) / l2, 0, 1);
-    const qx = z.x1 + u * vx, qy = z.y1 + u * vy, dx = t.x - qx, dy = t.y - qy, d = Math.hypot(dx, dy), min = t.r + z.r;
-    if (d >= min) continue;
-    const nx = d > 1e-6 ? dx / d : -vy / l, ny = d > 1e-6 ? dy / d : vx / l;
-    t.x = qx + nx * min; t.y = qy + ny * min;
-    if (!t.isBall) { t.vx += nx * 30; t.vy += ny * 30; continue; }
-    const vn = t.dx * nx + t.dy * ny;
-    if (vn < 0) setDir(t, t.dx - 2 * vn * nx, t.dy - 2 * vn * ny);
-    clampBall(t);
-    if ((z.cd[t.id] || 0) > T) continue;
-    z.cd[t.id] = T + 0.4;
-    damage(t, 3.2, z.src, { kind: 'zone' });
-    if (!headless) { burst(qx, qy, '#ffb38a', 8, 14, 0.35); sfx('thud'); }
-  }
+// a ball or minion that touches a wall segment is pushed out and bounces off; returns the touch point
+function segPush(z, t) {
+  const vx = z.x2 - z.x1, vy = z.y2 - z.y1, l2 = vx * vx + vy * vy, l = Math.sqrt(l2) || 1;
+  const u = clamp(((t.x - z.x1) * vx + (t.y - z.y1) * vy) / (l2 || 1), 0, 1);
+  const qx = z.x1 + u * vx, qy = z.y1 + u * vy, dx = t.x - qx, dy = t.y - qy, d = Math.hypot(dx, dy), min = t.r + z.r;
+  if (d >= min) return null;
+  const nx = d > 1e-6 ? dx / d : -vy / l, ny = d > 1e-6 ? dy / d : vx / l;
+  t.x = qx + nx * min; t.y = qy + ny * min;
+  if (t.isBall) { const vn = t.dx * nx + t.dy * ny; if (vn < 0) setDir(t, t.dx - 2 * vn * nx, t.dy - 2 * vn * ny); clampBall(t); }
+  else { t.vx += nx * 30; t.vy += ny * 30; }
+  return [qx, qy];
+}
+function blockShots(z, col) {
   for (const s of shots) {
     if (s.team === z.team || s.dead || segDist(s.x, s.y, z.x1, z.y1, z.x2, z.y2) > s.r + z.r) continue;
     s.dead = true;
-    if (!headless) burst(s.x, s.y, '#ffb38a', 5, 12, 0.3);
+    if (!headless) burst(s.x, s.y, col, 5, 12, 0.3);
   }
 }
+function wallTick(z) {
+  for (const t of foesOf(z.team)) {
+    if (!canTouch(t)) continue;
+    const q = segPush(z, t);
+    if (!q || !t.isBall || (z.cd[t.id] || 0) > T) continue;
+    z.cd[t.id] = T + 0.4;
+    damage(t, 3.2, z.src, { kind: 'zone' });
+    if (!headless) { burst(q[0], q[1], '#ffb38a', 8, 14, 0.35); sfx('thud'); }
+  }
+  blockShots(z, '#ffb38a');
+}
+
+/* ---------- аниме ---------- */
+// is the enemy roughly straight ahead and within reach? forward strikes wait for that moment instead of aiming
+function ahead(b, t, reach, cone) {
+  const dx = t.x - b.x, dy = t.y - b.y, d = Math.hypot(dx, dy) || 1;
+  return d <= reach + t.r && (dx * b.dx + dy * b.dy) / d > Math.cos(cone + Math.asin(Math.min(1, t.r / d)));
+}
+function ready(b, st, period, reach, cone) {      // cooldown over and the enemy in front
+  if (T < (st.cd || 0)) return null;
+  const f = foe(b);
+  if (!f || !canTouch(f) || !ahead(b, f, reach, cone)) return null;
+  st.cd = T + period;
+  return f;
+}
+def({ id: 'rasengan', cat: 'anime', from: 'Наруто', icon: '🔵', name: 'Расенган', col: '#7fc8ff',
+  desc: 'Каждые 4 секунды закручивает в руке шар чакры. Следующий удар с ним наносит +9 и далеко отшвыривает врага.',
+  tick(b, st, dt) { if (!st.ready && timer(st, 't', 4, dt, 1.5)) st.ready = true; },
+  melee(b, st, d) { st.boom = !!st.ready; if (!st.ready) return d; st.ready = false; return d + 9; },
+  hit(b, st, t) {
+    if (!st.boom) return;
+    st.boom = false;
+    knock(t, b.x, b.y, 3);
+    if (!headless) { burst(t.x, t.y, '#bfe3ff', 24, 26, 0.5); rings.push({ x: t.x, y: t.y, r: 2, grow: 40, life: 0.35, max: 0.35, col: '#7fc8ff', w: 1.2 }); sfx('boom'); }
+  },
+  draw(b, st) {
+    if (!st.ready) return;
+    const x = b.x + b.dx * b.r, y = b.y + b.dy * b.r, a = T * 12;
+    glowAt(x, y, 5, '#7fc8ff', 0.9);
+    ctx.strokeStyle = 'rgba(230,245,255,.9)'; ctx.lineWidth = 0.35;
+    for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(x, y, 1.2 + k * 0.6, a + k * 2, a + k * 2 + 3.5); ctx.stroke(); }
+  } });
+
+def({ id: 'kamehameha', cat: 'anime', from: 'Драгонболл', icon: '🔆', name: 'Камехамеха', col: '#8fd8ff',
+  desc: 'Когда враг оказывается прямо впереди, замирает, копит энергию полсекунды и выпускает огромный луч: целую секунду по 28 урона в секунду. Потом отдыхает 4 секунды.',
+  tick(b, st, dt) {
+    if (st.fire > 0) { st.fire -= dt; beamAlong(b, st, st.ax, st.ay, 4.5, 28, dt); }
+    else if (st.charge > 0) { if ((st.charge -= dt) <= 0) { st.fire = 1; st.ax = b.dx; st.ay = b.dy; if (!headless) sfx('laser'); } }
+    else if (ready(b, st, 4, 200, 0.3)) st.charge = 0.5;
+  },
+  speed: (b, st, k) => st.charge > 0 || st.fire > 0 ? 0 : k,
+  draw(b, st) {
+    if (st.charge > 0) { glowAt(b.x + b.dx * b.r, b.y + b.dy * b.r, 3 + (0.5 - st.charge) * 12, '#8fd8ff', 0.95); return; }
+    if (!(st.fire > 0)) return;
+    const e = rayEnd(b.x, b.y, st.ax, st.ay), w = 1 + 0.15 * Math.sin(T * 50);
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(b.x + st.ax * b.r, b.y + st.ay * b.r); ctx.lineTo(e[0], e[1]);
+    ctx.strokeStyle = 'rgba(143,216,255,.45)'; ctx.lineWidth = 9 * w; ctx.stroke();
+    ctx.strokeStyle = '#bfeaff'; ctx.lineWidth = 5 * w; ctx.stroke();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.restore();
+  } });
+
+def({ id: 'gomu', cat: 'anime', from: 'Ван-Пис', icon: '🤜', name: 'Резиновый кулак', col: '#ffb38a',
+  desc: 'Когда враг оказывается впереди, выбрасывает руку, как резиновую, далеко вперёд: 7 урона и отбрасывает. Бьёт не чаще раза в 1,6 секунды.',
+  tick(b, st, dt) {
+    if (st.p > 0) {
+      st.p += dt / 0.45;
+      if (st.p >= 1) { st.p = 0; return; }
+      st.len = 40 * Math.sin(st.p * Math.PI);
+      const x1 = b.x + st.ax * b.r, y1 = b.y + st.ay * b.r, x2 = x1 + st.ax * st.len, y2 = y1 + st.ay * st.len;
+      for (const t of foesOf(b.team)) {
+        if (!canTouch(t) || st.hit[t.id] || segDist(t.x, t.y, x1, y1, x2, y2) > t.r + 2) continue;
+        st.hit[t.id] = 1;
+        damage(t, 7, b, { kind: 'weapon' });
+        knock(t, b.x, b.y, 2);
+        if (!headless) { burst(t.x, t.y, '#ffd2b8', 12, 18, 0.35); sfx('punch'); }
+      }
+    } else if (ready(b, st, 1.6, 42, 0.3)) { st.p = 1e-6; st.hit = {}; st.ax = b.dx; st.ay = b.dy; }
+  },
+  draw(b, st) {
+    if (!(st.p > 0)) return;
+    const x1 = b.x + st.ax * b.r, y1 = b.y + st.ay * b.r, x2 = x1 + st.ax * st.len, y2 = y1 + st.ay * st.len;
+    ctx.lineCap = 'round'; ctx.strokeStyle = '#f0b48c'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.fillStyle = '#f7c6a3'; disc(x2, y2, 2.4); ctx.fill();
+    ctx.strokeStyle = '#c98a62'; ctx.lineWidth = 0.4; ctx.stroke();
+  } });
+
+def({ id: 'getsuga', cat: 'anime', from: 'Блич', icon: '🌘', name: 'Гецуга Теншо', col: '#9fa8ff',
+  desc: 'Когда враг впереди, взмахом меча пускает широкий полумесяц, не чаще раза в 2,2 секунды. Он пролетает насквозь и режет всех на пути: 9 урона.',
+  tick(b, st, dt) { if (ready(b, st, 2.2, 200, 0.25)) shoot(b, angOf(b), { spd: 140, dmg: 9, r: 4.5, life: 1.5, pierce: true, col: '#9fa8ff', kind: 'crescent' }); } });
+
+def({ id: 'titan', cat: 'anime', from: 'Атака титанов', icon: '👹', name: 'Титан', col: '#d9905f',
+  desc: 'Раз в 12 секунд на 4 секунды превращается в титана: становится огромным, бьёт почти втрое сильнее и получает на треть меньше урона.',
+  tick(b, st, dt) {
+    if (st.on > 0) { st.on -= dt; return; }
+    if (!timer(st, 't', 12, dt, 4)) return;
+    st.on = 4;
+    if (!headless) { burst(b.x, b.y, '#ffb07a', 30, 30, 0.6); rings.push({ x: b.x, y: b.y, r: b.r, grow: 50, life: 0.4, max: 0.4, col: '#d9905f', w: 1.4 }); sfx('build'); }
+  },
+  size: (b, st, k) => st.on > 0 ? k * 1.75 : k,
+  melee: (b, st, d) => st.on > 0 ? d * 2.8 : d,
+  guard: (b, st, d) => st.on > 0 ? d * 0.67 : d,
+  under(b, st) { if (st.on > 0) { ctx.strokeStyle = 'rgba(217,144,95,.8)'; ctx.lineWidth = 0.8; disc(b.x, b.y, b.r + 1.2); ctx.stroke(); } } });
+
+def({ id: 'zawarudo', cat: 'anime', from: 'ДжоДжо', icon: '⏱️', name: 'Остановка времени', col: '#c8b8ff',
+  desc: 'Раз в 10 секунд останавливает время на 2 секунды: враг, его снаряды и слуги замирают. Пока время стоит, шарик бросает во врага ножи, и все они разом бьют, когда время пойдёт: 8 урона.',
+  tick(b, st, dt) {
+    const f = foe(b);
+    if (!f || !canTouch(f) || !timer(st, 't', 10, dt, 3)) return;
+    freezeTime(f, 2); frozen[f.team] = T + 2;
+    addZone(b, { kind: 'knives', x: f.x, y: f.y, r: f.r, life: 2, tgt: f, end: z => { if (canTouch(z.tgt)) damage(z.tgt, 8, z.src, { kind: 'magic', col: '#e6e6f0' }); if (!headless) { burst(z.tgt.x, z.tgt.y, '#e6e6f0', 20, 22, 0.4); sfx('slash'); } } });
+    if (!headless) { say('Время остановлено!'); sfx('rewind'); }
+  } });
+
+def({ id: 'deathnote', cat: 'anime', from: 'Тетрадь смерти', icon: '📓', name: 'Тетрадь смерти', col: '#e6e6e6',
+  desc: 'В начале боя вписывает имя врага в тетрадь. Через 20 секунд у врага сердечный приступ: 35 урона. И так каждые 20 секунд.',
+  tick(b, st, dt) {
+    if (!timer(st, 't', 20, dt)) return;
+    const f = foe(b);
+    if (!f || !canTouch(f)) return;
+    damage(f, 35, b, { kind: 'magic', col: '#ffffff' });
+    if (!headless) { floatText(f.x, f.y - f.r - 4, 'Сердечный приступ!', '#ffffff', 4); burst(f.x, f.y, '#e6e6e6', 20, 18, 0.6); sfx('curse'); }
+  },
+  draw(b, st) {                                   // a ring around the enemy runs out as the deadline comes
+    const f = foe(b);
+    if (!f || f.dead || st.t === undefined) return;
+    ctx.strokeStyle = 'rgba(235,235,235,.75)'; ctx.lineWidth = 0.45;
+    ctx.beginPath(); ctx.arc(f.x, f.y, f.r + 2.6, -Math.PI / 2, -Math.PI / 2 + clamp(st.t / 20, 0, 1) * 6.283); ctx.stroke();
+  } });
+
+def({ id: 'thunder', cat: 'anime', from: 'Клинок, рассекающий демонов', icon: '⚡', name: 'Удар грома', col: '#ffe14d',
+  desc: 'Когда враг впереди, молнией проносится прямо сквозь него через пол-арены и режет на 10. Не чаще раза в 2,8 секунды.',
+  tick(b, st, dt) {
+    if (!ready(b, st, 2.8, 42, 0.25)) return;
+    const e = rayEnd(b.x, b.y, b.dx, b.dy), L = Math.min(55, Math.hypot(e[0] - b.x, e[1] - b.y) - b.r);
+    if (L < 8) return;
+    const x2 = b.x + b.dx * L, y2 = b.y + b.dy * L;
+    for (const t of foesOf(b.team)) if (canTouch(t) && segDist(t.x, t.y, b.x, b.y, x2, y2) < t.r + b.r * 0.7) damage(t, 10, b, { kind: 'magic', col: '#ffe14d' });
+    if (!headless) { bolts.push({ pts: jag(b.x, b.y, x2, y2, 8), life: 0.35, max: 0.35, col: '#ffe14d' }); afterimage(b); sfx('zap'); }
+    b.x = x2; b.y = y2; clampBall(b);
+  } });
+
+def({ id: 'saitama', cat: 'anime', from: 'Ванпанчмен', icon: '👊', name: 'Серьёзный удар', col: '#ffd23a',
+  desc: 'Обычно бьёт как все. Но с шансом 10% бьёт всерьёз: +50 урона одним ударом.',
+  melee(b, st, d) { st.big = chance(0.1); return st.big ? d + 50 : d; },
+  hit(b, st, t) {
+    if (!st.big) return;
+    st.big = false;
+    knock(t, b.x, b.y, 3);
+    if (!headless) { floatText(t.x, t.y - t.r - 5, 'Серьёзный удар!', '#ffd23a', 4.4); burst(t.x, t.y, '#ffd23a', 40, 34, 0.7); addShake(0.6); sfx('boom'); }
+  } });
+
+def({ id: 'domain', cat: 'anime', from: 'Магическая битва', icon: '🏯', name: 'Расширение территории', col: '#b35cff',
+  desc: 'Раз в 12 секунд на 3,5 секунды вся арена становится его территорией: враг замедлен на 40% и теряет 6 здоровья в секунду.',
+  tick(b, st, dt) {
+    if (st.on > 0) {
+      st.on -= dt;
+      const f = foe(b);
+      if (!f || !canTouch(f)) return;
+      slow(f, 0.2, 0.4);
+      st.acc = (st.acc || 0) + 6 * dt;
+      if (st.acc >= 2) { damage(f, st.acc, b, { kind: 'magic', col: '#d9a8ff' }); st.acc = 0; }
+    } else if (timer(st, 't', 12, dt, 3)) { st.on = 3.5; if (!headless) { say('Расширение территории!'); sfx('hole'); } }
+  },
+  under(b, st) {
+    if (!(st.on > 0)) return;
+    ctx.save(); ctx.globalAlpha = 0.1; ctx.fillStyle = TEAMS[b.team].col; ctx.fillRect(0, 0, S, S);
+    ctx.globalAlpha = 0.5; ctx.strokeStyle = '#b35cff'; ctx.lineWidth = 0.5;
+    for (let k = 0; k < 3; k++) { const r = ((T * 18 + k * 25) % 75) + 4; disc(b.x, b.y, r); ctx.stroke(); }
+    ctx.restore();
+  } });
+
+def({ id: 'susanoo', cat: 'anime', from: 'Наруто', icon: '👺', name: 'Сусаноо', col: '#a070ff',
+  desc: 'Призрачный воин-доспех принимает на себя до 20 урона. Когда его разбили, через 8,5 секунды он вырастает снова.',
+  init(b, st) { st.hp = 20; },
+  tick(b, st, dt) { if (st.hp <= 0 && timer(st, 't', 8.5, dt)) { st.hp = 20; if (!headless) sfx('shieldUp'); } },
+  guard(b, st, d, src, o) {
+    if (!(st.hp > 0) || o.kind === 'dot' || o.kind === 'heat') return d;
+    const a = Math.min(st.hp, d);
+    st.hp -= a;
+    if (st.hp <= 0) { st.t = 8.5; if (!headless) { burst(b.x, b.y, '#c4a6ff', 22, 22, 0.5); sfx('block'); } }
+    return d - a;
+  },
+  under(b, st) {
+    if (!(st.hp > 0)) return;
+    const k = st.hp / 20, r = b.r * 1.55;
+    ctx.save(); ctx.globalAlpha = 0.25 + 0.45 * k;
+    ctx.fillStyle = 'rgba(160,112,255,.25)'; disc(b.x, b.y, r); ctx.fill();
+    ctx.strokeStyle = '#b896ff'; ctx.lineWidth = 0.5;
+    for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.arc(b.x, b.y, r - 0.6, Math.PI * 1.5 + i * 0.32 - 0.12, Math.PI * 1.5 + i * 0.32 + 0.12); ctx.stroke(); }
+    disc(b.x, b.y, r); ctx.stroke();
+    ctx.restore();
+  } });
+
+def({ id: 'saiyan', cat: 'anime', from: 'Драгонболл', icon: '✨', name: 'Супер-сайян', col: '#ffd23a',
+  desc: 'Когда здоровья остаётся меньше 45, превращается в супер-сайяна: лечится на 15, становится на 40% быстрее и бьёт на 8 сильнее.',
+  tick(b, st) {
+    if (st.on || b.hp >= 45) return;
+    st.on = true;
+    heal(b, 15);
+    if (!headless) { say(TEAMS[b.team].name + ' стал супер-сайяном!'); burst(b.x, b.y, '#ffe14d', 40, 30, 0.7); sfx('phoenix'); }
+  },
+  speed: (b, st, k) => st.on ? k * 1.4 : k,
+  melee: (b, st, d) => st.on ? d + 8 : d,
+  under(b, st) {
+    if (!st.on) return;
+    glowAt(b.x, b.y - b.r * 0.2, b.r * 2.6, '#ffd23a', 0.45 + 0.15 * Math.sin(T * 20));
+    if (!reduceMotion && Math.random() < 0.35) parts.push({ x: b.x + fxr(-0.8, 0.8) * b.r, y: b.y + fxr(-0.2, 0.6) * b.r, vx: 0, vy: fxr(-26, -14), life: 0.35, max: 0.35, col: '#ffe14d', r: fxr(0.3, 0.6), drag: 0.3 });
+  } });
+
+/* ---------- дота ---------- */
+function areaTick(b, st, R, dps, dt, kind, col) {   // steady damage to every enemy within R of the ball
+  st.acc = st.acc || {};
+  for (const t of foesOf(b.team)) {
+    if (!canTouch(t) || dist(t, b) > R + t.r * 0.5) continue;
+    const a = (st.acc[t.id] || 0) + dps * dt;
+    if (a >= 2) { damage(t, a, b, { kind, col }); st.acc[t.id] = 0; } else st.acc[t.id] = a;
+  }
+}
+function nearby(b, R) { return foesOf(b.team).filter(t => canTouch(t) && dist(t, b) < R + t.r); }
+
+def({ id: 'rot', cat: 'dota', from: 'Dota 2: Пудж', icon: '🤢', name: 'Гниль', col: '#8bc34a',
+  desc: 'Вокруг шарика всё время клубится гниль. Враг рядом теряет 8 здоровья в секунду и замедлен на 30%. Но гниль понемногу ест и самого шарика.',
+  tick(b, st, dt) {
+    const R = b.r + 18;
+    for (const t of nearby(b, R)) if (t.isBall) slow(t, 0.3, 0.3);
+    areaTick(b, st, R, 8, dt, 'zone', '#b8e07a');
+    st.self = (st.self || 0) + 0.4 * dt;
+    if (st.self >= 2) { damage(b, st.self, null, { kind: 'dot', col: '#b8e07a' }); st.self = 0; }
+  },
+  under(b) {
+    const R = b.r + 18;
+    ctx.fillStyle = 'rgba(139,195,74,.14)'; disc(b.x, b.y, R); ctx.fill();
+    ctx.strokeStyle = 'rgba(139,195,74,.4)'; ctx.lineWidth = 0.4; ctx.setLineDash([1.5, 1.5]); ctx.stroke(); ctx.setLineDash([]);
+  } });
+
+def({ id: 'chrono', cat: 'dota', from: 'Dota 2: Войд', icon: '⌛', name: 'Хроносфера', col: '#b9a7ff',
+  desc: 'Когда враг рядом, накрывает всё вокруг сферой на 2,6 секунды, не чаще раза в 9 секунд. Внутри для врага время стоит: он, его снаряды и слуги замирают. Сам шарик двигается свободно и бьёт застывшего врага на 4 сильнее.',
+  tick(b, st, dt) {
+    if (T < (st.cd || 0)) return;
+    const f = foe(b);
+    if (!f || !canTouch(f) || dist(b, f) > 26) return;
+    st.cd = T + 9;
+    addZone(b, { kind: 'chrono', r: 28, life: 2.6, tick: chronoTick });
+    if (!headless) sfx('hole');
+  },
+  melee: (b, st, d, t) => t.stun > 0 && t.stunKind === 'time' ? d + 4 : d });
+function chronoTick(z) {
+  for (const t of foesOf(z.team)) {
+    if (!canTouch(t) || !touching(z, t, 0)) continue;
+    if (t.isBall) freezeTime(t, 0.1); else t.hold = T + 0.05;
+  }
+  for (const s of shots) if (s.team !== z.team && !s.dead && touching(z, s, 0)) s.hold = T + 0.05;
+}
+
+def({ id: 'helix', cat: 'dota', from: 'Dota 2: Акс', icon: '🪓', name: 'Спираль Акса', col: '#e5484d',
+  desc: 'Когда его бьют, с шансом 35% крутится с топором и рубит всех рядом: 12 урона.',
+  hurt(b, st, d, src, o) {
+    if (o.kind === 'dot' || o.kind === 'heat' || st.cd > T || !chance(0.35)) return;
+    st.cd = T + 0.4; st.spin = T + 0.35;
+    for (const t of nearby(b, b.r + 16)) damage(t, 12, b, { kind: 'weapon' });
+    if (!headless) { burst(b.x, b.y, '#ff9b9e', 14, 24, 0.35); sfx('slash'); }
+  },
+  draw(b, st) {
+    if (!(st.spin > T)) return;
+    const a = T * 30, R = b.r + 13;
+    ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(a);
+    ctx.strokeStyle = 'rgba(255,220,220,.75)'; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.arc(0, 0, R, 0, 4.5); ctx.stroke();
+    ctx.fillStyle = '#c9ced8'; ctx.beginPath(); ctx.moveTo(R, -2.2); ctx.quadraticCurveTo(R + 3, 0, R, 2.2); ctx.lineTo(R - 1.2, 0); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  } });
+
+def({ id: 'pact', cat: 'dota', from: 'Dota 2: Сларк', icon: '🌑', name: 'Тёмный договор', col: '#6b5bd6',
+  desc: 'Раз в 3 секунды через полсекунды бьёт тёмной волной вокруг: 13 урона всем рядом. Заодно снимает с себя яд, огонь, раны, замедление и паутину.',
+  tick(b, st, dt) {
+    if (st.w > 0) {
+      if ((st.w -= dt) > 0) return;
+      cleanse(b);
+      for (const t of nearby(b, b.r + 24)) damage(t, 13, b, { kind: 'magic', col: '#b0a6ff' });
+      if (!headless) { rings.push({ x: b.x, y: b.y, r: b.r, grow: 70, life: 0.3, max: 0.3, col: '#8a7bff', w: 1.4 }); sfx('wave'); }
+    } else if (timer(st, 't', 3, dt, 1.5)) st.w = 0.5;
+  },
+  under(b, st) { if (st.w > 0) glowAt(b.x, b.y, b.r * 2.4, '#6b5bd6', 0.6); } });
+
+def({ id: 'zeus', cat: 'dota', from: 'Dota 2: Зевс', icon: '🌩️', name: 'Гнев Зевса', col: '#9fd0ff',
+  desc: 'Раз в 7,5 секунды молния с неба бьёт врага, где бы он ни был: 10 урона. Не промахивается.',
+  tick(b, st, dt) {
+    if (!timer(st, 't', 7.5, dt, 2.5)) return;
+    const f = foe(b);
+    if (!f || !canTouch(f)) return;
+    damage(f, 10, b, { kind: 'magic', col: '#cfe8ff' });
+    if (!headless) { boltFx(f.x, f.y); sfx('thunder'); }
+  } });
+
+def({ id: 'finger', cat: 'dota', from: 'Dota 2: Лион', icon: '👉', name: 'Палец смерти', col: '#ff5a5a',
+  desc: 'Раз в 10 секунд бьёт врага разрядом: 5 урона и ещё пятая часть уже потерянного врагом здоровья. Чем враг слабее, тем больнее.',
+  tick(b, st, dt) {
+    if (!timer(st, 't', 10, dt, 4)) return;
+    const f = foe(b);
+    if (!f || !canTouch(f)) return;
+    damage(f, 5 + (f.maxHp - f.hp) / 5, b, { kind: 'magic', col: '#ff9b9e' });
+    if (!headless) { bolts.push({ pts: jag(b.x, b.y, f.x, f.y, 9), life: 0.4, max: 0.4, col: '#ff5a5a' }); burst(f.x, f.y, '#ff5a5a', 20, 22, 0.5); sfx('zap'); }
+  } });
+
+def({ id: 'fissure', cat: 'dota', from: 'Dota 2: Шейкер', icon: '⛰️', name: 'Разлом', col: '#c49a6c',
+  desc: 'Когда враг впереди, бьёт по земле, и до самой стены встаёт каменная гряда, не чаще раза в 4 секунды. Кого задела: 7 урона и оглушение на секунду. Гряда стоит 3 секунды, враг об неё отскакивает.',
+  tick(b, st, dt) {
+    if (!ready(b, st, 4, 200, 0.12)) return;
+    const e = rayEnd(b.x, b.y, b.dx, b.dy), x1 = b.x + b.dx * (b.r + 1), y1 = b.y + b.dy * (b.r + 1);
+    const z = addZone(b, { kind: 'fissure', x: (x1 + e[0]) / 2, y: (y1 + e[1]) / 2, x1, y1, x2: e[0], y2: e[1], r: 1.8, life: 3, tick: fissureTick });
+    for (const t of foesOf(b.team)) {
+      if (!canTouch(t) || segDist(t.x, t.y, z.x1, z.y1, z.x2, z.y2) > t.r + 2.5) continue;
+      damage(t, 7, b, { kind: 'zone' });
+      stun(t, 1);
+    }
+    if (!headless) { addShake(0.35); sfx('punch'); }
+  } });
+function fissureTick(z) {
+  for (const t of foesOf(z.team)) if (canTouch(t)) segPush(z, t);
+  blockShots(z, '#d8b48a');
+}
+
+def({ id: 'ravage', cat: 'dota', from: 'Dota 2: Тайдхантер', icon: '🐙', name: 'Щупальца', col: '#3fb8a0',
+  desc: 'Раз в 6 секунд из пола вокруг вырываются щупальца, большой волной. Всех, кого задели: 12 урона и оглушение на 1,2 секунды.',
+  tick(b, st, dt) { if (timer(st, 't', 6, dt, 2.5)) { addZone(b, { kind: 'ravage', r: b.r, r0: b.r, life: 0.45, hit: {}, tick: ravageTick }); if (!headless) sfx('wave'); } } });
+function ravageTick(z) {
+  z.r = z.r0 + (40 - z.r0) * Math.min(1, z.age / z.life);
+  for (const t of foesOf(z.team)) {
+    if (!canTouch(t) || z.hit[t.id] || Math.hypot(t.x - z.x, t.y - z.y) > z.r + t.r) continue;
+    z.hit[t.id] = 1;
+    damage(t, 12, z.src, { kind: 'zone' });
+    stun(t, 1.2);
+  }
+}
+
+def({ id: 'rupture', cat: 'dota', from: 'Dota 2: Бладсикер', icon: '🩸', name: 'Разрыв', col: '#c0392b',
+  desc: 'Раз в 8 секунд рвёт врагу жилы на 4 секунды: чем больше враг двигается, тем больше теряет крови. Обычно выходит около 15 урона.',
+  tick(b, st, dt) {
+    const f = foe(b);
+    if (!f || f.dead) return;
+    if (st.on > 0) {
+      st.on -= dt;
+      st.acc = (st.acc || 0) + Math.min(3, Math.hypot(f.x - st.px, f.y - st.py)) * 0.07;
+      st.px = f.x; st.py = f.y;
+      if (st.acc >= 2) { damage(f, st.acc, b, { kind: 'magic', col: '#ff5c7a' }); st.acc = 0; }
+    } else if (canTouch(f) && timer(st, 't', 8, dt, 2)) { st.on = 4; st.px = f.x; st.py = f.y; if (!headless) sfx('curse'); }
+  },
+  draw(b, st) {
+    const f = foe(b);
+    if (!(st.on > 0) || !f || f.dead) return;
+    ctx.strokeStyle = 'rgba(220,40,60,.8)'; ctx.lineWidth = 0.5;
+    for (let k = 0; k < 3; k++) { const a = k * 2.1 + 0.4; ctx.beginPath(); ctx.moveTo(f.x + Math.cos(a) * f.r * 0.3, f.y + Math.sin(a) * f.r * 0.3); ctx.lineTo(f.x + Math.cos(a) * f.r * 0.9, f.y + Math.sin(a) * f.r * 0.9); ctx.stroke(); }
+  } });
+
+def({ id: 'silence', cat: 'dota', from: 'Dota 2: Сайленсер', icon: '🤫', name: 'Тишина', col: '#c8c8d8',
+  desc: 'Раз в 6 секунд накладывает на врага тишину на 3 секунды: все его способности молчат. И бьёт на 5.',
+  tick(b, st, dt) {
+    if (!timer(st, 't', 6, dt, 2)) return;
+    const f = foe(b);
+    if (!f || !canTouch(f)) return;
+    f.silence = 3;
+    damage(f, 5, b, { kind: 'magic', col: '#e0e0ea' });
+    if (!headless) { floatText(f.x, f.y - f.r - 4, 'Тишина!', '#e0e0ea', 4); sfx('ghost'); }
+  } });
+
+def({ id: 'omni', cat: 'dota', from: 'Dota 2: Джаггернаут', icon: '⚔️', name: 'Омнислэш', col: '#ff8a3d',
+  desc: 'Раз в 12 секунд исчезает и наносит врагу 4 молниеносных удара со всех сторон, по 3,5 урона. Пока режет, его не задеть.',
+  tick(b, st, dt) {
+    const f = foe(b);
+    if (st.n > 0) {
+      if ((st.w -= dt) > 0) return;
+      if (!f || !canTouch(f)) { st.n = 0; return; }
+      st.n--; st.w = 0.18; b.inv = Math.max(b.inv, 0.3); b.hitCd = 0.3;   // slashes, not body hits
+      const x0 = b.x, y0 = b.y;
+      b.omni = true; blinkTo(b, f); b.omni = false;
+      if (!headless) bolts.push({ pts: [[x0, y0], [b.x, b.y]], life: 0.2, max: 0.2, col: '#ffb07a' });
+    } else if (f && canTouch(f) && timer(st, 't', 12, dt, 3)) { st.n = 4; st.w = 0; }
+  } });
+
+def({ id: 'bladefury', cat: 'dota', from: 'Dota 2: Джаггернаут', icon: '🌪️', name: 'Вихрь клинков', col: '#ffb14d',
+  desc: 'Раз в 6 секунд на 3 секунды раскручивается вихрем и, кружась, тянется к врагу: рубит всех рядом на 14 в секунду, а снаряды, взрывы и чары его не берут.',
+  tick(b, st, dt) {
+    if (st.on > 0) {
+      st.on -= dt;
+      const f = foe(b);
+      if (f && canTouch(f)) steerTo(b, f.x, f.y, 3 * dt);
+      areaTick(b, st, b.r + 15, 14, dt, 'weapon');
+    }
+    else if (timer(st, 't', 6, dt, 2)) { st.on = 3; if (!headless) sfx('slash'); }
+  },
+  speed: (b, st, k) => st.on > 0 ? k * 1.3 : k,
+  guard: (b, st, d, src, o) => st.on > 0 && o.kind !== 'hit' && o.kind !== 'weapon' && o.kind !== 'mob' && o.kind !== 'heat' ? 0 : d,
+  draw(b, st) {
+    if (!(st.on > 0)) return;
+    ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(T * 25);
+    ctx.strokeStyle = 'rgba(255,200,140,.6)'; ctx.lineWidth = 0.6;
+    for (let k = 0; k < 3; k++) { ctx.rotate(2.094); ctx.beginPath(); ctx.arc(0, 0, b.r + 12, 0, 1.4); ctx.stroke(); }
+    ctx.restore();
+  } });
+
+def({ id: 'requiem', cat: 'dota', from: 'Dota 2: Невермор', icon: '🕯️', name: 'Реквием душ', col: '#9b6bff',
+  desc: 'Раз в 5 секунд выпускает во все стороны 18 душ, по 4 урона каждая. Если враг рядом, в него попадает сразу несколько.',
+  tick(b, st, dt) {
+    if (!timer(st, 't', 5, dt, 2)) return;
+    const a0 = rand(0, 6.283);
+    for (let k = 0; k < 18; k++) shoot(b, a0 + k * 6.283 / 18, { spd: 85, dmg: 4, r: 2, life: 1.1, col: '#9b6bff', kind: 'soul' });
+  } });
 
 /* ---------- the fight ---------- */
 function makeBall(team, ids) {
   const x = team ? 72 : 28, y = team ? 28 : 72, a = Math.atan2(50 - y, 50 - x) + rand(-0.9, 0.9);
   return {
     isBall: true, id: uid++, team, x, y, dx: Math.cos(a), dy: Math.sin(a), r: R0, mass: 1, hp: HP0, maxHp: HP0, spd: V0, dead: false,
-    stun: 0, stunKind: '', stunImm: 0, root: 0, rootImm: 0, slow: 0, slowK: 0, ghost: 0, inv: 0, pull: 0, pullSrc: null, kick: 0,
+    stun: 0, stunKind: '', stunImm: 0, root: 0, rootImm: 0, silence: 0, slow: 0, slowK: 0, ghost: 0, inv: 0, pull: 0, pullSrc: null, kick: 0,
     burnT: 0, burnDps: 0, burnSrc: null, pois: 0, poisT: 0, poisSrc: null, bleeds: [], bleedSrc: null, dotT: 0.5,
     hitCd: 0, flash: 0, hurtT: 9, healAcc: 0, dealt: 0, taken: 0, healed: 0,
     picks: ids.slice(), abil: ids.map(id => ({ def: ABI[id], st: {} }))
@@ -1240,7 +1649,7 @@ function resolveMimics() {
 }
 function startFight(p0, p1, quick) {
   T = 0; heatOn = false; winner = -1; shake = 0;
-  shots = []; zones = []; mobs = []; parts = []; rings = []; floaters = []; bolts = []; ghosts = [];
+  shots = []; zones = []; mobs = []; parts = []; rings = []; floaters = []; bolts = []; ghosts = []; frozen = [0, 0];
   balls = [makeBall(0, p0), makeBall(1, p1)];
   resolveMimics();
   for (const b of balls) each(b, 'init');
@@ -1279,7 +1688,7 @@ function bounce(b, side, moving) {
   const w = { side, x: side === 0 ? 0 : side === 2 ? S : b.x, y: side === 1 ? 0 : side === 3 ? S : b.y };
   if (heatOn) damage(b, 2 + (T - SUDDEN) / 6, null, { kind: 'heat', col: '#ffb14d' });
   if (b.dead) return;
-  if (b.stun <= 0) each(b, 'wall', w);
+  if (b.stun <= 0 && b.silence <= 0) each(b, 'wall', w);
   if (!headless) { burst(w.x, w.y, heatOn ? '#ff8a1f' : TEAMS[b.team].col, heatOn ? 10 : 5, 14, 0.3); sfx('bounce'); }
 }
 function collideBalls() {
@@ -1330,7 +1739,7 @@ function step(dt) {
     if (b.dead) continue;
     b.r = R0 * fold(b, 'size', 1);
     b.mass = (b.r / R0) ** 2 * fold(b, 'mass', 1);
-    if (b.stun <= 0) each(b, 'tick', dt);
+    if (b.stun <= 0 && b.silence <= 0) each(b, 'tick', dt);
   }
   for (const b of balls) moveBall(b, dt);
   collideBalls();
@@ -1447,7 +1856,7 @@ function stepFx(dt) {
 /* ---------- drawing (world units; the arena is S×S, scaled to fit the stage) ---------- */
 const $ = id => document.getElementById(id);
 const cvs = $('game'), ctx = cvs.getContext('2d'), stage = $('stage');
-const FONT = '"Russo One","Arial Black",system-ui,sans-serif';
+const FONT = 'system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
 let cw = 1, ch = 1, dpr = 1, floor = null;
 const view = { x: 0, y: 0, k: 1 };
 const glowCache = {};
@@ -1456,15 +1865,15 @@ function glow(col) {
   if (c) return c;
   c = document.createElement('canvas'); c.width = c.height = 64;
   const g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-  gr.addColorStop(0, col + 'ff'); gr.addColorStop(0.22, col + 'aa'); gr.addColorStop(0.5, col + '33'); gr.addColorStop(1, col + '00');
+  gr.addColorStop(0, col + 'ee'); gr.addColorStop(0.45, col + '99'); gr.addColorStop(0.75, col + '22'); gr.addColorStop(1, col + '00');
   g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
   return (glowCache[col] = c);
 }
 function glowAt(x, y, r, col, a) {
   if (!(r > 0)) return;
   const k = ctx.globalAlpha;
-  ctx.globalAlpha = k * clamp(a, 0, 1);
-  ctx.drawImage(glow(col), x - r, y - r, r * 2, r * 2);
+  ctx.globalAlpha = k * clamp(a * 0.7, 0, 1);
+  ctx.drawImage(glow(col), x - r * 0.75, y - r * 0.75, r * 1.5, r * 1.5);
   ctx.globalAlpha = k;
 }
 function disc(x, y, r) { ctx.beginPath(); ctx.arc(x, y, Math.max(0.01, r), 0, 6.283); }
@@ -1483,88 +1892,47 @@ function layout() {
   view.k = A / S; view.x = (cw - A) / 2; view.y = (ch - A) / 2;
   floor = null;
 }
-// the arena floor is baked once per size: soft gradient, grid, centre ring, a team glow in each starting corner
+// the arena floor is baked once per size: a flat panel with a faint grid
 function bakeFloor() {
   const px = Math.max(1, Math.ceil(S * view.k * dpr));
   floor = document.createElement('canvas'); floor.width = floor.height = px;
   const g = floor.getContext('2d');
   g.scale(px / S, px / S);
-  const gr = g.createRadialGradient(50, 50, 4, 50, 50, 72);
-  gr.addColorStop(0, '#1f1846'); gr.addColorStop(1, '#0c081d');
-  g.fillStyle = gr; g.fillRect(0, 0, S, S);
-  for (const [x, y, col] of [[0, S, 'rgba(255,77,109,.12)'], [S, 0, 'rgba(58,215,255,.12)']]) {
-    const q = g.createRadialGradient(x, y, 0, x, y, 48);
-    q.addColorStop(0, col); q.addColorStop(1, 'rgba(0,0,0,0)');
-    g.fillStyle = q; g.fillRect(0, 0, S, S);
-  }
-  g.strokeStyle = 'rgba(123,92,255,.11)'; g.lineWidth = 0.25;
+  g.fillStyle = '#23242a'; g.fillRect(0, 0, S, S);
+  g.strokeStyle = 'rgba(255,255,255,.035)'; g.lineWidth = 0.25;
   g.beginPath();
   for (let i = 10; i < S; i += 10) { g.moveTo(i, 0); g.lineTo(i, S); g.moveTo(0, i); g.lineTo(S, i); }
   g.stroke();
-  g.strokeStyle = 'rgba(123,92,255,.22)'; g.lineWidth = 0.4;
-  g.beginPath(); g.arc(50, 50, 13, 0, 6.283); g.stroke();
-}
-const skyStars = Array.from({ length: 110 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() < 0.15 ? 1.5 : 0.5 + Math.random() * 0.7, p: Math.random() * 6.28, sp: 0.6 + Math.random() * 2 }));
-function drawSky(now) {
-  ctx.fillStyle = '#d8d0ff';
-  for (const s of skyStars) { ctx.globalAlpha = 0.2 + 0.35 * (0.5 + 0.5 * Math.sin(now * s.sp + s.p)); ctx.fillRect(s.x * cw, s.y * ch, s.r, s.r); }
-  ctx.globalAlpha = 1;
 }
 function drawBorder(now) {
-  const hot = heatOn && state === 'fight', col = hot ? (Math.sin(now * 9) > 0 ? '#ff6b3d' : '#ffb14d') : '#7b5cff';
-  ctx.save();
-  ctx.shadowColor = col; ctx.shadowBlur = (hot ? 22 : 14) * dpr;
-  ctx.strokeStyle = col; ctx.lineWidth = hot ? 1.3 : 0.9;
+  const hot = heatOn && state === 'fight';
+  ctx.strokeStyle = hot ? (Math.sin(now * 9) > 0 ? '#e8743b' : '#f2a65a') : '#4a4b55';
+  ctx.lineWidth = hot ? 1.2 : 0.7;
   ctx.strokeRect(0, 0, S, S);
-  ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 0.25;
-  ctx.strokeRect(0, 0, S, S);
-  ctx.restore();
 }
 
-/* balls: a glossy sphere with a smiley face that looks where it flies */
+/* balls: plain flat circles in the team colour */
 function drawBall(b, now) {
   const tm = TEAMS[b.team], r = b.r;
   ctx.save();
   if (b.ghost > 0) ctx.globalAlpha = 0.35 + 0.1 * Math.sin(now * 25);
   else if (b.inv > 0) ctx.globalAlpha = 0.6 + 0.4 * Math.sin(now * 40);
-  glowAt(b.x, b.y, r * 2.7, tm.col, 0.5);
-  const g = ctx.createRadialGradient(b.x - r * 0.35, b.y - r * 0.4, r * 0.08, b.x, b.y, r);
-  g.addColorStop(0, tm.light); g.addColorStop(0.45, tm.col); g.addColorStop(1, tm.dark);
-  ctx.fillStyle = g; disc(b.x, b.y, r); ctx.fill();
-  ctx.lineWidth = 0.45; ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.stroke();
-  if (b.flash > 0) { const a0 = ctx.globalAlpha; ctx.globalAlpha = a0 * Math.min(1, b.flash / 0.14) * 0.75; ctx.fillStyle = '#ffffff'; disc(b.x, b.y, r); ctx.fill(); ctx.globalAlpha = a0; }
-  if (b.slow > 0) { ctx.strokeStyle = 'rgba(191,244,255,.75)'; ctx.lineWidth = 0.6; ctx.setLineDash([1.2, 1.2]); disc(b.x, b.y, r + 1.2); ctx.stroke(); ctx.setLineDash([]); }
-  face(b);
+  ctx.fillStyle = tm.col; disc(b.x, b.y, r); ctx.fill();
+  ctx.lineWidth = 0.6; ctx.strokeStyle = tm.dark; ctx.stroke();
+  if (b.flash > 0) { const a0 = ctx.globalAlpha; ctx.globalAlpha = a0 * Math.min(1, b.flash / 0.14) * 0.6; ctx.fillStyle = '#ffffff'; disc(b.x, b.y, r); ctx.fill(); ctx.globalAlpha = a0; }
+  if (b.slow > 0) { ctx.strokeStyle = 'rgba(191,244,255,.7)'; ctx.lineWidth = 0.6; ctx.setLineDash([1.2, 1.2]); disc(b.x, b.y, r + 1.2); ctx.stroke(); ctx.setLineDash([]); }
+  if (b.silence > 0) { ctx.strokeStyle = 'rgba(200,200,215,.8)'; ctx.lineWidth = 0.5; disc(b.x, b.y, r * 0.55); ctx.stroke(); ctx.beginPath(); ctx.moveTo(b.x - r * 0.4, b.y + r * 0.4); ctx.lineTo(b.x + r * 0.4, b.y - r * 0.4); ctx.stroke(); }
   if (b.stun > 0 && b.stunKind === 'ice') iceBlock(b);
+  else if (b.stun > 0 && b.stunKind === 'time') timeFrame(b, now);
   else if (b.stun > 0) stunStars(b, now);
   if (b.root > 0) webbed(b);
   ctx.restore();
 }
-function face(b) {
-  const r = b.r, lx = b.dx * r * 0.13, ly = b.dy * r * 0.13, ink = '#1b0a1f';
-  const dazed = b.stun > 0, hurt = b.hurtT < 0.3, low = b.hp < b.maxHp * 0.3;
-  const ex = r * 0.33, ey = b.y - r * 0.14 + ly;
-  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = ink;
-  for (const s of [-1, 1]) {
-    const cx = b.x + s * ex + lx, q = r * 0.12;
-    ctx.lineWidth = r * 0.08;
-    if (dazed) {                                   // X X
-      ctx.beginPath(); ctx.moveTo(cx - q, ey - q); ctx.lineTo(cx + q, ey + q); ctx.moveTo(cx + q, ey - q); ctx.lineTo(cx - q, ey + q); ctx.stroke();
-    } else if (hurt) {                             // > <
-      ctx.beginPath(); ctx.moveTo(cx + s * q, ey - q); ctx.lineTo(cx - s * q, ey); ctx.lineTo(cx + s * q, ey + q); ctx.stroke();
-    } else {
-      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(cx, ey, r * 0.16, r * 0.2, 0, 0, 6.283); ctx.fill();
-      ctx.fillStyle = ink; disc(cx + b.dx * r * 0.06, ey + b.dy * r * 0.07, r * 0.09); ctx.fill();
-      if (low) { ctx.lineWidth = r * 0.06; ctx.beginPath(); ctx.moveTo(cx - s * r * 0.17, ey - r * 0.32); ctx.lineTo(cx + s * r * 0.12, ey - r * 0.23); ctx.stroke(); }
-    }
-  }
-  const mx = b.x + lx * 0.6, my = b.y + r * 0.36 + ly * 0.6;
-  ctx.lineWidth = r * 0.085;
-  ctx.beginPath();
-  if (dazed) { ctx.moveTo(mx - r * 0.22, my); for (let k = 1; k <= 4; k++) ctx.lineTo(mx - r * 0.22 + k * r * 0.11, my + (k % 2 ? -1 : 1) * r * 0.05); }
-  else if (hurt || low) ctx.arc(mx, my + r * 0.17, r * 0.2, Math.PI * 1.18, Math.PI * 1.82);
-  else ctx.arc(mx, my - r * 0.14, r * 0.25, Math.PI * 0.18, Math.PI * 0.82);
-  ctx.stroke();
+function timeFrame(b) {
+  const r = b.r * 1.25;
+  ctx.fillStyle = 'rgba(180,170,255,.18)'; disc(b.x, b.y, r); ctx.fill();
+  ctx.strokeStyle = 'rgba(200,190,255,.85)'; ctx.lineWidth = 0.4; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(b.x, b.y - r * 0.7); ctx.moveTo(b.x, b.y); ctx.lineTo(b.x + r * 0.5, b.y); ctx.stroke();
 }
 function stunStars(b, now) {
   for (let k = 0; k < 3; k++) {
@@ -1766,13 +2134,9 @@ function drawTurret(m, tm) {
   ctx.beginPath(); ctx.arc(m.x, m.y, m.r + 0.9, -Math.PI / 2, -Math.PI / 2 + (1 - m.age / m.life) * 6.283); ctx.stroke();
 }
 function drawClone(m, tm) {
-  ctx.globalAlpha *= 0.55 + 0.15 * Math.sin(m.age * 8);
-  glowAt(m.x, m.y, m.r * 2.4, tm.col, 0.5);
-  const g = ctx.createRadialGradient(m.x - m.r * 0.3, m.y - m.r * 0.35, 0.3, m.x, m.y, m.r);
-  g.addColorStop(0, tm.light); g.addColorStop(0.5, tm.col); g.addColorStop(1, tm.dark);
-  ctx.fillStyle = g; disc(m.x, m.y, m.r); ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 0.3; ctx.setLineDash([1, 1]); ctx.stroke(); ctx.setLineDash([]);
-  face(m);
+  ctx.globalAlpha *= 0.5 + 0.12 * Math.sin(m.age * 8);
+  ctx.fillStyle = tm.col; disc(m.x, m.y, m.r); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 0.3; ctx.setLineDash([1, 1]); ctx.stroke(); ctx.setLineDash([]);
 }
 function drawGolem(m, tm) {
   const r = m.r, fx = Math.cos(m.face), fy = Math.sin(m.face);
@@ -1797,7 +2161,7 @@ function drawGolem(m, tm) {
 /* projectiles */
 function drawShot(s) {
   const a = Math.atan2(s.vy, s.vx);
-  if (s.kind === 'bolt' || s.kind === 'pellet' || s.kind === 'orb') {
+  if (s.kind === 'bolt' || s.kind === 'pellet' || s.kind === 'orb' || s.kind === 'soul') {
     glowAt(s.x, s.y, s.r * 3.4, s.col, 0.95);
     ctx.fillStyle = '#ffffff'; disc(s.x, s.y, s.r * 0.55); ctx.fill();
     return;
@@ -1838,6 +2202,12 @@ function drawShot(s) {
       ctx.rotate(a);
       glowAt(0, 0, 4, '#9fe8ff', 0.7);
       ctx.fillStyle = s.col; ctx.beginPath(); ctx.moveTo(2.6, 0); ctx.lineTo(0, -1.1); ctx.lineTo(-2, 0); ctx.lineTo(0, 1.1); ctx.closePath(); ctx.fill();
+      break;
+    case 'crescent':
+      ctx.rotate(a);
+      ctx.fillStyle = 'rgba(159,168,255,.85)'; ctx.beginPath();
+      ctx.arc(-2, 0, 5, -1.25, 1.25); ctx.arc(-4.2, 0, 4.2, 1.15, -1.15, true); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 0.35; ctx.stroke();
       break;
     case 'glob':
       glowAt(0, 0, s.r * 3, s.col, 0.8);
@@ -1908,6 +2278,38 @@ function drawZone(z) {
       glowAt(z.x, z.y, 4 + 3 * Math.sin(T * 30), '#c77dff', 0.9);
       break;
     }
+    case 'knives': {
+      const t = z.tgt, n = Math.min(8, 1 + Math.floor(z.age / 0.22));
+      ctx.strokeStyle = '#e6e6f0'; ctx.lineWidth = 0.5; ctx.lineCap = 'round';
+      for (let k = 0; k < n; k++) { const a = k * 0.785 + 0.3, r1 = t.r + 5, r2 = t.r + 1.5; ctx.beginPath(); ctx.moveTo(t.x + Math.cos(a) * r1, t.y + Math.sin(a) * r1); ctx.lineTo(t.x + Math.cos(a) * r2, t.y + Math.sin(a) * r2); ctx.stroke(); }
+      break;
+    }
+    case 'chrono': {
+      const k = Math.min(1, z.age / 0.2, (z.life - z.age) / 0.3);
+      ctx.fillStyle = `rgba(185,167,255,${0.16 * k})`; disc(z.x, z.y, z.r); ctx.fill();
+      ctx.strokeStyle = `rgba(210,200,255,${0.8 * k})`; ctx.lineWidth = 0.6; ctx.stroke();
+      ctx.beginPath(); ctx.arc(z.x, z.y, z.r * 0.85, T * 2, T * 2 + 1.2); ctx.stroke();
+      break;
+    }
+    case 'fissure': {
+      const f = Math.min(1, (z.life - z.age) / 0.5);
+      ctx.save(); ctx.globalAlpha = f; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(z.x1, z.y1); ctx.lineTo(z.x2, z.y2);
+      ctx.strokeStyle = '#8a6a48'; ctx.lineWidth = z.r * 2.4; ctx.stroke();
+      ctx.strokeStyle = '#c49a6c'; ctx.lineWidth = z.r * 1.2; ctx.setLineDash([1.6, 1.1]); ctx.stroke(); ctx.setLineDash([]);
+      ctx.restore();
+      break;
+    }
+    case 'ravage': {
+      const k = 1 - z.age / z.life, n = 18;
+      ctx.fillStyle = `rgba(63,184,160,${0.9 * k + 0.1})`; ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const a = i / n * 6.283, x = z.x + Math.cos(a) * z.r, y = z.y + Math.sin(a) * z.r;
+        ctx.moveTo(x - Math.sin(a) * 1.2, y + Math.cos(a) * 1.2); ctx.lineTo(x + Math.cos(a) * 3.5, y + Math.sin(a) * 3.5); ctx.lineTo(x + Math.sin(a) * 1.2, y - Math.cos(a) * 1.2);
+      }
+      ctx.fill();
+      break;
+    }
     case 'wall': {
       const f = Math.min(1, (z.life - z.age) / 0.6, z.age / 0.2);
       ctx.save(); ctx.lineCap = 'round';
@@ -1966,8 +2368,7 @@ function drawFloaters(ox, oy, k) {
 }
 function draw(now) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = '#0f0b22'; ctx.fillRect(0, 0, cw, ch);
-  drawSky(now);
+  ctx.fillStyle = '#17181c'; ctx.fillRect(0, 0, cw, ch);
   if (!floor) bakeFloor();
   const k = view.k;
   let ox = view.x, oy = view.y;
@@ -1985,6 +2386,7 @@ function draw(now) {
   for (const b of balls) if (!b.dead) drawBall(b, now);
   for (const b of balls) if (!b.dead) for (const a of b.abil) if (a.def.draw) a.def.draw(b, a.st);
   drawParts();
+  if (frozen[0] > T || frozen[1] > T) { ctx.fillStyle = 'rgba(200,190,255,.07)'; ctx.fillRect(0, 0, S, S); }
   ctx.restore();
   drawBorder(now);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -2087,7 +2489,9 @@ function buildMenu() {
     const btn = el('button', undefined, 'ab');
     btn.type = 'button'; btn.dataset.id = a.id;
     const txt = el('span');
-    txt.append(el('b', a.name), el('small', a.desc));
+    txt.append(el('b', a.name));
+    if (a.from) txt.append(el('span', a.from, 'from'));
+    txt.append(el('small', a.desc));
     const who = el('span', undefined, 'ab-who');
     who.setAttribute('aria-hidden', 'true');
     who.append(el('i', undefined, 'p0'), el('i', undefined, 'p1'));
