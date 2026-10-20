@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "title": "Как будет работать чат на сайте",
+  "shapes": [
+    { "id": "title", "type": "text", "x": 150, "y": 10, "w": 520, "h": 40, "text": "Как будет работать чат на сайте", "fontSize": 22, "bold": true },
+    { "id": "you", "type": "actor", "x": 40, "y": 95, "w": 40, "h": 70, "text": "Ты" },
+    { "id": "chat", "type": "rounded", "x": 150, "y": 100, "w": 150, "h": 60, "text": "Окно чата\nна сайте", "fill": "chrome" },
+    { "id": "server", "type": "rect", "x": 380, "y": 100, "w": 150, "h": 60, "text": "Сервер\n(Render или VPS)" },
+    { "id": "ai", "type": "cloud", "x": 610, "y": 85, "w": 170, "h": 95, "text": "ИИ: Claude\nили другой", "fill": "#cfe3ff" },
+    { "id": "history", "type": "cylinder", "x": 400, "y": 220, "w": 110, "h": 90, "text": "История\nчата", "fill": "plate" },
+    { "id": "answer", "type": "document", "x": 610, "y": 240, "w": 170, "h": 80, "text": "Ответ\n+ новая схема" },
+    { "id": "note", "type": "note", "x": 40, "y": 250, "w": 160, "h": 70, "text": "Ключ ИИ хранится\nтолько на сервере" }
+  ],
+  "edges": [
+    { "id": "e1", "from": "you", "to": "chat", "label": "пишет" },
+    { "id": "e2", "from": "chat", "to": "server", "label": "сообщение" },
+    { "id": "e3", "from": "server", "to": "ai", "label": "запрос" },
+    { "id": "e4", "from": "ai", "to": "answer" },
+    { "id": "e5", "from": "answer", "fromPort": "bottom", "to": "chat", "toPort": "bottom", "label": "ответ" },
+    { "id": "e6", "from": "server", "to": "history", "startArrow": "arrow", "dash": "dash" }
+  ]
+}

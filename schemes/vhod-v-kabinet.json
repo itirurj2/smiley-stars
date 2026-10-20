@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "title": "Вход в личный кабинет",
+  "shapes": [
+    { "id": "title", "type": "text", "x": 200, "y": 10, "w": 340, "h": 40, "text": "Вход в личный кабинет", "fontSize": 22, "bold": true },
+    { "id": "start", "type": "terminator", "x": 300, "y": 70, "w": 140, "h": 50, "text": "Начало", "fill": "chrome" },
+    { "id": "input", "type": "parallelogram", "x": 280, "y": 160, "w": 180, "h": 64, "text": "Ввод логина\nи пароля" },
+    { "id": "check", "type": "rect", "x": 290, "y": 264, "w": 160, "h": 60, "text": "Проверка данных\nна сервере" },
+    { "id": "db", "type": "cylinder", "x": 560, "y": 250, "w": 110, "h": 90, "text": "База\nпользователей", "fill": "plate" },
+    { "id": "ok", "type": "rhombus", "x": 280, "y": 364, "w": 180, "h": 100, "text": "Данные верны?" },
+    { "id": "cabinet", "type": "rect", "x": 290, "y": 504, "w": 160, "h": 60, "text": "Открыть\nличный кабинет", "fill": "#cdeccd" },
+    { "id": "end", "type": "terminator", "x": 300, "y": 604, "w": 140, "h": 50, "text": "Конец", "fill": "chrome" },
+    { "id": "tries", "type": "rhombus", "x": 40, "y": 364, "w": 170, "h": 100, "text": "Попыток\nбольше 3?" },
+    { "id": "lock", "type": "rect", "x": 45, "y": 504, "w": 160, "h": 60, "text": "Блокировка\nна 5 минут", "fill": "#ffd6cc" },
+    { "id": "note", "type": "note", "x": 560, "y": 384, "w": 150, "h": 70, "text": "Пароль хранится\nв зашифрованном виде" }
+  ],
+  "edges": [
+    { "id": "e1", "from": "start", "to": "input" },
+    { "id": "e2", "from": "input", "to": "check" },
+    { "id": "e3", "from": "check", "to": "ok" },
+    { "id": "e4", "from": "ok", "to": "cabinet", "label": "Да" },
+    { "id": "e5", "from": "cabinet", "to": "end" },
+    { "id": "e6", "from": "ok", "to": "tries", "label": "Нет" },
+    { "id": "e7", "from": "tries", "to": "lock", "label": "Да" },
+    { "id": "e8", "from": "lock", "fromPort": "bottom", "to": "end", "toPort": "left" },
+    { "id": "e9", "from": "tries", "fromPort": "top", "to": "input", "toPort": "left", "label": "Нет" },
+    { "id": "e10", "from": "check", "to": "db", "route": "straight", "startArrow": "arrow", "dash": "dash", "label": "запрос" },
+    { "id": "e11", "from": "db", "to": "note", "route": "straight", "endArrow": "none", "dash": "dot" }
+  ]
+}
