@@ -10,7 +10,7 @@
 
 ## Стальные схемы
 
-`scheme.html` — редактор блок-схем на поле из шлифованной стали, тоже одним файлом. Фигуры как в draw.io: основные и все фигуры блок-схем, стрелки трёх форм (ломаная, прямая, кривая) с разными наконечниками и подписями. «Текст» в списке фигур — прозрачная табличка: на ней можно писать прямо на поле. Размер фигур меняется белыми квадратами, текст пишется двойным кликом. Кнопка «Запустить» прорисовывает готовую схему паяльником: искры бегут по контурам, след остывает, текст выжигается.
+`scheme.html` — редактор блок-схем на поле из шлифованной стали, тоже одним файлом. Фигуры как в draw.io: основные и все фигуры блок-схем, стрелки трёх форм (ломаная, прямая, кривая) с разными наконечниками и подписями. «Текст» в списке фигур — прозрачная табличка: на ней можно писать прямо на поле, а «Код» — тёмная карточка с моноширинным шрифтом для программы рядом со схемой. Размер фигур меняется белыми квадратами, текст пишется двойным кликом. Кнопка «Запустить» прорисовывает готовую схему паяльником: искры бегут по контурам, след остывает, текст выжигается.
 
 Схемы сохраняются в браузере («Файл» → «Мои и готовые схемы»), а ещё в файл `.json`, в PNG и SVG.
 
@@ -34,7 +34,7 @@
 ```
 
 - `type` фигуры: `text`, `rect`, `rounded`, `ellipse`, `rhombus`, `triangle`, `hexagon`, `parallelogram`, `trapezoid`, `cylinder`, `cloud`, `note`, `callout`, `blockArrow`, `actor`, `terminator`, `predefined`, `document`, `multidoc`, `manualInput`, `manualOp`, `internalStorage`, `storedData`, `delay`, `display`, `card`, `tape`, `offpage`, `loopLimit`, `or`, `sumJunction`, `merge`, `sort`, `annotation`.
-- Необязательный вид фигуры: `fill` (цвет, `none`, `chrome`, `copper`, `plate`), `stroke`, `width`, `dash` (`solid`, `dash`, `dot`), `fontSize`, `color`, `bold`, `italic`, `align`, `shadow`.
+- Необязательный вид фигуры: `fill` (цвет, `none`, `chrome`, `copper`, `plate`), `stroke`, `width`, `dash` (`solid`, `dash`, `dot`), `fontSize`, `color`, `bold`, `italic`, `align`, `font` (`sans` или `mono` для кода: отступы сохраняются), `shadow`.
 - Стрелка: `from` и `to` — id фигур, или свободные концы `x1`, `y1`, `x2`, `y2`. Сторону можно задать через `fromPort` и `toPort` (`top`, `right`, `bottom`, `left`), иначе она выбирается сама. Ещё есть `route` (`orthogonal`, `straight`, `curved`), `startArrow` и `endArrow` (`none`, `arrow`, `open`, `triangle`, `diamond`, `diamondOpen`, `circle`, `circleOpen`, `erOne`, `erMany`), `label`, `stroke`, `width`, `dash`, `bend` — точка изгиба.
 
 ### Чат

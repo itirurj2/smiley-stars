@@ -336,6 +336,7 @@ kbd{font:600 11px var(--font-ui);padding:1px 5px;border-radius:4px;border:1px so
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const FONT = 'Arial, "Liberation Sans", "Helvetica Neue", Helvetica, sans-serif';  // scheme text: same metrics everywhere, also in exports
+const MONO = 'Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace';  // code cards
 const GRID = 10;
 const MINK = 0.15, MAXK = 4;
 const r2 = n => Math.round(n * 100) / 100;
@@ -357,7 +358,8 @@ const store = {
   get(k, fb) { try { const v = localStorage.getItem(k); return v == null ? fb : JSON.parse(v); } catch { return fb; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
 };
-const K = { docs: 'steel.docs', cur: 'steel.cur', settings: 'steel.settings', chat: 'steel.chat' };
+const K = { docs: 'steel.docs', cur: 'steel.cur', settings: 'steel.settings', chat: 'steel.chat', demo: 'steel.demo' };
+const DEMO_V = 2;                                    // raise it to show a changed example once to people who already opened the app
 
 /* ---------- shape library (outlines in local coordinates 0..w, 0..h) ---------- */
 const sq = (w, h) => poly([[0, 0], [w, 0], [w, h], [0, h]]);
@@ -401,6 +403,7 @@ const SHAPES = {
 const PALETTE = [
   { cat: 'Основные', items: [
     { type: 'text', label: 'Текст', w: 160, h: 40, text: 'Текст' },
+    { type: 'rounded', label: 'Код', w: 320, h: 70, text: 'Console.WriteLine("Привет!");', style: { fill: '#2b3036', stroke: '#14171a', color: '#e6edf3', font: 'mono', fontSize: 12, align: 'left' }, icon: '<rect x="3" y="6" width="42" height="21" rx="3" fill="#2b3036" stroke="#c4cbd2" stroke-width="1.2"/><text x="24" y="21" text-anchor="middle" font-family="monospace" font-size="11" fill="#e6e9ec">{ ; }</text>' },
     { type: 'rect', label: 'Прямо\u00adугольник', w: 120, h: 60 },
     { type: 'rounded', label: 'Скруг\u00adлённый', w: 120, h: 60 },
     { type: 'ellipse', label: 'Эллипс', w: 120, h: 70 },
@@ -473,7 +476,7 @@ const DEFS = `<filter id="f-shadow" x="-30%" y="-30%" width="160%" height="170%"
 <linearGradient id="g-plate" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f6f8"/><stop offset="1" stop-color="#cfd5db"/></linearGradient>`;
 
 /* ---------- styles ---------- */
-const SHAPE_DEF = { fill: '#eef1f4', stroke: '#1d2126', width: 2, dash: 'solid', fontSize: 14, color: '#16191c', bold: false, italic: false, align: 'center', shadow: true };
+const SHAPE_DEF = { fill: '#eef1f4', stroke: '#1d2126', width: 2, dash: 'solid', fontSize: 14, color: '#16191c', bold: false, italic: false, align: 'center', font: 'sans', shadow: true };
 const EDGE_DEF = { stroke: '#1d2126', width: 2, dash: 'solid', route: 'orthogonal', startArrow: 'none', endArrow: 'arrow', fontSize: 13, color: '#16191c' };
 const COLOR_RE = /^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|hsla?\([\d\s.,%deg]+\)|[a-z]{3,20})$/i;
 function cleanColor(v, fb, allowGrad) {
@@ -493,9 +496,10 @@ function styleOf(s) {
   o.fontSize = clamp(+o.fontSize || base.fontSize, 6, 96);
   if (!DASHES[o.dash]) o.dash = 'solid';
   if (!['left', 'center', 'right'].includes(o.align)) o.align = 'center';
+  if (o.font !== 'mono') o.font = 'sans';
   return o;
 }
-const ev = (e, k) => e[k] !== undefined ? e[k] : EDGE_DEF[k];
+const ev =(e, k) => e[k] !== undefined ? e[k] : EDGE_DEF[k];
 function edgeStyle(e) {
   const o = {};
   for (const k in EDGE_DEF) o[k] = ev(e, k);
@@ -514,7 +518,8 @@ const dashArr = (dash, w) => dash === 'dash' ? `${r2(5 + w * 2.5)} ${r2(3 + w * 
 
 /* ---------- text ---------- */
 const mctx = document.createElement('canvas').getContext('2d');
-const fontOf = S => `${S.italic ? 'italic ' : ''}${S.bold ? 'bold ' : ''}${S.fontSize}px ${FONT}`;
+const fontOf = S => `${S.italic ? 'italic ' : ''}${S.bold ? 'bold ' : ''}${S.fontSize}px ${S.font === 'mono' ? MONO : FONT}`;
+const shown = (t, S) => S.font === 'mono' ? t.replace(/ /g, ' ') : t;   // code keeps its indentation: SVG would collapse plain spaces
 const measure = (t, S) => { mctx.font = fontOf(S); return mctx.measureText(t).width; };
 const wrapCache = new Map();
 function wrap(text, maxW, S) {
@@ -525,9 +530,9 @@ function wrap(text, maxW, S) {
   const m = t => mctx.measureText(t).width;
   const out = [];
   for (const para of String(text).split('\n')) {
-    let line = '';
+    let line = null;                                // null until the first word, so leading spaces survive
     for (let word of para.split(' ')) {
-      const test = line ? line + ' ' + word : word;
+      const test = line === null ? word : line + ' ' + word;
       if (m(test) <= maxW) { line = test; continue; }
       if (line) { out.push(line); line = ''; }
       while (word.length > 1 && m(word) > maxW) {      // a word wider than the box breaks by letters
@@ -538,7 +543,7 @@ function wrap(text, maxW, S) {
       }
       line = word;
     }
-    out.push(line);
+    out.push(line || '');
   }
   if (wrapCache.size > 3000) wrapCache.clear();
   wrapCache.set(key, out);
@@ -546,7 +551,7 @@ function wrap(text, maxW, S) {
 }
 const textBox = s => { const def = SHAPES[s.type] || SHAPES.rect; return def.text ? def.text(s.w, s.h) : { x: 0, y: 0, w: s.w, h: s.h }; };
 function layoutText(s) {
-  const S = styleOf(s), b = textBox(s), pad = 4;
+  const S = styleOf(s), b = textBox(s), pad = S.font === 'mono' ? 12 : 4;
   const lines = wrap(s.text || '', Math.max(4, b.w - pad * 2), S);
   const lh = S.fontSize * 1.25;
   const top = SHAPES[s.type]?.valign === 'top' ? b.y : b.y + (b.h - lines.length * lh) / 2;
@@ -554,8 +559,8 @@ function layoutText(s) {
   const x = S.align === 'left' ? b.x + pad : S.align === 'right' ? b.x + b.w - pad : b.x + b.w / 2;
   return { S, anchor, x, lh, lines: lines.map((t, i) => ({ t, y: top + i * lh + S.fontSize * 0.97 })) };
 }
-const textAttrs = (S, anchor) => `font-family='${FONT}' font-size="${S.fontSize}" fill="${esc(S.color)}" text-anchor="${anchor}"${S.bold ? ' font-weight="bold"' : ''}${S.italic ? ' font-style="italic"' : ''} pointer-events="none"`;
-const textMarkup = L => `<text ${textAttrs(L.S, L.anchor)}>` + L.lines.map(l => `<tspan x="${r2(L.x)}" y="${r2(l.y)}">${esc(l.t)}</tspan>`).join('') + '</text>';
+const textAttrs = (S, anchor) => `font-family='${S.font === 'mono' ? MONO : FONT}' font-size="${S.fontSize}" fill="${esc(S.color)}" text-anchor="${anchor}"${S.bold ? ' font-weight="bold"' : ''}${S.italic ? ' font-style="italic"' : ''} pointer-events="none"`;
+const textMarkup = L => `<text ${textAttrs(L.S, L.anchor)}>` + L.lines.map(l => `<tspan x="${r2(L.x)}" y="${r2(l.y)}">${esc(shown(l.t, L.S))}</tspan>`).join('') + '</text>';
 
 /* ---------- geometry ---------- */
 const SIDES = { top: [0, -1], right: [1, 0], bottom: [0, 1], left: [-1, 0] };
@@ -1052,6 +1057,7 @@ function addShape(it, at) {
   if (!at) for (let n = 0; n < 30 && doc.shapes.some(s => Math.abs(s.x + s.w / 2 - c.x) < 8 && Math.abs(s.y + s.h / 2 - c.y) < 8); n++) c = { x: c.x + 20, y: c.y + 20 };
   const s = { id: uid('s'), type: it.type, x: snapV(c.x - it.w / 2), y: snapV(c.y - it.h / 2), w: it.w, h: it.h };
   if (it.text) s.text = it.text;
+  if (it.style) Object.assign(s, it.style);
   change(() => { doc.shapes.push(s); sel = new Set([s.id]); });
   selectionChanged();
   if (it.type === 'text') startEdit(s.id);
@@ -1363,6 +1369,8 @@ function fit() {
 window.addEventListener('keydown', e => {
   const a = document.activeElement, typing = a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable);
   if (editing && a === editor) {
+    const s = !editing.edge && shapeById(editing.id);
+    if (e.key === 'Tab' && s && sv(s, 'font') === 'mono') { e.preventDefault(); editor.setRangeText('    ', editor.selectionStart, editor.selectionEnd, 'end'); placeEditor(); return; }   // Tab indents code
     if (e.key === 'Escape' || e.key === 'Tab' || (e.key === 'Enter' && (e.ctrlKey || e.metaKey))) { e.preventDefault(); commitEdit(); }
     return;
   }
@@ -1440,11 +1448,12 @@ function placeEditor() {
   st.top = r2(view.y + box.y * k) + 'px';
   st.width = r2(Math.max(40, box.w * k)) + 'px';
   st.fontSize = r2(S.fontSize * k) + 'px';
+  st.fontFamily = S.font === 'mono' ? MONO : '';
   st.fontWeight = S.bold ? 'bold' : 'normal';
   st.fontStyle = S.italic ? 'italic' : 'normal';
   st.color = editing.edge ? '' : S.color;
   st.textAlign = S.align;
-  st.paddingLeft = st.paddingRight = r2(4 * k) + 'px';
+  st.paddingLeft = st.paddingRight = r2((S.font === 'mono' ? 12 : 4) * k) + 'px';
   st.height = '0px'; st.paddingTop = st.paddingBottom = '0px';
   const ch = editor.scrollHeight, H = Math.max(box.h * k, ch);
   st.height = r2(H) + 'px';
@@ -1512,6 +1521,7 @@ function shapePanel(ss) {
   h += `<section class="p-sec"><h4>Текст</h4><div class="row"><label for="p-fs">Размер</label><input id="p-fs" class="num" type="number" min="6" max="96" step="1" data-set="fontSize" data-target="shape" value="${g('fontSize') ?? ''}">` +
     `<div class="seg" role="group"><button type="button" data-set="bold" data-val="${!b}" data-target="shape" aria-pressed="${!!b}" title="Жирный"><b>Ж</b></button><button type="button" data-set="italic" data-val="${!it}" data-target="shape" aria-pressed="${!!it}" title="Курсив"><i>К</i></button></div></div>` +
     `<div class="row"><label>Выравнивание</label><div class="seg" role="group">${['left', 'center', 'right'].map(v => `<button type="button" data-set="align" data-val="${v}" data-target="shape" aria-pressed="${al === v}" title="${{ left: 'По левому краю', center: 'По центру', right: 'По правому краю' }[v]}">${ALIGN_ICONS[v]}</button>`).join('')}</div></div>` +
+    `<div class="row"><label>Шрифт</label>${segBtns('font', { sans: 'Обычный', mono: 'Для кода' }, g('font'), 'shape')}</div>` +
     `<div class="p-lbl">Цвет текста</div>${swatches('color', TEXTS, g('color'), 'shape')}</section>`;
   if (one) h += `<section class="p-sec"><h4>Размер и место</h4><div class="geo">${[['x', 'X'], ['y', 'Y'], ['w', 'Ширина'], ['h', 'Высота']].map(([k, n]) => `<label for="g-${k}">${n}<input id="g-${k}" class="num" type="number" step="1" data-geo="${k}" value="${Math.round(one[k])}"></label>`).join('')}</div></section>`;
   return h;
@@ -1608,6 +1618,7 @@ function setTitle(v) {
 
 /* ---------- palette ---------- */
 function tileIcon(it) {
+  if (it.icon) return it.icon;
   if (it.type === 'text') return '<rect x="2" y="6" width="44" height="20" rx="2" fill="none" stroke="#98a1aa" stroke-width="1.2" stroke-dasharray="3 2.5"/><text x="24" y="21" text-anchor="middle" font-family="Georgia,serif" font-size="14" fill="#e6e9ec">Аа</text>';
   const def = SHAPES[it.type], sc = Math.min(40 / it.w, 26 / it.h), w = it.w * sc, h = it.h * sc;
   return `<g transform="translate(${r2((48 - w) / 2)} ${r2((32 - h) / 2)})">` + def.parts(w, h).map(p => `<path class="${p.fill ? 'ti-fill' : 'ti-line'}" d="${p.d}"/>`).join('') + '</g>';
@@ -1697,7 +1708,13 @@ function buildOrder() {
     if (e.from) { if (!outgoing.has(e.from)) outgoing.set(e.from, []); outgoing.get(e.from).push(e); }
     if (e.to && e.to !== e.from) incoming.add(e.to);
   }
-  const byPos = (a, b) => (a.y - b.y) || (a.x - b.x);
+  const cols = [];                                  // schemes standing side by side are drawn one after another, left to right
+  for (const [a, b] of doc.shapes.map(s => [s.x, s.x + s.w]).sort((p, q) => p[0] - q[0])) {
+    const c = cols[cols.length - 1];
+    if (c && a <= c[1] + 40) c[1] = Math.max(c[1], b); else cols.push([a, b]);
+  }
+  const colOf = s => cols.findIndex(c => s.x >= c[0] && s.x <= c[1]);
+  const byPos = (a, b) => (colOf(a) - colOf(b)) || (a.y - b.y) || (a.x - b.x);
   const visit = s => {                              // follow the flow the way a hand would: down the main line first, then the branches
     if (seenS.has(s.id)) return;
     seenS.add(s.id);
@@ -1847,8 +1864,8 @@ function stepUpdate(s, p) {
       if (!s.started) { s.started = true; if (s.bg) s.bg.setAttribute('opacity', '1'); }
       let n = Math.round(s.chars * p), hx = null, hy = 0;
       s.md.lines.forEach((l, k) => {
-        const take = clamp(n, 0, l.t.length), txt = l.t.slice(0, take);
-        if (s.tsp[k] && s.tsp[k].textContent !== txt) s.tsp[k].textContent = txt;
+        const take = clamp(n, 0, l.t.length), txt = l.t.slice(0, take), vis = shown(txt, s.md.S);
+        if (s.tsp[k] && s.tsp[k].textContent !== vis) s.tsp[k].textContent = vis;
         if (take > 0) { hx = l.x + measure(txt, s.md.S); hy = l.y - s.md.S.fontSize * 0.32; }
         n -= take;
       });
@@ -2178,7 +2195,7 @@ function schemesModal() {
     const n = (d.data && d.data.shapes || []).length;
     return `<div class="item${id === curId ? ' cur' : ''}"><div class="t"><b>${esc(d.title || 'Без названия')}</b><small>${esc(when(d.updated))} · ${n} ${plural(n, 'фигура', 'фигуры', 'фигур')}${id === curId ? ' · открыта' : ''}</small></div>${id === curId ? '' : `<button class="btn" data-open="${esc(id)}">Открыть</button>`}<button class="btn icon danger" data-del="${esc(id)}" title="Удалить" aria-label="Удалить"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M18 7l-1 13H7L6 7"/></svg></button></div>`;
   }).join('') : '<div class="empty">Пока пусто</div>') + '</div>';
-  body += '<div class="list-h">Готовые схемы</div><div class="list" id="site-list"><div class="item" id="builtin-ex"><div class="t"><b>Вход в личный кабинет</b><small>пример: решения, цикл, база данных</small></div><button class="btn" data-example="1">Открыть</button></div><div class="empty" id="site-wait">Ищу схемы на сайте…</div></div>';
+  body += '<div class="list-h">Готовые схемы</div><div class="list" id="site-list"><div class="item"><div class="t"><b>Примеры блок-схем</b><small>вход в кабинет и чётность числа с кодом на C#</small></div><button class="btn" data-example="1">Открыть</button></div><div class="empty" id="site-wait">Ищу схемы на сайте…</div></div>';
   modal('Схемы', body, [], true);
   modalEl.querySelector('.card-b').addEventListener('click', e => {
     const b = e.target.closest('button');
@@ -2199,8 +2216,6 @@ function schemesModal() {
     const w = $('#site-wait');
     if (!w) return;
     if (!list || !list.length) { w.textContent = list ? 'На сайте пока нет других схем' : 'Схемы с сайта появятся, когда страница открыта с сервера'; return; }
-    const ex = $('#builtin-ex');
-    if (ex) ex.remove();                             // the site keeps its own copy of the example
     w.outerHTML = list.map(x => `<div class="item"><div class="t"><b>${esc(x.title || x.file)}</b><small>${esc(x.note || 'schemes/' + x.file)}</small></div><button class="btn" data-site="${esc(x.file)}">Открыть</button></div>`).join('');
   });
 }
@@ -2369,7 +2384,7 @@ window.addEventListener('beforeunload', saveNow);
 /* ---------- example ---------- */
 const EXAMPLE = {
   version: 1,
-  title: 'Вход в личный кабинет',
+  title: 'Примеры блок-схем',
   shapes: [
     { id: 'title', type: 'text', x: 200, y: 10, w: 340, h: 40, text: 'Вход в личный кабинет', fontSize: 22, bold: true },
     { id: 'start', type: 'terminator', x: 300, y: 70, w: 140, h: 50, text: 'Начало', fill: 'chrome' },
@@ -2381,7 +2396,17 @@ const EXAMPLE = {
     { id: 'end', type: 'terminator', x: 300, y: 604, w: 140, h: 50, text: 'Конец', fill: 'chrome' },
     { id: 'tries', type: 'rhombus', x: 40, y: 364, w: 170, h: 100, text: 'Попыток\nбольше 3?' },
     { id: 'lock', type: 'rect', x: 45, y: 504, w: 160, h: 60, text: 'Блокировка\nна 5 минут', fill: '#ffd6cc' },
-    { id: 'note', type: 'note', x: 560, y: 384, w: 150, h: 70, text: 'Пароль хранится\nв зашифрованном виде' }
+    { id: 'note', type: 'note', x: 560, y: 384, w: 150, h: 70, text: 'Пароль хранится\nв зашифрованном виде' },
+    { id: 'eo-title', type: 'text', x: 830, y: 10, w: 360, h: 40, text: 'Чётное или нечётное', fontSize: 22, bold: true },
+    { id: 'eo-start', type: 'terminator', x: 940, y: 70, w: 140, h: 50, text: 'Начало', fill: 'chrome' },
+    { id: 'eo-ask', type: 'parallelogram', x: 910, y: 160, w: 200, h: 64, text: 'Вывод:\n«Введите число»' },
+    { id: 'eo-in', type: 'parallelogram', x: 920, y: 264, w: 180, h: 60, text: 'Ввод n' },
+    { id: 'eo-if', type: 'rhombus', x: 920, y: 364, w: 180, h: 100, text: 'n % 2 == 0?' },
+    { id: 'eo-even', type: 'parallelogram', x: 800, y: 504, w: 170, h: 60, text: 'Вывод:\n«Чётное»', fill: '#cdeccd' },
+    { id: 'eo-odd', type: 'parallelogram', x: 1050, y: 504, w: 170, h: 60, text: 'Вывод:\n«Нечётное»', fill: '#cfe3ff' },
+    { id: 'eo-end', type: 'terminator', x: 940, y: 604, w: 140, h: 50, text: 'Конец', fill: 'chrome' },
+    { id: 'eo-code-title', type: 'text', x: 800, y: 690, w: 440, h: 30, text: 'Тот же алгоритм на C#', fontSize: 16, bold: true },
+    { id: 'eo-code', type: 'rounded', x: 800, y: 724, w: 440, h: 240, text: 'using System;\n\nclass Program\n{\n    static void Main()                          // Начало\n    {\n        Console.Write("Введите число: ");       // Вывод\n        int n = int.Parse(Console.ReadLine());  // Ввод\n        if (n % 2 == 0)                         // Ромб\n            Console.WriteLine("Чётное");        // Да\n        else\n            Console.WriteLine("Нечётное");      // Нет\n    }                                           // Конец\n}', font: 'mono', fontSize: 12, align: 'left', fill: '#2b3036', stroke: '#14171a', color: '#e6edf3' }
   ],
   edges: [
     { id: 'e1', from: 'start', to: 'input' },
@@ -2394,7 +2419,14 @@ const EXAMPLE = {
     { id: 'e8', from: 'lock', fromPort: 'bottom', to: 'end', toPort: 'left' },
     { id: 'e9', from: 'tries', fromPort: 'top', to: 'input', toPort: 'left', label: 'Нет' },
     { id: 'e10', from: 'check', to: 'db', route: 'straight', startArrow: 'arrow', dash: 'dash', label: 'запрос' },
-    { id: 'e11', from: 'db', to: 'note', route: 'straight', endArrow: 'none', dash: 'dot' }
+    { id: 'e11', from: 'db', to: 'note', route: 'straight', endArrow: 'none', dash: 'dot' },
+    { id: 'eo-e1', from: 'eo-start', to: 'eo-ask' },
+    { id: 'eo-e2', from: 'eo-ask', to: 'eo-in' },
+    { id: 'eo-e3', from: 'eo-in', to: 'eo-if' },
+    { id: 'eo-e4', from: 'eo-if', fromPort: 'left', to: 'eo-even', toPort: 'top', label: 'Да' },
+    { id: 'eo-e5', from: 'eo-if', fromPort: 'right', to: 'eo-odd', toPort: 'top', label: 'Нет' },
+    { id: 'eo-e6', from: 'eo-even', fromPort: 'bottom', to: 'eo-end', toPort: 'left' },
+    { id: 'eo-e7', from: 'eo-odd', fromPort: 'bottom', to: 'eo-end', toPort: 'right' }
   ]
 };
 
@@ -2414,8 +2446,14 @@ function init() {
   if (!Array.isArray(chat)) chat = [];
   buildPalette();
   const docs = store.get(K.docs, {});
-  const saved = store.get(K.cur, null);
-  if (saved && docs[saved] && docs[saved].data) { curId = saved; doc = normalize(docs[saved].data); }
+  const saved = store.get(K.cur, null), old = saved && docs[saved] && docs[saved].data;
+  if (store.get(K.demo, 0) < DEMO_V) {
+    store.set(K.demo, DEMO_V);
+    const ex = normalize(EXAMPLE), was = old && normalize(old), same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+    const untouched = was && was.shapes.length && same(was.shapes, ex.shapes.slice(0, was.shapes.length)) && same(was.edges, ex.edges.slice(0, was.edges.length));
+    curId = untouched ? saved : uid('d');           // an untouched older example is replaced, anything edited stays in «Мои схемы»
+    doc = ex;
+  } else if (old) { curId = saved; doc = normalize(old); }
   else { curId = uid('d'); doc = normalize(EXAMPLE); }
   $('#doc-title').value = doc.title;
   const hint = $('#hint');

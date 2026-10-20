@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "title": "Чётное или нечётное (C#)",
+  "shapes": [
+    {
+      "id": "eo-title",
+      "type": "text",
+      "x": 70,
+      "y": 10,
+      "w": 360,
+      "h": 40,
+      "text": "Чётное или нечётное",
+      "fontSize": 22,
+      "bold": true
+    },
+    {
+      "id": "eo-start",
+      "type": "terminator",
+      "x": 180,
+      "y": 70,
+      "w": 140,
+      "h": 50,
+      "text": "Начало",
+      "fill": "chrome"
+    },
+    {
+      "id": "eo-ask",
+      "type": "parallelogram",
+      "x": 150,
+      "y": 160,
+      "w": 200,
+      "h": 64,
+      "text": "Вывод:\n«Введите число»"
+    },
+    {
+      "id": "eo-in",
+      "type": "parallelogram",
+      "x": 160,
+      "y": 264,
+      "w": 180,
+      "h": 60,
+      "text": "Ввод n"
+    },
+    {
+      "id": "eo-if",
+      "type": "rhombus",
+      "x": 160,
+      "y": 364,
+      "w": 180,
+      "h": 100,
+      "text": "n % 2 == 0?"
+    },
+    {
+      "id": "eo-even",
+      "type": "parallelogram",
+      "x": 40,
+      "y": 504,
+      "w": 170,
+      "h": 60,
+      "text": "Вывод:\n«Чётное»",
+      "fill": "#cdeccd"
+    },
+    {
+      "id": "eo-odd",
+      "type": "parallelogram",
+      "x": 290,
+      "y": 504,
+      "w": 170,
+      "h": 60,
+      "text": "Вывод:\n«Нечётное»",
+      "fill": "#cfe3ff"
+    },
+    {
+      "id": "eo-end",
+      "type": "terminator",
+      "x": 180,
+      "y": 604,
+      "w": 140,
+      "h": 50,
+      "text": "Конец",
+      "fill": "chrome"
+    },
+    {
+      "id": "eo-code-title",
+      "type": "text",
+      "x": 40,
+      "y": 690,
+      "w": 440,
+      "h": 30,
+      "text": "Тот же алгоритм на C#",
+      "fontSize": 16,
+      "bold": true
+    },
+    {
+      "id": "eo-code",
+      "type": "rounded",
+      "x": 40,
+      "y": 724,
+      "w": 440,
+      "h": 240,
+      "text": "using System;\n\nclass Program\n{\n    static void Main()                          // Начало\n    {\n        Console.Write(\"Введите число: \");       // Вывод\n        int n = int.Parse(Console.ReadLine());  // Ввод\n        if (n % 2 == 0)                         // Ромб\n            Console.WriteLine(\"Чётное\");        // Да\n        else\n            Console.WriteLine(\"Нечётное\");      // Нет\n    }                                           // Конец\n}",
+      "font": "mono",
+      "fontSize": 12,
+      "align": "left",
+      "fill": "#2b3036",
+      "stroke": "#14171a",
+      "color": "#e6edf3"
+    }
+  ],
+  "edges": [
+    {
+      "id": "eo-e1",
+      "from": "eo-start",
+      "to": "eo-ask"
+    },
+    {
+      "id": "eo-e2",
+      "from": "eo-ask",
+      "to": "eo-in"
+    },
+    {
+      "id": "eo-e3",
+      "from": "eo-in",
+      "to": "eo-if"
+    },
+    {
+      "id": "eo-e4",
+      "from": "eo-if",
+      "fromPort": "left",
+      "to": "eo-even",
+      "toPort": "top",
+      "label": "Да"
+    },
+    {
+      "id": "eo-e5",
+      "from": "eo-if",
+      "fromPort": "right",
+      "to": "eo-odd",
+      "toPort": "top",
+      "label": "Нет"
+    },
+    {
+      "id": "eo-e6",
+      "from": "eo-even",
+      "fromPort": "bottom",
+      "to": "eo-end",
+      "toPort": "left"
+    },
+    {
+      "id": "eo-e7",
+      "from": "eo-odd",
+      "fromPort": "bottom",
+      "to": "eo-end",
+      "toPort": "right"
+    }
+  ]
+}
