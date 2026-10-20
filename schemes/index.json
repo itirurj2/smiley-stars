@@ -1,5 +1,5 @@
 [
   { "file": "vhod-v-kabinet.json", "title": "Вход в личный кабинет", "note": "решения, цикл, база данных" },
   { "file": "chat-na-sajte.json", "title": "Как будет работать чат на сайте", "note": "сайт, сервер и ИИ" },
-  { "file": "chetnoe-nechetnoe.json", "title": "Чётное или нечётное", "note": "блок-схема и тот же код на C#" }
+  { "file": "chetnoe-nechetnoe.json", "title": "Чётное или нечётное", "note": "схема и код на C# и на псевдокоде" }
 ]

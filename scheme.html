@@ -359,7 +359,7 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
 };
 const K = { docs: 'steel.docs', cur: 'steel.cur', settings: 'steel.settings', chat: 'steel.chat', demo: 'steel.demo' };
-const DEMO_V = 2;                                    // raise it to show a changed example once to people who already opened the app
+const DEMO_V = 3;                                    // raise it to show a changed example once to people who already opened the app
 
 /* ---------- shape library (outlines in local coordinates 0..w, 0..h) ---------- */
 const sq = (w, h) => poly([[0, 0], [w, 0], [w, h], [0, h]]);
@@ -2195,7 +2195,7 @@ function schemesModal() {
     const n = (d.data && d.data.shapes || []).length;
     return `<div class="item${id === curId ? ' cur' : ''}"><div class="t"><b>${esc(d.title || 'Без названия')}</b><small>${esc(when(d.updated))} · ${n} ${plural(n, 'фигура', 'фигуры', 'фигур')}${id === curId ? ' · открыта' : ''}</small></div>${id === curId ? '' : `<button class="btn" data-open="${esc(id)}">Открыть</button>`}<button class="btn icon danger" data-del="${esc(id)}" title="Удалить" aria-label="Удалить"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M18 7l-1 13H7L6 7"/></svg></button></div>`;
   }).join('') : '<div class="empty">Пока пусто</div>') + '</div>';
-  body += '<div class="list-h">Готовые схемы</div><div class="list" id="site-list"><div class="item"><div class="t"><b>Примеры блок-схем</b><small>вход в кабинет и чётность числа с кодом на C#</small></div><button class="btn" data-example="1">Открыть</button></div><div class="empty" id="site-wait">Ищу схемы на сайте…</div></div>';
+  body += '<div class="list-h">Готовые схемы</div><div class="list" id="site-list"><div class="item"><div class="t"><b>Примеры блок-схем</b><small>вход в кабинет и чётность числа: схемы на C# и на псевдокоде</small></div><button class="btn" data-example="1">Открыть</button></div><div class="empty" id="site-wait">Ищу схемы на сайте…</div></div>';
   modal('Схемы', body, [], true);
   modalEl.querySelector('.card-b').addEventListener('click', e => {
     const b = e.target.closest('button');
@@ -2406,7 +2406,17 @@ const EXAMPLE = {
     { id: 'eo-odd', type: 'parallelogram', x: 1050, y: 504, w: 170, h: 60, text: 'Вывод:\n«Нечётное»', fill: '#cfe3ff' },
     { id: 'eo-end', type: 'terminator', x: 940, y: 604, w: 140, h: 50, text: 'Конец', fill: 'chrome' },
     { id: 'eo-code-title', type: 'text', x: 800, y: 690, w: 440, h: 30, text: 'Тот же алгоритм на C#', fontSize: 16, bold: true },
-    { id: 'eo-code', type: 'rounded', x: 800, y: 724, w: 440, h: 240, text: 'using System;\n\nclass Program\n{\n    static void Main()                          // Начало\n    {\n        Console.Write("Введите число: ");       // Вывод\n        int n = int.Parse(Console.ReadLine());  // Ввод\n        if (n % 2 == 0)                         // Ромб\n            Console.WriteLine("Чётное");        // Да\n        else\n            Console.WriteLine("Нечётное");      // Нет\n    }                                           // Конец\n}', font: 'mono', fontSize: 12, align: 'left', fill: '#2b3036', stroke: '#14171a', color: '#e6edf3' }
+    { id: 'eo-code', type: 'rounded', x: 800, y: 724, w: 440, h: 240, text: 'using System;\n\nclass Program\n{\n    static void Main()                          // Начало\n    {\n        Console.Write("Введите число: ");       // Вывод\n        int n = int.Parse(Console.ReadLine());  // Ввод\n        if (n % 2 == 0)                         // Ромб\n            Console.WriteLine("Чётное");        // Да\n        else\n            Console.WriteLine("Нечётное");      // Нет\n    }                                           // Конец\n}', font: 'mono', fontSize: 12, align: 'left', fill: '#2b3036', stroke: '#14171a', color: '#e6edf3' },
+    { id: 'ps-title', type: 'text', x: 1360, y: 10, w: 360, h: 40, text: 'То же на псевдокоде', fontSize: 22, bold: true },
+    { id: 'ps-start', type: 'terminator', x: 1470, y: 70, w: 140, h: 50, text: 'НАЧАЛО', fill: 'chrome' },
+    { id: 'ps-ask', type: 'parallelogram', x: 1440, y: 160, w: 200, h: 64, text: 'ВЫВОД\n"Введите число"' },
+    { id: 'ps-in', type: 'parallelogram', x: 1450, y: 264, w: 180, h: 60, text: 'ВВОД n' },
+    { id: 'ps-if', type: 'rhombus', x: 1450, y: 364, w: 180, h: 100, text: 'n mod 2 = 0 ?' },
+    { id: 'ps-even', type: 'parallelogram', x: 1330, y: 504, w: 170, h: 60, text: 'ВЫВОД\n"Чётное"', fill: '#cdeccd' },
+    { id: 'ps-odd', type: 'parallelogram', x: 1580, y: 504, w: 170, h: 60, text: 'ВЫВОД\n"Нечётное"', fill: '#cfe3ff' },
+    { id: 'ps-end', type: 'terminator', x: 1470, y: 604, w: 140, h: 50, text: 'КОНЕЦ', fill: 'chrome' },
+    { id: 'ps-code-title', type: 'text', x: 1330, y: 690, w: 440, h: 30, text: 'Псевдокод', fontSize: 16, bold: true },
+    { id: 'ps-code', type: 'rounded', x: 1330, y: 724, w: 440, h: 170, text: 'НАЧАЛО                      // овал\n  ВЫВОД "Введите число"     // параллелограмм\n  ВВОД n                    // параллелограмм\n  ЕСЛИ n mod 2 = 0 ТО       // ромб, ветка «Да»\n    ВЫВОД "Чётное"          // параллелограмм\n  ИНАЧЕ                     // ветка «Нет»\n    ВЫВОД "Нечётное"        // параллелограмм\n  КОНЕЦ ЕСЛИ                // ветки сходятся\nКОНЕЦ                       // овал', font: 'mono', fontSize: 12, align: 'left', fill: '#2b3036', stroke: '#14171a', color: '#e6edf3' }
   ],
   edges: [
     { id: 'e1', from: 'start', to: 'input' },
@@ -2426,7 +2436,14 @@ const EXAMPLE = {
     { id: 'eo-e4', from: 'eo-if', fromPort: 'left', to: 'eo-even', toPort: 'top', label: 'Да' },
     { id: 'eo-e5', from: 'eo-if', fromPort: 'right', to: 'eo-odd', toPort: 'top', label: 'Нет' },
     { id: 'eo-e6', from: 'eo-even', fromPort: 'bottom', to: 'eo-end', toPort: 'left' },
-    { id: 'eo-e7', from: 'eo-odd', fromPort: 'bottom', to: 'eo-end', toPort: 'right' }
+    { id: 'eo-e7', from: 'eo-odd', fromPort: 'bottom', to: 'eo-end', toPort: 'right' },
+    { id: 'ps-e1', from: 'ps-start', to: 'ps-ask' },
+    { id: 'ps-e2', from: 'ps-ask', to: 'ps-in' },
+    { id: 'ps-e3', from: 'ps-in', to: 'ps-if' },
+    { id: 'ps-e4', from: 'ps-if', fromPort: 'left', to: 'ps-even', toPort: 'top', label: 'Да' },
+    { id: 'ps-e5', from: 'ps-if', fromPort: 'right', to: 'ps-odd', toPort: 'top', label: 'Нет' },
+    { id: 'ps-e6', from: 'ps-even', fromPort: 'bottom', to: 'ps-end', toPort: 'left' },
+    { id: 'ps-e7', from: 'ps-odd', fromPort: 'bottom', to: 'ps-end', toPort: 'right' }
   ]
 };
 
